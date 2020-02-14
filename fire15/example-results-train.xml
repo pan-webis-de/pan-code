@@ -1,0 +1,26 @@
+
+<document> 
+<reuse_case 
+  source_codeC="008.c"    
+  source_codeJ="008.java"   
+/> 
+<reuse_case 
+  source_codeC="023.c"    
+  source_codeJ="023.java"   
+/> 
+
+<reuse_case 
+  source_codeC="123.c"    
+  source_codeJ="021.java"   
+/> 
+
+<reuse_case 
+  source_codeC="063.c"    
+  source_codeJ="001.java"   
+/> 
+
+<reuse_case 
+  source_codeC="243.c"    
+  source_codeJ="423.java"   
+/> 
+</document > 
