@@ -17,9 +17,6 @@ def parse_input():
     parser.add_argument("-p", "--predictions", help="path to the dir holding the predicted labels.ndjson")
     parser.add_argument("-t", "--truth", help="path to the dir holding the true labels.ndjson")
     parser.add_argument("-o", "--output", help="path to the dir to write the results to")
-    parser.add_argument("-v", "--no-validation", dest='validate', action='store_const',
-                        const=False, default=True,
-                        help='If flag is there, do not check if file is a valid labels.ndjson')
     args = parser.parse_args()
 
     # dont presume all are in the same order:
@@ -27,8 +24,7 @@ def parse_input():
             for u in open("{}/labels.ndjson".format(args.predictions)).readlines()}
     tr = {json.loads(u)["id"]: json.loads(u)
           for u in open("{}/labels.ndjson".format(args.truth)).readlines()}
-    if args.validate:
-        is_valid(pred, tr)
+    is_valid(pred, tr)
     ids = pred.keys()
 
     return ([pred[i] for i in ids],
@@ -43,11 +39,11 @@ def is_valid(pred, tr):
     truth_cids = set(tr.keys())
     pred_cids = set(pred.keys())
     if truth_cids != pred_cids:
-        raise KeyError("Invalid output file, predictions for some id's are missing.")
+        raise print("Invalid output file, predictions for some id's are missing.")
 
     for pre in pred.values():
         if pre.keys() != {"id", "occupation", "birthyear", "gender"}:
-            raise KeyError("Invalid output, missing keys in predictions.")
+            raise print("Invalid output, missing keys in predictions.")
 
 
 def write_output(filename, k, v):
