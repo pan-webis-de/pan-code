@@ -6,6 +6,7 @@ from itertools import chain
 
 from sklearn.metrics import f1_score
 
+EV_OUT = "evaluation.txt"
 
 def read_solution_files(solutions_folder):
     """
@@ -71,22 +72,32 @@ def compute_task2_f1_score(truth, solutions):
     # task 2 - lists have to be flattened first
     return f1_score(list(chain.from_iterable(task2_truth)), list(chain.from_iterable(task2_solution)), average='micro', labels=[0, 1])
 
+def write_output(filename, k, v):
+    """
+    print() and write a given measurement to the indicated output file
+    :param filename: full path of the file, where to write to
+    :param k: the name of the metric
+    :param v: the value of the metric
+    :return: None
+    """
+    line = 'measure{{\n  key: "{}"\n  value: "{}"\n}}\n'.format(k, str(v))
+    print(line)
+    open(filename, "a").write(line)
+
 
 def main():
     parser = argparse.ArgumentParser(description='PAN20 Style Change Detection Task: Output Verifier')
-    parser.add_argument('--solution', type=str, help='folder containing solution files (json)', required=True)
-    parser.add_argument('--truth', type=str, help='folder containing ground truth files (json)', required=True)
+    parser.add_argument("-p", "--predictions", help="path to the dir holding the predicted labels", required=True)
+    parser.add_argument("-t", "--truth", help="path to the dir holding the true labels", required=True)
+    parser.add_argument("-o", "--output", help="path to the dir to write the results to", required=True)
     args = parser.parse_args()
 
-    solutions = read_solution_files(args.solution)
+    solutions = read_solution_files(args.predictions)
     truth = read_ground_truth_files(args.truth)
 
-    task1_score = compute_task1_f1_score(truth, solutions)
-    print(f"score task 1: {task1_score:.5f}")
-
-    task2_score = compute_task2_f1_score(truth, solutions)
-    print(f"score task 2: {task2_score:.5f}")
-
+    for k, v in {"task1_score": compute_task1_f1_score(truth, solutions),
+     "task2_score": compute_task2_f1_score(truth, solutions)}.items():
+        write_output(os.path.join(args.output, EV_OUT), k, v)
 
 if __name__ == "__main__":
     main()
