@@ -6,7 +6,7 @@ from itertools import chain
 
 from sklearn.metrics import f1_score
 
-EV_OUT = "evaluation.txt"
+EV_OUT = "evaluation.prototext"
 
 def read_solution_files(solutions_folder):
     """
