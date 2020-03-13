@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import json
 from collections import Counter
 from statistics import mean
+from sys import stderr
 
 EV_OUT = "evaluation.prototext"
 
@@ -39,11 +40,11 @@ def is_valid(pred, tr):
     truth_cids = set(tr.keys())
     pred_cids = set(pred.keys())
     if truth_cids != pred_cids:
-        raise print("Invalid output file, predictions for some id's are missing.")
+        print("Invalid output file, predictions for some id's are missing.", file=stderr)
 
     for pre in pred.values():
         if pre.keys() != {"id", "occupation", "birthyear", "gender"}:
-            raise print("Invalid output, missing keys in predictions.")
+            print("Invalid output, missing keys in predictions.", file=stderr)
 
 
 def write_output(filename, k, v):
@@ -95,7 +96,7 @@ def mc_prec_rec(mc_p, mc_t, hit_function=lambda x, y: x == y):
     return precisions, recalls
 
 
-def age_window_hit(by_predicted, by_truth, m=lambda x: -0.1*x+202.8):
+def age_window_hit(by_predicted: int, by_truth: int, m=lambda x: -0.1*x+202.8):
     """
     calculates the window for a given truth and checks if the prediction lies within that window
     :param by_predicted: the predicted birth year
@@ -103,6 +104,8 @@ def age_window_hit(by_predicted, by_truth, m=lambda x: -0.1*x+202.8):
     :param m: function giving the window size when given by_truth.
     :return: true if by_predicted within m-window of by_truth
     """
+    by_truth = int(by_truth)
+    by_predicted = int(by_predicted)
     return int(by_truth - m(by_truth)) <= by_predicted <= int(by_truth + m(by_truth))
 
 
