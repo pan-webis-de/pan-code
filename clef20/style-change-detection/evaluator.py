@@ -6,7 +6,7 @@ from itertools import chain
 
 from sklearn.metrics import f1_score
 
-EV_OUT = "evaluation.prototext"
+EV_OUT = "evaluation.txt"
 
 def read_solution_files(solutions_folder):
     """
@@ -49,7 +49,7 @@ def extract_task_results(truth, solutions, task):
         try:
             all_solutions.append(solutions[problem_id][task])
         except KeyError as _:
-            print(f"No solution file found for problem {problem_id}, exiting.")
+            print("No solution file found for problem %s, exiting." % problem_id)
             exit(0)
     return all_truth, all_solutions
 
