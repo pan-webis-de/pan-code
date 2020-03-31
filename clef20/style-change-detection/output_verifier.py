@@ -88,11 +88,11 @@ def check_output_files(problem_ids, output_path, input_folder):
         if os.path.exists(file_path):
            errors = get_solution_file_check_result(file_path, problem_id, input_folder)
            if not errors:
-                print(f"[problem {problem_id}]: OK")
+                print("[problem %s]: OK" % problem_id)
            else:
-                [print(f"[problem {problem_id}]: {x}") for x in errors]
+                [print("[problem %s: %x") % (problem_id, x)  for x in errors]
         else:
-            print(f"[problem {problem_id}]: no solution file found")
+            print("[problem %s]: no solution file found" % problem_id)
 
 
 def get_problem_ids(input_folder):
