@@ -85,6 +85,7 @@ from sklearn.metrics import roc_auc_score, f1_score
 
 def binarize(y, threshold=0.5):
     y = np.array(y)
+    y = np.ma.fix_invalid(y, fill_value=threshold)
     y[y >= threshold] = 1
     y[y < threshold] = 0
     return y
@@ -118,7 +119,10 @@ def auc(true_y, pred_y):
         Task at PAN 2014. CLEF (Working Notes) 2014: 877-897.
 
     """
-    return roc_auc_score(true_y, pred_y)
+    try:
+        return roc_auc_score(true_y, pred_y)
+    except ValueError:
+        return 0.0
 
 
 def c_at_1(true_y, pred_y, threshold=0.5):
