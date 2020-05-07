@@ -300,8 +300,8 @@ def main():
     gt = load_file(args.i)
     pred = load_file(args.a)
 
-    print(f'-> {len(gt)} problems in ground truth')
-    print(f'-> {len(pred)} solutions explicitly proposed')
+    print('->', len(gt), 'problems in ground truth')
+    print('->', len(pred), 'solutions explicitly proposed')
 
     # default missing problems to 0.5
     for probl_id in sorted(gt):
