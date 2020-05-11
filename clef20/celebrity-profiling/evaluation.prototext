@@ -1,0 +1,16 @@
+measure{
+  key: "c_rank"
+  value: "1.0"
+}
+measure{
+  key: "f1_gender"
+  value: "1.0"
+}
+measure{
+  key: "f1_occupation"
+  value: "1.0"
+}
+measure{
+  key: "f1_age"
+  value: "1.0"
+}
