@@ -297,8 +297,8 @@ def main():
         raise ValueError('The output folder path is required')
     
     # load:
-    gt = load_file(args.i)
-    pred = load_file(args.a)
+    gt = load_file(f"{args.i}/truth.jsonl")
+    pred = load_file(f"{args.a}/answers.jsonl")
 
     print('->', len(gt), 'problems in ground truth')
     print('->', len(pred), 'solutions explicitly proposed')
