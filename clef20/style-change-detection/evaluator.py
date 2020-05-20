@@ -2,8 +2,8 @@ import argparse
 import glob
 import json
 import os
+import statistics
 from itertools import chain
-
 from sklearn.metrics import f1_score
 
 EV_OUT = "evaluation.txt"
@@ -28,7 +28,7 @@ def read_ground_truth_files(truth_folder):
     :return: dict of ground truth files with problem-id as key and file content as value
     """
     truth = {}
-    for truth_file in glob.glob(os.path.join(truth_folder, 'truth-*.json')):
+    for truth_file in glob.glob(os.path.join(truth_folder, 'truth-problem*.json')):
         with open(truth_file, 'r') as fh:
             curr_truth = json.load(fh)
             truth[os.path.basename(truth_file)[6:-5]] = curr_truth
@@ -86,17 +86,25 @@ def write_output(filename, k, v):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='PAN20 Style Change Detection Task: Output Verifier')
-    parser.add_argument("-p", "--predictions", help="path to the dir holding the predicted labels", required=True)
-    parser.add_argument("-t", "--truth", help="path to the dir holding the true labels", required=True)
+    parser = argparse.ArgumentParser(description='PAN20 Style Change Detection Task: Evaluator')
+    parser.add_argument("-p", "--predictions", help="path to the dir holding two folders, dataset-wide and "\
+    "dataset-narrow, each holding the predicted labels for the respective subtask", required=True)
+    parser.add_argument("-t", "--truth", help="path to the dir holding the true labels, again structured "\
+    "in two folders: dataset-wide and dataset-narrow", required=True)
     parser.add_argument("-o", "--output", help="path to the dir to write the results to", required=True)
     args = parser.parse_args()
 
-    solutions = read_solution_files(args.predictions)
-    truth = read_ground_truth_files(args.truth)
+    solutions_narrow = read_solution_files(os.path.join(args.predictions, 'dataset-narrow'))
+    truth_narrow = read_ground_truth_files(os.path.join(args.truth, 'dataset-narrow'))
 
-    for k, v in {"task1_score": compute_task1_f1_score(truth, solutions),
-     "task2_score": compute_task2_f1_score(truth, solutions)}.items():
+    solutions_wide = read_solution_files(os.path.join(args.predictions, 'dataset-wide'))
+    truth_wide = read_ground_truth_files(os.path.join(args.truth, 'dataset-wide'))
+ 
+    task1_results = [compute_task1_f1_score(truth_narrow, solutions_narrow), compute_task1_f1_score(truth_wide, solutions_wide)]
+    task2_results = [compute_task2_f1_score(truth_narrow, solutions_narrow), compute_task2_f1_score(truth_wide, solutions_wide)]
+
+    for k, v in {"task1_score": statistics.mean(task1_results),
+     "task2_score": statistics.mean(task2_results)}.items():
         write_output(os.path.join(args.output, EV_OUT), k, v)
 
 if __name__ == "__main__":
