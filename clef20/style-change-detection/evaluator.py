@@ -2,7 +2,6 @@ import argparse
 import glob
 import json
 import os
-import statistics
 from itertools import chain
 from sklearn.metrics import f1_score
 
@@ -103,8 +102,8 @@ def main():
     task1_results = [compute_task1_f1_score(truth_narrow, solutions_narrow), compute_task1_f1_score(truth_wide, solutions_wide)]
     task2_results = [compute_task2_f1_score(truth_narrow, solutions_narrow), compute_task2_f1_score(truth_wide, solutions_wide)]
 
-    for k, v in {"task1_score": statistics.mean(task1_results),
-     "task2_score": statistics.mean(task2_results)}.items():
+    for k, v in {"task1_score": sum(task1_results)/len(task1_results),
+     "task2_score": sum(task2_results)/len(task2_results)}.items():
         write_output(os.path.join(args.output, EV_OUT), k, v)
 
 if __name__ == "__main__":
