@@ -11,16 +11,18 @@ The following evaluation measures are provided:
     - c@1 [Peñas and Rodrigo 2011; Stamatatos 2014]
     - f_05_u_score [Bevendorff et al. 2019]
 
+Systems will be evaluated, taking all of the measures into account.
+
 ## Formats
-The script requires two folders, one for the ground truth (gold standard)
-and one for the system predictions. Each folder should contain at least one,
-but potentially more files, that are formatted using the `jsonl`-convention,
-whereby each line should contain a valid json-string: e.g.
+The script requires two files, one for the ground truth (gold standard)
+and one for the system predictions. These files should be formatted using
+the `jsonl`-convention, whereby each line should contain a valid
+json-string: e.g.
 
 ``` json
-    {"problem_id": "1", "value": 0.123}
-    {"problem_id": "2", "value": 0.5}
-    {"problem_id": "3", "value": 0.888}
+    {"id": "1", "value": 0.123}
+    {"id": "2", "value": 0.5}
+    {"id": "3", "value": 0.888}
 ```
 
 Only files will be considered that:
@@ -28,13 +30,16 @@ Only files will be considered that:
 - are properly encoded as UTF-8.
 
 Please note:
-    * For the F1-score, all scores are will binarized using
+    * For the c@1, all scores are will binarized using
       the conventional thresholds:
         * score < 0.5 -> 0
-        * score > 0.5 -> 0
+        * score > 0.5 -> 1
     * A score of *exactly* 0.5, will be considered a non-decision.
-    * All answers which are present in the ground truth, but which
-      are *not* provided by the system, will automatically be set to 0.5.
+    * All problems which are present in the ground truth, but which
+      are *not* provided an answer to by the system, will automatically
+      be set to 0.5.
+    * Non-answers are removed for the F1 score calculation below, but they
+      are taken into account by the AUC score.
 
 ## Dependencies:
 - Python 3.6+ (we recommend the Anaconda Python distribution)
@@ -47,13 +52,15 @@ From the command line:
 >>> python pan20-verif-evaluator.py -i COLLECTION -a ANSWERS -o OUTPUT
 
 where
-    COLLECTION is the path to the main folder of the evaluation collection
-    ANSWERS is the path to the answers folder of a submitted method
+    COLLECTION is the path to the file with the ground truth
+    ANSWERS is the path to the answers file for a submitted method
     OUTPUT is the path to the folder where the results of the evaluation will be saved
 
 Example: 
 
->>> python pan20-verif-evaluator.py -i "/mydata/pan20-verif-development-corpus" -a "/mydata/pan20-answers" -o "/mydata/pan20-evaluation"
+>>> python pan20_verif_evaluator.py -i "datasets/test_truth/truth.jsonl" \
+        -a "out/answers.jsonl" \
+        -o "pan20-evaluation"
 
 ## References
 - E. Stamatatos, et al. Overview of the Author Identification
@@ -69,56 +76,22 @@ Example:
 """
 
 import argparse
-import glob
 import json
 import os
-from itertools import combinations
 
 import numpy as np
-
-from sklearn.metrics import f1_score
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, f1_score
 
 
 def binarize(y, threshold=0.5):
+    y = np.array(y)
+    y = np.ma.fix_invalid(y, fill_value=threshold)
     y[y >= threshold] = 1
     y[y < threshold] = 0
-
     return y
 
-def f1(true_y, pred_y, threshold=0.5):
-    """
-    Calculates the verification accuracy, assuming that every
-    `score >= 0.5` represents an attribution.
 
-    Parameters
-    ----------
-    prediction_scores : array [n_problems]
-
-        The predictions outputted by a verification system.
-        Assumes `0 >= prediction <=1`.
-
-    ground_truth_scores : array [n_problems]
-
-        The gold annotations provided for each problem.
-        Will typically be `0` or `1`.
-
-    Returns
-    ----------
-    acc = The number of correct attributions.
-
-    References
-    ----------
-        E. Stamatatos, et al. Overview of the Author Identification
-        Task at PAN 2014. CLEF (Working Notes) 2014: 877-897.
-    """
-    true_y = binarize(true_y, threshold=threshold)
-    pred_y = binarize(pred_y, threshold=threshold)
-
-    return f1_score(true_y, pred_y)
-
-
-def auc(true_y, pred_y, threshold=0.5):
+def auc(true_y, pred_y):
     """
     Calculates the AUC score (Area Under the Curve), a well-known
     scalar evaluation score for binary classifiers. This score
@@ -146,8 +119,10 @@ def auc(true_y, pred_y, threshold=0.5):
         Task at PAN 2014. CLEF (Working Notes) 2014: 877-897.
 
     """
-    true_y = binarize(true_y, threshold=threshold)
-    return roc_auc_score(true_y, pred_y)
+    try:
+        return roc_auc_score(true_y, pred_y)
+    except ValueError:
+        return 0.0
 
 
 def c_at_1(true_y, pred_y, threshold=0.5):
@@ -188,8 +163,6 @@ def c_at_1(true_y, pred_y, threshold=0.5):
 
     """
 
-    pred_y = binarize(pred_y, threshold=threshold)
-
     n = float(len(pred_y))
     nc, nu = 0.0, 0.0
 
@@ -202,18 +175,58 @@ def c_at_1(true_y, pred_y, threshold=0.5):
     return (1 / n) * (nc + (nu * nc / n))
 
 
-def f_05_u_score(true_y, pred_y, threshold=0.5, pos_label=1):
+def f1(true_y, pred_y):
+    """
+    Assesses verification performance, assuming that every
+    `score > 0.5` represents a same-author pair decision.
+    Note that all non-decisions (scores == 0.5) are ignored
+    by this metric.
+
+    Parameters
+    ----------
+    prediction_scores : array [n_problems]
+
+        The predictions outputted by a verification system.
+        Assumes `0 >= prediction <=1`.
+
+    ground_truth_scores : array [n_problems]
+
+        The gold annotations provided for each problem.
+        Will typically be `0` or `1`.
+
+    Returns
+    ----------
+    acc = The number of correct attributions.
+
+    References
+    ----------
+        E. Stamatatos, et al. Overview of the Author Identification
+        Task at PAN 2014. CLEF (Working Notes) 2014: 877-897.
+    """
+    true_y_filtered, pred_y_filtered = [], []
+
+    for true, pred in zip(true_y, pred_y):
+        if pred != 0.5:
+            true_y_filtered.append(true)
+            pred_y_filtered.append(pred)
+    
+    pred_y_filtered = binarize(pred_y_filtered)
+
+    return f1_score(true_y_filtered, pred_y_filtered)
+
+
+def f_05_u_score(true_y, pred_y, pos_label=1, threshold=0.5):
     """
     Return F0.5u score of prediction.
 
     :param true_y: true labels
     :param pred_y: predicted labels
-    :param threshold: indication for non-decisions
+    :param threshold: indication for non-decisions (default = 0.5)
     :param pos_label: positive class label (default = 1)
     :return: F0.5u score
     """
 
-    true_y = binarize(true_y, threshold=threshold)
+    pred_y = binarize(pred_y)
 
     n_tp = 0
     n_fn = 0
@@ -233,59 +246,62 @@ def f_05_u_score(true_y, pred_y, threshold=0.5, pos_label=1):
     return (1.25 * n_tp) / (1.25 * n_tp + 0.25 * (n_fn + n_u) + n_fp)
 
 
-def load_folder(folder):
+def load_file(fn):
     problems = {}
-    for fn in sorted(glob.glob(f'{folder}/*.jsonl')):
-        for line in open(fn):
-            d =  json.loads(line.strip())
-            problems[d['problem_id']] = d['value']
+    for line in open(fn):
+        d =  json.loads(line.strip())
+        if 'value' in d:
+            problems[d['id']] = d['value']
+        else:
+            problems[d['id']] = int(d['same'])
     return problems
 
 
-def evaluate_all(true_y, pred_y, threshold=0.5):
+def evaluate_all(true_y, pred_y):
     """
     Convenience function: calculates all PAN20 evaluation measures
-    and returns them as a dict
+    and returns them as a dict, including the 'overall' score, which
+    is the mean of the individual metrics (0 >= metric >= 1). All 
+    scores get rounded to three digits.
     """
 
-    results = {'f1':  f1(true_y, pred_y, threshold=threshold),
-               'auc': auc(true_y, pred_y, threshold=threshold),
-               'c@1': c_at_1(true_y, pred_y, threshold=threshold),
-               'F0.5u': f_05_u_score(true_y, pred_y, threshold=threshold)}
+    results = {'auc': auc(true_y, pred_y),
+               'c@1': c_at_1(true_y, pred_y),
+               'f_05_u': f_05_u_score(true_y, pred_y),
+               'F1': f1(true_y, pred_y)}
     
-    results['overall'] = np.mean(tuple(results.values()))
+    results['overall'] = np.mean(list(results.values()))
 
     for k, v in results.items():
         results[k] = round(v, 3)
 
     return results
 
+
 def main():
     parser = argparse.ArgumentParser(description='Evaluation script AA@PAN2020')
     parser.add_argument('-i', type=str,
-                        help='Path to the ground truth scores')
+                        help='Path to the jsonl-file with ground truth scores')
     parser.add_argument('-a', type=str,
-                        help='Path to answers folder (system prediction)')
+                        help='Path to the jsonl-file with the answers (system prediction)')
     parser.add_argument('-o', type=str, 
                         help='Path to output files')
-    parser.add_argument('-threshold', type=float, default=0.5,
-                        help='Binarization threshold (default=0.5)')
     args = parser.parse_args()
 
     # validate:
     if not args.i:
-        raise ValueError('The collection path is required')
+        raise ValueError('The ground truth path is required')
     if not args.a:
-        raise ValueError('The answers folder is required')
+        raise ValueError('The answers path is required')
     if not args.o:
-        raise ValueError('The output path is required')
+        raise ValueError('The output folder path is required')
     
     # load:
-    gt = load_folder(args.i)
-    pred = load_folder(args.a)
+    gt = load_file(f"{args.i}/truth.jsonl")
+    pred = load_file(f"{args.a}/answers.jsonl")
 
-    print(f'-> {len(gt)} problems in ground truth')
-    print(f'-> {len(pred)} solutions explicitly proposed')
+    print('->', len(gt), 'problems in ground truth')
+    print('->', len(pred), 'solutions explicitly proposed')
 
     # default missing problems to 0.5
     for probl_id in sorted(gt):
@@ -305,7 +321,7 @@ def main():
     assert len(gt) == len(pred)
 
     # evaluate:
-    results = evaluate_all(gt, pred, threshold=args.threshold)
+    results = evaluate_all(gt, pred)
     print(results)
 
     with open(args.o + os.sep + 'out.json', 'w') as f:

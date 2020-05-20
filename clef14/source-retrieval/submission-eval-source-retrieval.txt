@@ -1,0 +1,7 @@
+user="administrator"
+host="webis19.medien.uni-weimar.de"
+sshport="44400"
+userpw="webis.pan14"
+os="ubuntu"
+workingDir="/mnt/nfs/tira/data/pan14-evaluators/"
+cmd="python pan14-source-retrieval-eval.py $truthDir $outputDir/'evaluation.txt' $token"
