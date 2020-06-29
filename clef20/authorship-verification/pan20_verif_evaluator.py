@@ -326,6 +326,13 @@ def main():
 
     with open(args.o + os.sep + 'out.json', 'w') as f:
         json.dump(results, f, indent=4, sort_keys=True)
+    
+    with open(args.o + os.sep + 'evaluation.prototext', 'w') as f:
+        for metric, score in results.items():
+            f.write('measure {\n')
+            f.write(' key: "' + metric + '"\n')
+            f.write(' value: "' + str(score) + '"\n')
+            f.write('}\n')
 
 if __name__ == '__main__':
     main()
