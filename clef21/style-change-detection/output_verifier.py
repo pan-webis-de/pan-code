@@ -127,7 +127,7 @@ def get_problem_ids(input_folder):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='PAN20 Style Change Detection Task: Output Verifier')
+    parser = argparse.ArgumentParser(description='PAN21 Style Change Detection Task: Output Verifier')
     parser.add_argument('--output', type=str, help='folder containing output/solution files (json)', required=True)
     parser.add_argument('--input', type=str, help='folder containing input files for task (txt)', required=True)
     args = parser.parse_args()
