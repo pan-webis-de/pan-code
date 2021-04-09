@@ -96,12 +96,12 @@ def main():
     solutions= read_solution_files(args.predictions)
     truth = read_ground_truth_files(args.truth)
 
-    task1_results = compute_score_single_predictions(truth, solutions, 'multi-author')
+    task1_result = compute_score_single_predictions(truth, solutions, 'multi-author')
     task2_results = compute_score_multiple_predictions(truth, solutions, 'changes', labels=[0, 1])
     task3_results = compute_score_multiple_predictions(truth, solutions, 'paragraph-authors', labels=[1,2,3,4,5])
 
     for k, v in {
-        "task1_score": sum(task1_results)/len(task1_results),
+        "task1_score": task1_result,
         "task2_score": sum(task2_results)/len(task2_results),
         "task3_score": sum(task3_results)/len(task3_results)}.items():
         write_output(os.path.join(args.output, EV_OUT), k, v),
