@@ -102,8 +102,8 @@ def main():
 
     for k, v in {
         "task1_score": task1_result,
-        "task2_score": sum(task2_results)/len(task2_results),
-        "task3_score": sum(task3_results)/len(task3_results)}.items():
+        "task2_score": task2_results,
+        "task3_score": task3_results}.items():
         write_output(os.path.join(args.output, EV_OUT), k, v),
 
 
