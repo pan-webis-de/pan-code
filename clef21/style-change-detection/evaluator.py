@@ -98,7 +98,7 @@ def main():
 
     task1_result = compute_score_single_predictions(truth, solutions, 'multi-author')
     task2_results = compute_score_multiple_predictions(truth, solutions, 'changes', labels=[0, 1])
-    task3_results = compute_score_multiple_predictions(truth, solutions, 'paragraph-authors', labels=[1,2,3,4,5])
+    task3_results = compute_score_multiple_predictions(truth, solutions, 'paragraph-authors', labels=[1,2,3,4])
 
     for k, v in {
         "task1_score": task1_result,
