@@ -83,10 +83,13 @@ import numpy as np
 from sklearn.metrics import roc_auc_score, f1_score
 
 
-def binarize(y, threshold=0.5):
+def binarize(y, threshold=0.5, triple_valued=False):
     y = np.array(y)
     y = np.ma.fix_invalid(y, fill_value=threshold)
-    y[y >= threshold] = 1
+    if triple_valued:
+        y[y > threshold] = 1
+    else:
+        y[y >= threshold] = 1
     y[y < threshold] = 0
     return y
 
@@ -226,7 +229,7 @@ def f_05_u_score(true_y, pred_y, pos_label=1, threshold=0.5):
     :return: F0.5u score
     """
 
-    pred_y = binarize(pred_y)
+    pred_y = binarize(pred_y, triple_valued=True)
 
     n_tp = 0
     n_fn = 0
