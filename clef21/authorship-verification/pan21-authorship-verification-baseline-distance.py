@@ -57,6 +57,7 @@ from pan20_verif_evaluator import evaluate_all
 
 
 def cosine_sim(a, b):
+    print(a, b)
     return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 
@@ -97,16 +98,13 @@ def rescale(value, orig_min, orig_max, new_min, new_max):
 
 
 def correct_scores(scores, p1, p2):
-    def _x(scr):
-        for sc in scr:
-            if sc <= p1:
-                yield rescale(sc, 0, p1, 0, 0.49)
-            elif p1 < sc < p2:
-                yield 0.5
-            else:
-                yield rescale(sc, p2, 1, 0.51, 1)
-
-    return np.array(_x(scores))
+    for sc in scores:
+        if sc <= p1:
+            yield rescale(sc, 0, p1, 0, 0.49)
+        elif p1 < sc < p2:
+            yield 0.5
+        else:
+            yield rescale(sc, p2, 1, 0.51, 1)  # np.array(list
 
 
 def train(input_pairs, input_truth, model_directory, vocab_size, ngram_size, num_iterations, dropout):
@@ -161,9 +159,6 @@ def train(input_pairs, input_truth, model_directory, vocab_size, ngram_size, num
 
     similarities = np.array(similarities, dtype=np.float64)
     labels = np.array(labels, dtype=np.float64)
-
-    # kdeplot(similarities, label='orig cos sim')
-
     print('-> grid search p1/p2:')
     step_size = 0.01
     thresholds = np.arange(0.01, 0.99, step_size)
@@ -171,26 +166,14 @@ def train(input_pairs, input_truth, model_directory, vocab_size, ngram_size, num
 
     params = {}
     for p1, p2 in combs:
-        corrected_scores = correct_scores(similarities, p1=p1, p2=p2)
-        score = evaluate_all(pred_y=corrected_scores,
-                             true_y=labels)
+        corrected_scores = np.array(list(correct_scores(similarities, p1=p1, p2=p2)))
+        score = evaluate_all(pred_y=corrected_scores, true_y=labels)
         params[(p1, p2)] = score['overall']
     opt_p1, opt_p2 = max(params, key=params.get)
     print('optimal p1/p2:', opt_p1, opt_p2)
-    # plt.axvline(opt_p1, ls='--', c='darkgrey')
-    # plt.axvline(opt_p2, ls='--', c='darkgrey')
 
-    corrected_scores = correct_scores(similarities, p1=opt_p1, p2=opt_p2)
-    print('optimal score:', evaluate_all(pred_y=corrected_scores,
-                                         true_y=labels))
-    # kdeplot(corrected_scores, label='corr cos sim')
-    corr_p1, corr_p2 = correct_scores([opt_p1, opt_p2], p1=opt_p1, p2=opt_p2)
-    # plt.axvline(corr_p1, ls='--', c='darkgrey')
-    # plt.axvline(corr_p2, ls='--', c='darkgrey')
-    # plt.xlim([0, 1])
-    # plt.tight_layout()
-    # plt.savefig('kde.pdf')
-    # plt.clf()
+    corrected_scores = np.array(list(correct_scores(similarities, p1=opt_p1, p2=opt_p2)))
+    print('optimal score:', evaluate_all(pred_y=corrected_scores, true_y=labels))
 
     print('-> determining optimal threshold')
     scores = []
@@ -208,16 +191,18 @@ def train(input_pairs, input_truth, model_directory, vocab_size, ngram_size, num
     print(f'Dev results -> F1={max_f1} at th={max_th}')
 
     pickle.dump(vectorizer, open(model_directory / 'vectorizer.pickle', 'wb'))
-    pickle.dump(rnd_feature_idxs, open(model_directory / 'rnd_feature_idxs.pickle', 'wb'))
     pickle.dump(opt_p1, open(model_directory / 'opt_p1.pickle', 'wb'))
     pickle.dump(opt_p2, open(model_directory / 'opt_p2.pickle', 'wb'))
+    if num_iterations:
+        pickle.dump(rnd_feature_idxs, open(model_directory / 'rnd_feature_idxs.pickle', 'wb'))
 
 
 def test(test_pairs, output_dir, model_directory, num_iterations):
     vectorizer = pickle.load(open(model_directory / 'vectorizer.pickle', 'rb'))
-    rnd_feature_idxs = pickle.load(open(model_directory / 'rnd_feature_idxs.pickle', 'rb'))
     opt_p1 = pickle.load(open(model_directory / 'opt_p1.pickle', 'rb'))
     opt_p2 = pickle.load(open(model_directory / 'opt_p2.pickle', 'rb'))
+    if num_iterations:
+        rnd_feature_idxs = pickle.load(open(model_directory / 'rnd_feature_idxs.pickle', 'rb'))
 
     print('-> calculating test similarities')
     with open(output_dir / 'answers.jsonl', 'w') as outf:
@@ -234,7 +219,7 @@ def test(test_pairs, output_dir, model_directory, num_iterations):
             else:
                 similarity = cosine_sim(x1, x2)
 
-            similarity = correct_scores([similarity], p1=opt_p1, p2=opt_p2)[0]
+            similarity = np.array(list(correct_scores([similarity], p1=opt_p1, p2=opt_p2)))[0]
             r = {'id': problem_id, 'value': similarity}
             outf.write(json.dumps(r) + '\n')
 
@@ -251,7 +236,7 @@ def main():
     parser.add_argument('-i', '--test_dir', type=str, help='Path to the directory that contains the test pairs.jsonl')
     parser.add_argument('-o', '--output', type=str, help='Path to the output folder for the predictions.\
                                                                          (Will be overwritten if it exist already.)')
-    parser.add_argument('--model_dir', type=str, default='./model-data', help='Path to the directory storing the model')
+    parser.add_argument('--model_dir', type=str, default='./baseline-distance-data', help='Path to the directory storing the model')
 
     # algorithmic settings:
     parser.add_argument('-seed', default=2020, type=int, help='Random seed')
@@ -278,7 +263,7 @@ def main():
               args.vocab_size, args.ngram_size, args.num_iterations, args.dropout)
 
     else:
-        if not args.input_pairs or not args.input_truth:
+        if not args.test_dir or not args.output:
             print("STOP. Missing required parameters: --test_dir or --output")
             exit(1)
         if not model_directory.exists():
@@ -288,7 +273,8 @@ def main():
         output_dir = Path(args.output)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        test(args.test_pairs / 'pairs.jsonl', output_dir / 'answers.jsonl', model_directory, args.num_iterations)
+        test(Path(args.test_dir) / 'pairs.jsonl',
+             Path(output_dir), model_directory, args.num_iterations)
 
 
 if __name__ == '__main__':
