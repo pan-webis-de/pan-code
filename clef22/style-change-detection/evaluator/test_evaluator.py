@@ -13,6 +13,35 @@ class EvaluatorTest(unittest.TestCase):
         f1_score = evaluator.compute_score_multiple_predictions(truth, solution, 'changes', labels=[0,1])
         self.assertAlmostEqual(f1_score, 1)
 
+    def test_jer(self):
+        truth = {'1': {'paragraph-authors': [1, 2, 3]}, '2': {'paragraph-authors': [1, 1, 2, 2, 2]}}
+        solution = {'1': {'paragraph-authors': [1, 2, 3]}, '2': {'paragraph-authors': [1, 1, 2, 2, 2]}}
+        jer_score, _ = evaluator.compute_secondary_metrics(truth, solution, 'paragraph-authors')
+        self.assertAlmostEqual(jer_score, 0)
+
+    def test_jer2(self):
+        truth = {'1': {'paragraph-authors': [1, 2]}}
+        solution = {'1': {'paragraph-authors': [1, 1]}}
+        jer_score, _ = evaluator.compute_secondary_metrics(truth, solution, 'paragraph-authors')
+        self.assertAlmostEqual(jer_score, 0.75)
+
+    def test_der(self):
+        truth = {'1': {'paragraph-authors': [1, 2, 3]}, '2': {'paragraph-authors': [1, 1, 2, 2, 2]}}
+        solution = {'1': {'paragraph-authors': [1, 2, 3]}, '2': {'paragraph-authors': [1, 1, 2, 2, 2]}}
+        _, der_score = evaluator.compute_secondary_metrics(truth, solution, 'paragraph-authors')
+        self.assertAlmostEqual(der_score, 0)
+
+    def test_der2(self):
+        truth = {'1': {'paragraph-authors': [1, 2]}}
+        solution = {'1': {'paragraph-authors': [1, 1]}}
+        _, der_score = evaluator.compute_secondary_metrics(truth, solution, 'paragraph-authors')
+        self.assertAlmostEqual(der_score, 0.75)
+
+
+
+    def test_der2(self):
+        pass
+
     def test_extract_task_results(self):
         task1_result = evaluator.extract_task_results(self.truth, self.solution, 'changes')
         task2_result = evaluator.extract_task_results(self.truth, self.solution, 'paragraph-authors')
