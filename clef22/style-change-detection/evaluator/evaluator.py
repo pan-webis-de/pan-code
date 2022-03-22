@@ -121,6 +121,7 @@ def contingency_matrix(ref_labels: np.array, sys_labels: np.array) -> np.array:
 
 def compute_der(ref: np.array, cm: np.array, ref_idx: np.array, sys_idx: np.array, reverse: bool = False) -> float:
     """
+    Code by Benedikt Bönninghoff <benedikt.boenninghoff@rub.de>
     Computes the diarization error rate:
         DER = (reference length - optimal matches) / reference length
 
@@ -130,7 +131,7 @@ def compute_der(ref: np.array, cm: np.array, ref_idx: np.array, sys_idx: np.arra
     :param sys_idx: corresponding sys indices giving the optimal assignment
     :param reverse: return diarization accuracy rate "optimal matches / reference length"
     :return: diarization error between 0 and 1
-    Code by Benedikt Bönninghoff <benedikt.boenninghoff@rub.de>
+
     """
     ref_total_length = ref.shape[0]
     optimal_match_overlap = cm[ref_idx, sys_idx].sum()
@@ -144,6 +145,8 @@ def compute_der(ref: np.array, cm: np.array, ref_idx: np.array, sys_idx: np.arra
 
 def compute_jer(ref: np.array, sys: np.array, cm: np.array, ref_idx: np.array, sys_idx: np.array, reverse: bool = False) -> np.array:
     """
+    Code by Benedikt Bönninghoff <benedikt.boenninghoff@rub.de>
+
     Assume we have N reference authors and M system authors. An optimal mapping between authors is determined using
     the Hungarian algorithm so that each reference author is paired with at most one system author.
     Then, for each reference author (ref_a) the author-specific Jaccard error rate is computed w.r.t. the
@@ -161,7 +164,6 @@ def compute_jer(ref: np.array, sys: np.array, cm: np.array, ref_idx: np.array, s
     :param sys_idx: corresponding sys indices giving the optimal assignment
     :param reverse: return Jaccard similarity "intersection(ref_a, sys_a) / union(ref_a, sys_a)"
     :return: jaccard error rate between 0 and 1
-    Code by Benedikt Bönninghoff <benedikt.boenninghoff@rub.de>
     """
 
     # iterate over all reference authors
@@ -200,13 +202,13 @@ def compute_jer(ref: np.array, sys: np.array, cm: np.array, ref_idx: np.array, s
 
 def compute_secondary_metrics(ref_list: dict, sys_list: dict, task_key: str, reverse: bool = False) -> tuple:
     """
-    Computes metrics
+    Code by Benedikt Bönninghoff <benedikt.boenninghoff@rub.de>
+    Computes secondary metrics (jer and der)
     :param task_key: key used in solution file to reference current task
     :param ref_list: list of arrays for reference labels
     :param sys_list: list of arrays for system labels
     :param reverse: compute "diarization accuracy rate" and "Jaccard similarity"
     :return: tuple with metrics
-    Code by Benedikt Bönninghoff <benedikt.boenninghoff@rub.de>
     """
 
     ref_list, sys_list = extract_task_results(ref_list, sys_list, task_key)
