@@ -67,7 +67,8 @@ def compute_score_multiple_predictions(truth_values: dict, solution_values: dict
     # extract truth and solution values in suitable format
     truth, solution = extract_task_results(truth_values, solution_values, key)
     # lists have to be flattened first
-    return f1_score(list(chain.from_iterable(truth)), list(chain.from_iterable(solution)), average='macro', labels=labels)
+    return f1_score(list(chain.from_iterable(truth)), list(chain.from_iterable(solution)), average='macro',
+labels=labels, zero_division=0)
 
 
 def sort_labels(labels: list) -> np.array:
