@@ -46,13 +46,12 @@ def extract_task_results(truth: dict, solutions: dict, task: str) -> tuple:
     """
     all_solutions = []
     all_truth = []
-    for problem_id, truth_instance in truth.items():
+    for problem_id, truth_instance in sorted(truth.items()):
+        if len(truth_instance[task]) != len(solutions[problem_id][task]):
+          print(f"Solution length for problem {problem_id} is not correct, skipping.")
+          continue
         all_truth.append(truth_instance[task])
-        try:
-            all_solutions.append(solutions[problem_id][task])
-        except KeyError as _:
-            print("No solution file found for problem %s, exiting." % problem_id)
-            exit(0)
+        all_solutions.append(solutions[problem_id][task])
     return all_truth, all_solutions
 
 
@@ -263,17 +262,37 @@ def main():
 
     task1_solutions = read_solution_files(os.path.join(args.predictions, 'dataset1'))
     task1_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset1'))
-    task1_f1 = compute_score_multiple_predictions(task1_truth, task1_solutions, 'changes', labels=[0, 1])
+
+    print(len(task1_solutions), len(task1_truth))
+    try:
+       task1_f1 = compute_score_multiple_predictions(task1_truth, task1_solutions, 'changes', labels=[0, 1])
+    except KeyError as _:
+       task1_f1 = None
+       print("No solution file found for one or more problems, please check the output. Exiting task 1.")
+
 
     task2_solutions = read_solution_files(os.path.join(args.predictions, 'dataset2'))
     task2_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset2'))
-    task2_f1 = compute_score_multiple_predictions(task2_truth, task2_solutions, 'paragraph-authors', labels=[1,2,3,4,5])
-
-    task2_jer, task2_der = compute_secondary_metrics(ref_list=task2_truth, sys_list=task2_solutions, task_key='paragraph-authors', reverse=True)
+    try:
+       task2_f1 = compute_score_multiple_predictions(task2_truth, task2_solutions, 'paragraph-authors', labels=[1,2,3,4,5])
+    except KeyError as _:
+       task2_f1 = None
+       print("No solution file found for one or more problems, please check the output. Exiting task 2.")
+       
+    try:
+       task2_jer, task2_der = compute_secondary_metrics(ref_list=task2_truth, sys_list=task2_solutions, task_key='paragraph-authors', reverse=True)
+    except KeyError as _:
+       task2_jer = None
+       task2_der = None
+       print("No solution file found for one or more problems, please check the output. Exiting task 2.")
 
     task3_solutions = read_solution_files(os.path.join(args.predictions, 'dataset3'))
     task3_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset3'))
-    task3_f1 = compute_score_multiple_predictions(task3_truth, task3_solutions, 'changes', labels=[0, 1])
+    try:
+       task3_f1 = compute_score_multiple_predictions(task3_truth, task3_solutions, 'changes', labels=[0, 1])
+    except KeyError as _:
+       task3_f1 = None
+       print("No solution file found for one or more problems, please check the output. Exiting task 3.")
 
     for k, v in {
         "task1_f1_score": task1_f1,
