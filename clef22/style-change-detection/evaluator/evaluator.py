@@ -263,7 +263,6 @@ def main():
     task1_solutions = read_solution_files(os.path.join(args.predictions, 'dataset1'))
     task1_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset1'))
 
-    print(len(task1_solutions), len(task1_truth))
     try:
        task1_f1 = compute_score_multiple_predictions(task1_truth, task1_solutions, 'changes', labels=[0, 1])
     except KeyError as _:
