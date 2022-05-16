@@ -261,7 +261,7 @@ def main():
     args = parser.parse_args()
 
     task1_solutions = read_solution_files(os.path.join(args.predictions, 'dataset1'))
-    task1_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset1'))
+    task1_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset1/test'))
 
     try:
        task1_f1 = compute_score_multiple_predictions(task1_truth, task1_solutions, 'changes', labels=[0, 1])
@@ -271,7 +271,7 @@ def main():
 
 
     task2_solutions = read_solution_files(os.path.join(args.predictions, 'dataset2'))
-    task2_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset2'))
+    task2_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset2/test'))
     try:
        task2_f1 = compute_score_multiple_predictions(task2_truth, task2_solutions, 'paragraph-authors', labels=[1,2,3,4,5])
     except KeyError as _:
@@ -286,7 +286,7 @@ def main():
        print("No solution file found for one or more problems, please check the output. Exiting task 2.")
 
     task3_solutions = read_solution_files(os.path.join(args.predictions, 'dataset3'))
-    task3_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset3'))
+    task3_truth = read_ground_truth_files(os.path.join(args.truth, 'dataset3/test'))
     try:
        task3_f1 = compute_score_multiple_predictions(task3_truth, task3_solutions, 'changes', labels=[0, 1])
     except KeyError as _:
