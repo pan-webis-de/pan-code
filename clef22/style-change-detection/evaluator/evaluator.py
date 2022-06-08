@@ -296,9 +296,9 @@ def main():
     for k, v in {
         "task1_f1_score": task1_f1,
         "task2_f1_score": task2_f1,
+        "task3_f1_score": task3_f1,
         "task2_der": task2_der,
-        "task2_jer": task2_jer,
-        "task3_f1_score": task3_f1}.items():
+        "task2_jer": task2_jer}.items():
         write_output(os.path.join(args.output, EV_OUT), k, v),
 
 
