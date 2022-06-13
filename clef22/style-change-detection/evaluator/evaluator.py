@@ -8,7 +8,7 @@ from scipy.optimize import linear_sum_assignment
 import numpy as np
 from scipy.sparse import coo_matrix
 
-EV_OUT = "evaluation.txt"
+EV_OUT = "evaluation.prototext"
 
 def read_solution_files(solutions_folder: str) -> dict:
     """
