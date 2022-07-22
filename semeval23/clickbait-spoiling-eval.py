@@ -80,16 +80,24 @@ def parse_args():
     parser.add_argument('--ground_truth_classes', type=str, help='The ground truth classes used to evaluate submissions to task 1 (spoiler type generation). For the evaluation of task 2 (spoiler generation), this can be different from "--ground_truth_spoilers" to evaluate the effectiveness using real spoiler predictions.', required=False)
     parser.add_argument('--ground_truth_spoilers', type=str, help='The ground truth spoilers used to evaluate submissions to task 2 (spoiler generation).', required=False)
     parser.add_argument('--task', type=str, help='The task to evaluate. Choose 1 (spoiler type classification) or 2 (spoiler generation).', choices=['1', '2'], required=True)
+    parser.add_argument('--output_prototext', type=str, help='Write evalualuation results as prototext file to this location.', required=False)
 
 
     return parser.parse_args()
 
-def eval_task_1(input_run, ground_truth_classes):
+def eval_task_1(input_run, ground_truth_classes, output_file):
     input_run = spoiler_predictions_to_map(input_run)
+    ret = None
     if ground_truth_spoilers == None:
         success('No ground-truth is passed. I tested the input run and the input run is valid.')
+        ret = "measure{\n  key: \"result-size\"\n  value: \"" + str(len(input_run.keys())) + "\"\n}"
+        
     else:
         error('ToDo: The evaluator currently only checks if the format is valid')
+
+    if output_file:
+        with open(output_file, 'w') as f:
+            f.write(ret)
 
 def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers):
     input_run = spoiler_generations_to_map(input_run)
@@ -105,7 +113,7 @@ if __name__ == '__main__':
     ground_truth_spoilers = None if not args.ground_truth_spoilers else load_json_lines(args.ground_truth_spoilers)
 
     if args.task == '1':
-        eval_task_1(input_run, ground_truth_classes)
+        eval_task_1(input_run, ground_truth_classes, args.output_prototext)
     elif args.task == '2':
         eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers)
     else:
