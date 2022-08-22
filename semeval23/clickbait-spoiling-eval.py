@@ -28,49 +28,55 @@ def load_json_lines(f):
     success('The file ' + f + ' is in JSONL format.')
     return ret
 
-def spoiler_predictions_to_map(l):
+def spoiler_predictions_to_map(l, error=error):
     if l is None or len(l) == 0:
         error('Spoiler predictions are empty.')
     uuids = []
 
     for i in l:
-        if 'uuid' not in i.keys() or 'spoiler_type' not in i.keys():
-            error('Spoiler predictions do not have all required fields. Expected fields "uuid" and "spoiler_type". Got: ' + str(i))
+        if 'uuid' not in i.keys() or 'spoilerType' not in i.keys():
+            error('Spoiler predictions do not have all required fields. Expected fields "uuid" and "spoilerType". Got: ' + str(i))
+            return
         uuids += [i['uuid']]
 
     if len(l) != len(set(uuids)):
             error('Spoiler predictions have dupliates. I found ' + str(len(l)) + ' entries but only ' + str(len(set(uuids))) + ' unique uuids.')
+            return
 
     success('Spoiler predictions have correct format. Found ' + str(len(l)))
-    return {i['uuid']: i['spoiler_type'] for i in l}
+    return {i['uuid']: i['spoilerType'] for i in l}
 
-def normalize_spoiler_generation(i):
-    if 'uuid' not in i or ('generic_spoiler' not in i and ('phrase_spoiler' not in i or 'passage_spoiler' not in i or 'multi_spoiler' not in i)):
-        error('Spoiler generation does not have all required fields. Expected fields are uuid and either phrase_spoiler, passage_spoiler, multi_spoiler, or generic_spoiler. Got: ' + str(i))
+def normalize_spoiler_generation(i, error):
+    if 'uuid' not in i or 'spoiler' not in i:
+        error('Spoiler generation does not have all required fields. Expected fields are uuid and spoiler. Got: ' + str(i))
+        return
 
-    ret = {'uuid': i['uuid']}
+    return {i['uuid']: i['spoiler']}
 
-    for t in ['phrase_spoiler', 'passage_spoiler', 'multi_spoiler']:
-        ret[t] = i.get(t, i.get('generic_spoiler', None))
-
-    return ret
-
-def spoiler_generations_to_map(l):
+def spoiler_generations_to_map(l, error=error):
     if l is None or len(l) == 0:
         error('Spoiler predictions are empty.')
     uuids = []
 
     for i in l:
-        i = normalize_spoiler_generation(i)
-        uuids += [i['uuid']]
+        i = normalize_spoiler_generation(i, error)
+        if not i:
+            return
+        uuids += list(i.keys())
 
     if len(l) != len(set(uuids)):
             error('Spoiler generations have dupliates. I found ' + str(len(l)) + ' entries but only ' + str(len(set(uuids))) + ' unique uuids.')
 
-    l = [normalize_spoiler_generation(i) for i in l]
+    l = [normalize_spoiler_generation(i, error) for i in l]
 
     success('Spoiler generations have correct format. Found ' + str(len(l)))
-    return {i['uuid']: i for i in l}
+    ret = {}
+    for i in l:
+        for k, v in i.items():
+            assert k not in ret
+            ret[k] = v
+    
+    return ret
 
 
 def parse_args():
