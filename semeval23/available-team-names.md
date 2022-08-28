@@ -1,0 +1,150 @@
+# List of Available Team Names for the Clickbait Spoiling Task at SemEval 2023
+
+Please select a [list of fictional journalists](https://en.wikipedia.org/wiki/List_of_fictional_journalists)
+
+- Chick Adams
+- Ichabod Adams
+- Nick Alexander
+- Amy Amanda Allen
+- Celeste Anders
+- Matt Anders
+- Ben Andrews
+- Larry Appleton
+- Tally Atwater
+- Matt Bai
+- Billy Batson
+- Ted Baxter
+- Howard Beale
+- D.X. Beaumont
+- Paul Beltzer
+- Cy Bennett
+- Maddy Bowen
+- Tom Bradford
+- Carrie Bradshaw
+- Kent Brockman
+- Murphy Brown
+- Anson Bryson
+- Clint Buchanan
+- Walter Burns
+- Michelle Capra
+- Snapper Carr
+- Tess Mercer
+- Ben Caxton
+- Miles Clarkson
+- Harris Claibourne
+- Stephen Colbert
+- Emily Cowles
+- Jefferson Crowley
+- Chloe Sullivan
+- Pepper Dennis
+- Bryan Denton
+- Art Donovan
+- Jefferson Drum
+- Brooke English
+- George Faber
+- Vernon Fenwick
+- I. M. Fletcher
+- Jack Flood
+- Mr. Fosdick
+- Kermit the Frog
+- Grant Gabriel
+- Gallegher
+- Walter Wichita Garrett
+- Pat Garrison
+- Rory Gilmore
+- Mark Grainger
+- Lou Grant
+- Ben Gregory
+- Tom Grunick
+- Jackie Harvey
+- Bill Hastings
+- Nancy Hicks-Gribble
+- Jennifer Horton
+- J. Jonah Jameson
+- Rick Jason
+- Sierra Jennings
+- Spider Jerusalem
+- Hildy Johnson
+- Tom Jumbo-Grumbo
+- Charles Foster Kane
+- Clark Kent
+- John King
+- Kit Kittredge
+- Klugie
+- Alexander Knox
+- Carl Kolchak
+- Lois Lane
+- John Larsen
+- Adam MacLean
+- Paul Marino
+- Mark Markin
+- Monique Marmelstein
+- Doris Martin
+- Steve Martin
+- Christine Massey
+- Willie Maxwell
+- Jack McEvoy
+- Will McAvoy
+- Percy Mercy
+- Sam Miller
+- William Miller
+- Trudy Monk
+- Morbo the Annihilator
+- Paul Morgan
+- Les Nessman
+- Billie Newman
+- Trevor Newsworthy
+- Tyra Nordbo
+- Scott Norris
+- Bill Norton
+- Jimmy Olsen
+- Kelly O'Donnell
+- April O'Neil
+- Nic Pappas
+- Dion Patrick
+- Dick Preston
+- Miranda Priestly
+- Sweet Polly Purebred
+- Margaret Pynchon
+- Lloyd Ramsey
+- Mickey Riley
+- Jack Ryder
+- Andrea Sachs
+- Vic Sage
+- Murray Scarvi
+- Robin Scherbatsky
+- Lou Sheldon
+- Ruth Sherwood
+- Diane Simmons
+- Sabrina Spellman
+- Brenda Starr
+- Dave Tabak
+- Tricia Takanawa
+- Chloe Talbot
+- Danny Taylor
+- Paul Templin
+- Tom Tucker
+- Hal Towne
+- Abby Townsend
+- Frankly Unctuous
+- Ron Updyke
+- Vicki Vale
+- Linda van Schoonhoven
+- Dan Vasser
+- Tony Vincenzo
+- Bob Wallace
+- Mr. Wallace
+- Nicole Walker
+- John Boy Walton
+- Herb Welch
+- Trinity Wells
+- Perry White
+- Francis Wilde
+- Cameron "Buck" Williams
+- Duke William
+- Steve Wilson
+- Jamie Campbell
+- Jack Deveraux
+- Kara Zor'El 
+- Kat Grant
+- Kate Ripperton
