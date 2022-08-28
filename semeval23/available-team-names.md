@@ -1,6 +1,6 @@
 # List of Available Team Names for the Clickbait Spoiling Task at SemEval 2023
 
-Please select a [list of fictional journalists](https://en.wikipedia.org/wiki/List_of_fictional_journalists)
+Please select a team name from this [list of fictional journalists](https://en.wikipedia.org/wiki/List_of_fictional_journalists).
 
 - Chick Adams
 - Ichabod Adams
