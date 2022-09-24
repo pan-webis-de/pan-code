@@ -1,4 +1,4 @@
-IMAGE_VERSION=0.0.9
+IMAGE_VERSION=0.0.10
 
 build-docker-image:
 	docker build -t webis/pan-clickbait-spoiling-evaluator:${IMAGE_VERSION} .
