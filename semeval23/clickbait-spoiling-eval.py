@@ -138,13 +138,13 @@ def create_protobuf_for_task_1(actual, expected):
 def eval_task_1(input_run, ground_truth_classes, output_file):
     input_run = spoiler_predictions_to_map(input_run)
     ret = None
-    if ground_truth_spoilers == None:
+    if ground_truth_classes == None:
         success('No ground-truth is passed. I tested the input run and the input run is valid.')
         ret = to_prototext({"result-size": len(input_run.keys())})
         
     else:
-        ground_truth_spoilers = spoiler_predictions_to_map(ground_truth_spoilers, field='tags')
-        ret = create_protobuf_for_task_1(input_run, ground_truth_spoilers)
+        ground_truth_classes = spoiler_predictions_to_map(ground_truth_classes, field='tags')
+        ret = create_protobuf_for_task_1(input_run, ground_truth_classes)
 
     if output_file:
         with open(output_file, 'w') as f:
