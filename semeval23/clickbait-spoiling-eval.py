@@ -224,7 +224,7 @@ def create_protobuf_for_task_2(actual, expected):
         'missing-predictions': missing_predictions
     })
 
-def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers):
+def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_file):
     input_run = spoiler_generations_to_map(input_run)
     if ground_truth_spoilers == None:
         ret = to_prototext({"result-size": len(input_run.keys())})
@@ -246,7 +246,7 @@ if __name__ == '__main__':
     if args.task == '1':
         eval_task_1(input_run, ground_truth_classes, args.output_prototext)
     elif args.task == '2':
-        eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers)
+        eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, args.output_prototext)
     else:
         error('Unknown task. Expected 1 or 2. Got: ' + str(args.task))
 
