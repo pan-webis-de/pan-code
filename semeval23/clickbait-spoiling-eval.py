@@ -2,7 +2,9 @@
 
 import argparse
 from os.path import exists
+from glob import glob
 from os.path import isdir
+from sklearn.metrics import balanced_accuracy_score
 import json
 
 def error(msg):
@@ -38,14 +40,14 @@ def load_json_lines(f):
     success('The file ' + f + ' is in JSONL format.')
     return ret
 
-def spoiler_predictions_to_map(l, error=error):
+def spoiler_predictions_to_map(l, error=error, field='spoilerType'):
     if l is None or len(l) == 0:
         error('Spoiler predictions are empty.')
     uuids = []
 
     for i in l:
-        if 'uuid' not in i.keys() or 'spoilerType' not in i.keys():
-            error('Spoiler predictions do not have all required fields. Expected fields "uuid" and "spoilerType". Got: ' + str(i))
+        if 'uuid' not in i.keys() or field not in i.keys():
+            error(f'Spoiler predictions do not have all required fields. Expected fields "uuid" and "{field}". Got: ' + str(i))
             return
         uuids += [i['uuid']]
 
@@ -54,7 +56,7 @@ def spoiler_predictions_to_map(l, error=error):
             return
 
     success('Spoiler predictions have correct format. Found ' + str(len(l)))
-    return {i['uuid']: i['spoilerType'] for i in l}
+    return {i['uuid']: i[field] if type(i[field]) is not list else i[field][0] for i in l}
 
 def normalize_spoiler_generation(i, error):
     if 'uuid' not in i or 'spoiler' not in i:
@@ -101,15 +103,48 @@ def parse_args():
 
     return parser.parse_args()
 
+def to_prototext(d):
+    ret = ''
+    
+    for k, v in d.items():
+        ret += 'measure{\n  key: "' + str(k) + '"\n  value: "' + str(v) + '"\n}\n'
+    
+    return ret.strip()
+
+def create_protobuf_for_task_1(actual, expected):
+    keys = sorted(actual.keys())
+    missing_predictions = 0
+    
+    y_true = []
+    y_pred = []
+    
+    for k in keys:
+        y_true += [expected[k]]
+        
+        if k in actual:
+            y_pred += [actual[k]]
+        else:
+            missing_predictions += 1
+            y_pred += ['']
+    
+    balanced_accuracy_score
+
+    return to_prototext({
+        "result-size": len(keys),
+        'balanced-accuracy': balanced_accuracy_score(y_true, y_pred),
+        'missing_predictions': missing_predictions
+    })
+
 def eval_task_1(input_run, ground_truth_classes, output_file):
     input_run = spoiler_predictions_to_map(input_run)
     ret = None
     if ground_truth_spoilers == None:
         success('No ground-truth is passed. I tested the input run and the input run is valid.')
-        ret = "measure{\n  key: \"result-size\"\n  value: \"" + str(len(input_run.keys())) + "\"\n}"
+        ret = to_prototext({"result-size": len(input_run.keys())})
         
     else:
-        error('ToDo: The evaluator currently only checks if the format is valid')
+        ground_truth_spoilers = spoiler_predictions_to_map(ground_truth_spoilers, field='tags')
+        ret = create_protobuf_for_task_1(input_run, ground_truth_spoilers)
 
     if output_file:
         with open(output_file, 'w') as f:
