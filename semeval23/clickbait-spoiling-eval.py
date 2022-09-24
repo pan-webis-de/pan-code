@@ -186,11 +186,16 @@ def bleu_score(truth, prediction):
     write_dict = {'single_scores': {}, 'scores': {}}
 
     for i in range(len(truth)):
-        real_answer = truth[i].replace('\n', '')
-        pred_answer = prediction[i].replace('\n', '')
+        real_answer = truth[i]
+        if type(real_answer) is list:
+            real_answer = ' '.join(real_answer)
 
-        lem_truth_tokens = stopfilter(word_tokenize(real_answer))
-        lem_prediction_tokens = stopfilter(word_tokenize(pred_answer))
+        pred_answer = prediction[i]
+        if type(pred_answer) is list:
+            pred_answer = ' '.join(pred_answer)
+
+        lem_truth_tokens = stopfilter(word_tokenize(real_answer.replace('\n', '')))
+        lem_prediction_tokens = stopfilter(word_tokenize(pred_answer.replace('\n', '')))
         i_lem_score = make_score(lem_truth_tokens, lem_prediction_tokens)
         lem_score += i_lem_score
 
