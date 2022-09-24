@@ -47,3 +47,7 @@ The metrics we chose are BLEU-4, METEOR 1.5 and BERTScore.
 - Build the docker image via `make build-docker-image`
 - Publish the docker image via `make publish-docker-image`
 
+## Integration in TIRA
+
+Add this to TIRA via the image `webis/pan-clickbait-spoiling-evaluator:0.0.3` and the command `bash -c '/clickbait-spoiling-eval.py --task 1 --ground_truth_classes $inputDataset --input_run $inputRun --output_prototext ${outputDir}/evaluation.prototext'`.
+

@@ -2,6 +2,7 @@
 
 import argparse
 from os.path import exists
+from os.path import isdir
 import json
 
 def error(msg):
@@ -17,6 +18,15 @@ def load_json_lines(f):
 
     ret = []
     num = 1
+    
+    if isdir(f):
+        f = glob(f + '/*.json*')
+        
+        if len(f) != 1:
+            error('The input is an directory that contains multiple json files. Please create only a single json file. Got ' + str(f))
+        
+        f = f[0]
+    
     with open(f, 'r') as inp:
         for l in inp:
             try:
