@@ -28,7 +28,7 @@ measure{
   value: "1.0"
 }
 measure{
-  key: "missing_predictions"
+  key: "missing-predictions"
   value: "0"
 }'''
     inp = cse.spoiler_predictions_to_map([{"uuid": "1", "tags": ["passage"]}, {"uuid": "2", "tags": ["phrase"]}, {"uuid": "3", "tags": ["multi"]}], lambda x: None, 'tags')
@@ -48,7 +48,7 @@ measure{
   value: "0.75"
 }
 measure{
-  key: "missing_predictions"
+  key: "missing-predictions"
   value: "0"
 }'''
     a = cse.spoiler_predictions_to_map([{"uuid": "1", "tags": ["passage"]}, {"uuid": "2", "tags": ["phrase"]}, {"uuid": "3", "tags": ["multi"]}], lambda x: None, 'tags')

@@ -6,6 +6,10 @@ from glob import glob
 from os.path import isdir
 from sklearn.metrics import balanced_accuracy_score
 import json
+from nltk.translate.bleu_score import sentence_bleu
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+import string
 
 def error(msg):
     print('  [\033[91mx\033[0m] ' + msg)
@@ -126,13 +130,11 @@ def create_protobuf_for_task_1(actual, expected):
         else:
             missing_predictions += 1
             y_pred += ['']
-    
-    balanced_accuracy_score
 
     return to_prototext({
         "result-size": len(keys),
         'balanced-accuracy': balanced_accuracy_score(y_true, y_pred),
-        'missing_predictions': missing_predictions
+        'missing-predictions': missing_predictions
     })
 
 def eval_task_1(input_run, ground_truth_classes, output_file):
@@ -150,12 +152,85 @@ def eval_task_1(input_run, ground_truth_classes, output_file):
         with open(output_file, 'w') as f:
             f.write(ret)
 
+def bleu_score(truth, prediction):
+    """
+    From: https://github.com/webis-de/acl22-clickbait-spoiling/blob/470f488bd532da1e75812de6a94458ec80fdb2b9/evaluation/meteor-metric.py#L72
+    """
+
+    def stopfilter(tokens):
+        tmp = [token for token in tokens if token not in stopwords.words('english')]
+        res = [token.lower() for token in tmp if token not in string.punctuation]
+        return res
+
+    def make_score(trut, predi):
+        if len(trut) > 3 and len(predi) > 3:
+            weights = (1./4., 1./4., 1./4., 1./4.)
+        elif len(trut) > 2 and len(predi) > 2:
+            weights = (1./3., 1./3., 1./3.)
+        elif len(trut) > 1 and len(predi) > 1:
+            weights = (1./2., 1./2.)
+        else:
+            weights = (1., 0.)
+
+        if (len(weights) == 4) and (len(trut) < 4 or len(predi) < 4):
+            print(trut)
+            print(predi)
+            print(weights)
+            print('\n')
+
+        return sentence_bleu([trut], predi, weights=weights)
+
+    score = 0.
+    lem_score = 0.
+
+    write_dict = {'single_scores': {}, 'scores': {}}
+
+    for i in range(len(truth)):
+        real_answer = truth[i].replace('\n', '')
+        pred_answer = prediction[i].replace('\n', '')
+
+        lem_truth_tokens = stopfilter(word_tokenize(real_answer))
+        lem_prediction_tokens = stopfilter(word_tokenize(pred_answer))
+        i_lem_score = make_score(lem_truth_tokens, lem_prediction_tokens)
+        lem_score += i_lem_score
+
+    return lem_score / len(truth)
+
+
+def create_protobuf_for_task_2(actual, expected):
+    keys = sorted(actual.keys())
+    missing_predictions = 0
+    
+    y_true = []
+    y_pred = []
+    
+    for k in keys:
+        y_true += [expected[k]]
+        
+        if k in actual:
+            y_pred += [actual[k]]
+        else:
+            missing_predictions += 1
+            y_pred += ['']
+
+    return to_prototext({
+        "result-size": len(keys),
+        'bleu-score': bleu_score(y_true, y_pred),
+        'missing-predictions': missing_predictions
+    })
+
 def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers):
     input_run = spoiler_generations_to_map(input_run)
     if ground_truth_spoilers == None:
+        ret = to_prototext({"result-size": len(input_run.keys())})
         success('No ground-truth is passed. I tested the input run and the input run is valid.')
     else:
-        error('ToDo: The evaluator currently only checks if the format is valid')
+        ground_truth_spoilers = spoiler_generations_to_map(ground_truth_spoilers)
+        ret = create_protobuf_for_task_2(input_run, ground_truth_spoilers)
+
+    if output_file:
+        with open(output_file, 'w') as f:
+            f.write(ret)
 
 if __name__ == '__main__':
     args = parse_args()
