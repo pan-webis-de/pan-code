@@ -11,13 +11,16 @@ def parse_args():
     return parser.parse_args()
 
 
+def predict(inputs):
+    for i in inputs:
+        yield {'uuid': i['uuid'], 'spoiler': i['targetTitle']}
+
+
 def run_baseline(input_file, output_file):
     with open(input_file, 'r') as inp, open(output_file, 'w') as out:
-        for i in inp:
-            i = json.loads(i)
-
-            prediction = {'uuid': i['uuid'], 'spoiler': i['targetTitle']}
-            out.write(json.dumps(prediction) + '\n')
+        inp = [json.loads(i) for i in inp]
+        for output in predict(inp):
+            out.write(json.dumps(output) + '\n')
 
 
 if __name__ == '__main__':
