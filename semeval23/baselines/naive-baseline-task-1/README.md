@@ -3,7 +3,7 @@
 This is a baseline for task 1 that predicts that each clickbait post warrants a passage spoiler.
 
 You can run it directly via: `docker run webis/pan-clickbait-spoiling-baselines:task1-naive-0.0.1 --help`.
-To use this baseline in TIRA, you can insert it with the command `/naive-baseline-task-1.py --input $inputDataset/input.jsonl --output $outputDir/run.jsonl`.
+To use this baseline in TIRA, you can upload this image (you have to tag it accordingly, e.g., `docker tag webis/pan-clickbait-spoiling-baselines:task2-naive-0.0.1  registry.webis.de/code-research/tira/tira-user-princess-knight/naive-baseline-task1:0.0.1`) and insert it with the command `/naive-baseline-task-1.py --input $inputDataset/input.jsonl --output $outputDir/run.jsonl`.
 
 ## Development
 
