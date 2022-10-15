@@ -12,7 +12,7 @@ RUN apt-get update \
 	&& git checkout --track origin/debertalarge-all-cbs20-both-checkpoint-1200 \
 	&& rm -Rf .git
 
-COPY transformer-baseline-task2.py run_qa.py trainer_qa.py utils_qa.py /
+COPY transformer-baseline-task-2.py run_qa.py trainer_qa.py utils_qa.py /
 
-ENTRYPOINT [ "/transformer-baseline-task2.py" ]
+ENTRYPOINT [ "/transformer-baseline-task-2.py" ]
 
