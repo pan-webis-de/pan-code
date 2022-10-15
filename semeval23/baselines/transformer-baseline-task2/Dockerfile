@@ -1,10 +1,10 @@
-FROM python:3.6
+FROM pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime
 
-RUN pip3 install pandas jupyterlab docker datasets transformers torch
+RUN pip3 install pandas jupyterlab docker datasets transformers
 
-RUN wget 'https://raw.githubusercontent.com/tira-io/tira/development/application/src/tira/templates/tira/tira_git_cmd.py' -O '/usr/local/lib/python3.6/site-packages/tira.py' \
-	&& apt-get update \
-	&& apt-get install git-lfs \
+RUN apt-get update \
+	&& apt-get install git-lfs wget \
+	&& wget 'https://raw.githubusercontent.com/tira-io/tira/development/application/src/tira/templates/tira/tira_git_cmd.py' -O '/usr/local/lib/python3.6/site-packages/tira.py' \
 	&& git clone 'https://huggingface.co/webis/clickbait-spoiling-with-question-answering' /model \
 	&& cd /model \
 	&& git lfs install \
