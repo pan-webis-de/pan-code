@@ -3,7 +3,7 @@
 This is a baseline for task 2 that spoils each clickbait post with the title of the linked page.
 
 You can run it directly via: `docker run webis/pan-clickbait-spoiling-baselines:task2-naive-0.0.1 --help`.
-To use this baseline in TIRA, you can insert it with the command `/naive-baseline-task-2.py --input $inputDataset/input.jsonl --output $outputDir/run.jsonl`.
+To use this baseline in TIRA, you can upload it (you have to tag it accordingly, e.g., `docker tag webis/pan-clickbait-spoiling-baselines:task2-naive-0.0.1  registry.webis.de/code-research/tira/<YOUR-USER-NAME>/naive-baseline-task1:0.0.2`, and push it with `docker push registry.webis.de/code-research/tira/<YOUR-USER-NAME>/naive-baseline-task1:0.0.2`) and upload it with the command `/naive-baseline-task-2.py --input $inputDataset/input.jsonl --output $outputDir/run.jsonl`.
 
 To get an interactive development environment where you can try out things, you can start a jupyter notebook with:
 
