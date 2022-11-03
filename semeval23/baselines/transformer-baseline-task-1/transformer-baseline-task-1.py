@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import numpy as np
 from simpletransformers.classification import ClassificationModel
+import torch
 
 
 def parse_args():
@@ -26,10 +27,14 @@ def load_input(df):
     return pd.DataFrame(ret)
 
 
+def use_cuda():
+    return torch.cuda.is_available() and torch.cuda.device_count() > 0
+
+
 def predict(df):
     df = load_input(df)
     labels = ['phrase', 'passage', 'multi']
-    model = ClassificationModel('deberta', '/model', use_cuda=False)
+    model = ClassificationModel('deberta', '/model', use_cuda=use_cuda())
 
     uuids = list(df['uuid'])
     texts = list(df['text'])
