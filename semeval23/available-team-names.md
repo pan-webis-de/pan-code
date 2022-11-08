@@ -39,7 +39,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Vernon Fenwick
 - I. M. Fletcher
 - Grant Gabriel
-- Gallegher
 - Walter Wichita Garrett
 - Pat Garrison
 - Rory Gilmore
