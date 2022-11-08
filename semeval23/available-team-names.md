@@ -5,7 +5,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Chick Adams
 - Ichabod Adams
 - Nick Alexander
-- Amy Amanda Allen
 - Celeste Anders
 - Matt Anders
 - Ben Andrews
@@ -84,7 +83,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Percy Mercy
 - Sam Miller
 - William Miller
-- Trudy Monk
 - Morbo the Annihilator
 - Paul Morgan
 - Les Nessman
@@ -128,9 +126,7 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Dan Vasser
 - Tony Vincenzo
 - Bob Wallace
-- Mr. Wallace
 - Nicole Walker
-- John Boy Walton
 - Herb Welch
 - Trinity Wells
 - Perry White
@@ -141,5 +137,4 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Jamie Campbell
 - Jack Deveraux
 - Kara Zor'El 
-- Kat Grant
 - Kate Ripperton
