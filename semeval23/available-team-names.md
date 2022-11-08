@@ -30,7 +30,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Snapper Carr
 - Tess Mercer
 - Ben Caxton
-- Miles Clarkson
 - Harris Claibourne
 - Stephen Colbert
 - Emily Cowles
@@ -44,7 +43,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - George Faber
 - Vernon Fenwick
 - I. M. Fletcher
-- Jack Flood
 - Mr. Fosdick
 - Kermit the Frog
 - Grant Gabriel
@@ -70,12 +68,10 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Clark Kent
 - John King
 - Kit Kittredge
-- Klugie
 - Alexander Knox
 - Carl Kolchak
 - Lois Lane
 - John Larsen
-- Adam MacLean
 - Paul Marino
 - Mark Markin
 - Monique Marmelstein
@@ -123,7 +119,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Chloe Talbot
 - Danny Taylor
 - Paul Templin
-- Tom Tucker
 - Hal Towne
 - Abby Townsend
 - Frankly Unctuous
