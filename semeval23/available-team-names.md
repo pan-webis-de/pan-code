@@ -38,7 +38,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - George Faber
 - Vernon Fenwick
 - I. M. Fletcher
-- Mr. Fosdick
 - Grant Gabriel
 - Gallegher
 - Walter Wichita Garrett
