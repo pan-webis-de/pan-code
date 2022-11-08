@@ -103,7 +103,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Danny Taylor
 - Hal Towne
 - Abby Townsend
-- Frankly Unctuous
 - Ron Updyke
 - Vicki Vale
 - Linda van Schoonhoven
