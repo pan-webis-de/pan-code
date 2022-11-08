@@ -17,7 +17,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Paul Beltzer
 - Cy Bennett
 - Maddy Bowen
-- Tom Bradford
 - Carrie Bradshaw
 - Kent Brockman
 - Murphy Brown
@@ -55,7 +54,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Jennifer Horton
 - Rick Jason
 - Sierra Jennings
-- Spider Jerusalem
 - Hildy Johnson
 - Tom Jumbo-Grumbo
 - Charles Foster Kane
@@ -77,7 +75,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Percy Mercy
 - Sam Miller
 - William Miller
-- Paul Morgan
 - Les Nessman
 - Billie Newman
 - Trevor Newsworthy
@@ -98,9 +95,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Jack Ryder
 - Andrea Sachs
 - Vic Sage
-- Murray Scarvi
-- Robin Scherbatsky
-- Lou Sheldon
 - Ruth Sherwood
 - Diane Simmons
 - Sabrina Spellman
@@ -109,7 +103,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Tricia Takanawa
 - Chloe Talbot
 - Danny Taylor
-- Paul Templin
 - Hal Towne
 - Abby Townsend
 - Frankly Unctuous
@@ -121,7 +114,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Bob Wallace
 - Nicole Walker
 - Herb Welch
-- Trinity Wells
 - Perry White
 - Francis Wilde
 - Cameron "Buck" Williams
