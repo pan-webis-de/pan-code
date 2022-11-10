@@ -62,7 +62,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Lois Lane
 - John Larsen
 - Paul Marino
-- Mark Markin
 - Monique Marmelstein
 - Doris Martin
 - Steve Martin
