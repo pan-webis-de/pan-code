@@ -94,7 +94,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Vic Sage
 - Ruth Sherwood
 - Diane Simmons
-- Sabrina Spellman
 - Brenda Starr
 - Dave Tabak
 - Tricia Takanawa
