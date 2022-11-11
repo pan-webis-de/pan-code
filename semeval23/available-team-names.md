@@ -89,7 +89,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Margaret Pynchon
 - Lloyd Ramsey
 - Mickey Riley
-- Jack Ryder
 - Andrea Sachs
 - Vic Sage
 - Ruth Sherwood
