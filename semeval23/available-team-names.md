@@ -27,7 +27,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Snapper Carr
 - Tess Mercer
 - Ben Caxton
-- Stephen Colbert
 - Emily Cowles
 - Jefferson Crowley
 - Chloe Sullivan
