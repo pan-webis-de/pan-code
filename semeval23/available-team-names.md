@@ -12,7 +12,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Tally Atwater
 - Matt Bai
 - Billy Batson
-- Ted Baxter
 - Howard Beale
 - Paul Beltzer
 - Cy Bennett
