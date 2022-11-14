@@ -51,7 +51,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Hildy Johnson
 - Tom Jumbo-Grumbo
 - Charles Foster Kane
-- John King
 - Kit Kittredge
 - Alexander Knox
 - Carl Kolchak
