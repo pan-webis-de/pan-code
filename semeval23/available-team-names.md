@@ -29,7 +29,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Jefferson Crowley
 - Chloe Sullivan
 - Pepper Dennis
-- Bryan Denton
 - Jefferson Drum
 - Brooke English
 - George Faber
