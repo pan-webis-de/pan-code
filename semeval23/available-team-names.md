@@ -83,7 +83,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Dion Patrick
 - Dick Preston
 - Miranda Priestly
-- Sweet Polly Purebred
 - Margaret Pynchon
 - Lloyd Ramsey
 - Mickey Riley
