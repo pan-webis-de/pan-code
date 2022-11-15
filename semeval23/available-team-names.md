@@ -97,7 +97,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Vicki Vale
 - Linda van Schoonhoven
 - Dan Vasser
-- Tony Vincenzo
 - Bob Wallace
 - Nicole Walker
 - Herb Welch
