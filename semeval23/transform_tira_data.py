@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+from tqdm import tqdm
 
 def yield_all_data_points():
     with open('/mnt/ceph/tira/data/datasets/test-datasets-truth/clickbait-spoiling/task-2-spoiler-generation-20221115-test/test.jsonl') as f:
@@ -12,7 +13,7 @@ def main(args):
     print(f'I remove the fields {to_remove}')
 #    with open('input.jsonl') as f:
     keys = []
-    for i in yield_all_data_points():
+    for i in tqdm(list(yield_all_data_points())):
         for field_to_remove in to_remove:
             del i[field_to_remove]
         keys += list(i.keys())
