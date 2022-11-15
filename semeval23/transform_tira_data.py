@@ -18,7 +18,7 @@ def main(args):
             del i[field_to_remove]
         keys += list(i.keys())
 
-    print('The data has keys: {set(keys)}')
+    print(f'The data has keys: {set(keys)}')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='This script transforms the raw test-data to the input for algorithms')
