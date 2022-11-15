@@ -14,7 +14,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Billy Batson
 - Howard Beale
 - Paul Beltzer
-- Cy Bennett
 - Maddy Bowen
 - Carrie Bradshaw
 - Kent Brockman
