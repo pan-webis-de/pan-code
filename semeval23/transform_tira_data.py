@@ -31,7 +31,7 @@ def parse_args():
 
 
 def fields_to_remove(args):
-    ret = ['spoiler', 'spoilerPositions']
+    ret = ['spoiler', 'spoilerPositions', 'provenance']
     if args.task == '1':
         ret += ['tags']
         return set(ret)
