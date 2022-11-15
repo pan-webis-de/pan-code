@@ -9,10 +9,15 @@ def yield_all_data_points():
 
 def main(args):
     to_remove = fields_to_remove(args)
+    print(f'I remove the fields {to_remove}')
 #    with open('input.jsonl') as f:
+    keys = []
     for i in yield_all_data_points():
-        print(i.keys())
-        break
+        for field_to_remove in to_remove:
+            del i[field_to_remove]
+        keys += list(i.keys())
+
+    print('The data has keys: {set(keys)}')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='This script transforms the raw test-data to the input for algorithms')
@@ -22,9 +27,9 @@ def parse_args():
     return parser.parse_args()
 
 def fields_to_remove(args):
-    ret = []
+    ret = ['spoiler', 'spoilerPositions']
     if args.task == '1':
-        ret += ['sda']
+        ret += ['tags']
         return set(ret)
     elif args.task == '2':
         return set(ret)
