@@ -10,7 +10,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Ben Andrews
 - Larry Appleton
 - Tally Atwater
-- Matt Bai
 - Billy Batson
 - Howard Beale
 - Paul Beltzer
