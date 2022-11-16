@@ -93,7 +93,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Hal Towne
 - Abby Townsend
 - Ron Updyke
-- Vicki Vale
 - Linda van Schoonhoven
 - Dan Vasser
 - Bob Wallace
