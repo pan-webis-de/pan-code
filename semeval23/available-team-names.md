@@ -4,7 +4,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 
 - Chick Adams
 - Ichabod Adams
-- Nick Alexander
 - Celeste Anders
 - Matt Anders
 - Ben Andrews
