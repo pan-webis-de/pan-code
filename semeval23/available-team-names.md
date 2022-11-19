@@ -65,7 +65,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Sam Miller
 - William Miller
 - Les Nessman
-- Billie Newman
 - Trevor Newsworthy
 - Tyra Nordbo
 - Scott Norris
