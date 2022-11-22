@@ -56,7 +56,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Paul Marino
 - Monique Marmelstein
 - Doris Martin
-- Steve Martin
 - Christine Massey
 - Willie Maxwell
 - Jack McEvoy
