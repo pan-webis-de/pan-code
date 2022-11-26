@@ -43,7 +43,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Bill Hastings
 - Nancy Hicks-Gribble
 - Jennifer Horton
-- Rick Jason
 - Sierra Jennings
 - Hildy Johnson
 - Tom Jumbo-Grumbo
