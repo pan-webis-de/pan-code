@@ -13,7 +13,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Howard Beale
 - Paul Beltzer
 - Maddy Bowen
-- Carrie Bradshaw
 - Kent Brockman
 - Murphy Brown
 - Anson Bryson
