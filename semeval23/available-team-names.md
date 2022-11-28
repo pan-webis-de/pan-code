@@ -96,7 +96,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Perry White
 - Francis Wilde
 - Cameron "Buck" Williams
-- Duke William
 - Steve Wilson
 - Jamie Campbell
 - Kara Zor'El 
