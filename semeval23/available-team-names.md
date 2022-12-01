@@ -40,7 +40,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Tom Grunick
 - Jackie Harvey
 - Bill Hastings
-- Nancy Hicks-Gribble
 - Jennifer Horton
 - Sierra Jennings
 - Hildy Johnson
