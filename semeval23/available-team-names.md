@@ -63,7 +63,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Les Nessman
 - Trevor Newsworthy
 - Tyra Nordbo
-- Scott Norris
 - Bill Norton
 - Jimmy Olsen
 - Kelly O'Donnell
