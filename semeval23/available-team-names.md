@@ -33,7 +33,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Grant Gabriel
 - Walter Wichita Garrett
 - Pat Garrison
-- Rory Gilmore
 - Mark Grainger
 - Lou Grant
 - Ben Gregory
@@ -79,7 +78,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Ruth Sherwood
 - Diane Simmons
 - Brenda Starr
-- Dave Tabak
 - Tricia Takanawa
 - Chloe Talbot
 - Danny Taylor
