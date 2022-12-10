@@ -6,7 +6,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Ichabod Adams
 - Celeste Anders
 - Matt Anders
-- Ben Andrews
 - Larry Appleton
 - Tally Atwater
 - Billy Batson
