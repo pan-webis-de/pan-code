@@ -56,7 +56,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Jack McEvoy
 - Will McAvoy
 - Percy Mercy
-- Sam Miller
 - William Miller
 - Les Nessman
 - Trevor Newsworthy
