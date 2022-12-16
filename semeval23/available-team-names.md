@@ -18,7 +18,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Clint Buchanan
 - Walter Burns
 - Michelle Capra
-- Snapper Carr
 - Tess Mercer
 - Ben Caxton
 - Jefferson Crowley
