@@ -8,7 +8,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Matt Anders
 - Larry Appleton
 - Tally Atwater
-- Billy Batson
 - Howard Beale
 - Paul Beltzer
 - Maddy Bowen
