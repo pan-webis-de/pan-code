@@ -65,7 +65,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Nic Pappas
 - Dion Patrick
 - Dick Preston
-- Miranda Priestly
 - Margaret Pynchon
 - Lloyd Ramsey
 - Mickey Riley
