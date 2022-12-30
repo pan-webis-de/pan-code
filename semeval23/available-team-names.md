@@ -90,4 +90,3 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Steve Wilson
 - Jamie Campbell
 - Kara Zor'El 
-- Kate Ripperton
