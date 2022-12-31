@@ -69,7 +69,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Lloyd Ramsey
 - Mickey Riley
 - Andrea Sachs
-- Vic Sage
 - Ruth Sherwood
 - Diane Simmons
 - Brenda Starr
