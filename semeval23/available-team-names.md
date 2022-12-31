@@ -75,7 +75,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Tricia Takanawa
 - Chloe Talbot
 - Danny Taylor
-- Hal Towne
 - Abby Townsend
 - Ron Updyke
 - Linda van Schoonhoven
