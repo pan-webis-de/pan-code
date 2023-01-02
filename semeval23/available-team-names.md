@@ -15,7 +15,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Murphy Brown
 - Anson Bryson
 - Clint Buchanan
-- Walter Burns
 - Michelle Capra
 - Tess Mercer
 - Ben Caxton
