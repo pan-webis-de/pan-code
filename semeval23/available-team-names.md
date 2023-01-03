@@ -44,7 +44,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Alexander Knox
 - Carl Kolchak
 - Lois Lane
-- John Larsen
 - Paul Marino
 - Monique Marmelstein
 - Doris Martin
