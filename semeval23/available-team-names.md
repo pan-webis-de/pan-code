@@ -22,7 +22,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Chloe Sullivan
 - Pepper Dennis
 - Jefferson Drum
-- Brooke English
 - George Faber
 - Vernon Fenwick
 - I. M. Fletcher
