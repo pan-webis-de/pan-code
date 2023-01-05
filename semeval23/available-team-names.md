@@ -66,7 +66,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Mickey Riley
 - Andrea Sachs
 - Ruth Sherwood
-- Diane Simmons
 - Brenda Starr
 - Tricia Takanawa
 - Chloe Talbot
