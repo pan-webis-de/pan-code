@@ -2,7 +2,6 @@
 
 Please select a team name from this [list of fictional journalists](https://en.wikipedia.org/wiki/List_of_fictional_journalists).
 
-- Chick Adams
 - Ichabod Adams
 - Celeste Anders
 - Matt Anders
