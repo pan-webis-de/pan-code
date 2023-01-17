@@ -77,7 +77,6 @@ Please select a team name from this [list of fictional journalists](https://en.w
 - Nicole Walker
 - Herb Welch
 - Perry White
-- Francis Wilde
 - Cameron "Buck" Williams
 - Steve Wilson
 - Jamie Campbell
