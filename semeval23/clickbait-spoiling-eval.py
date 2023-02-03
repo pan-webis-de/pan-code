@@ -247,14 +247,14 @@ def create_protobuf_for_task_2(actual, expected):
     for k in keys:
         exp = expected[k]
         if type(exp) is list:
-            exp = ' '.join(exp)
+            exp = ' '.join(exp).strip()
         
         y_true += [exp]
         
         if k in actual:
             act = actual[k]
             if type(act) is list:
-                act = ' '.join(act)
+                act = ' '.join(act).strip()
             
             y_pred += [act]
         else:
