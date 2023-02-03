@@ -232,9 +232,11 @@ def meteor_score(truth, prediction):
                 preds.write(p + '\n')
 
         cmd = ['java', '-Xmx2G', '-jar', '/meteor-1.5.jar', tmpdirname + '/truths.txt', tmpdirname + '/preds.txt', '-l', 'en', '-norm', '-t', 'adq']
-        meteor_output = subprocess.check_output(cmd)
-
-        return float(meteor_output.decode('utf-8').split('\n\nFinal score:')[1].strip())
+        meteor_output = subprocess.check_output(cmd).decode('utf-8')
+        try:
+            return float(meteor_output.split('\n\nFinal score:')[1].strip())
+        except:
+            raise ValueError('Could not extract the final score out of "' + meteor_output + '".')
 
 
 def create_protobuf_for_task_2(actual, expected):
@@ -247,16 +249,16 @@ def create_protobuf_for_task_2(actual, expected):
     for k in keys:
         exp = expected[k]
         if type(exp) is list:
-            exp = ' '.join(exp).strip()
+            exp = ' '.join(exp)
         
-        y_true += [exp]
+        y_true += [exp.replace('\n', ' ').strip()]
         
         if k in actual:
             act = actual[k]
             if type(act) is list:
-                act = ' '.join(act).strip()
+                act = ' '.join(act)
             
-            y_pred += [act]
+            y_pred += [act.replace('\n', ' ').strip()]
         else:
             missing_predictions += 1
             y_pred += ['']
