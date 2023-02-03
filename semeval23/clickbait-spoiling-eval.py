@@ -13,6 +13,7 @@ import string
 from bert_score import score
 import subprocess
 import tempfile
+from copy import deepcopy
 
 
 def error(msg):
@@ -273,7 +274,7 @@ def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_f
     else:
         ret = {}
         for (display_name, tag_name) in [('all-spoilers', None), ('phrase-spoilers', 'phrase'), ('passage-spoilers', 'passage'), ('multi-spoilers', 'multi')]:
-            ground_truth_spoilers = spoiler_generations_to_map(ground_truth_spoilers, expected_spoiler_type=tag_name)
+            ground_truth_spoilers = spoiler_generations_to_map(deepcopy(ground_truth_spoilers), expected_spoiler_type=tag_name)
 
             for k,v in create_protobuf_for_task_2(input_run, ground_truth_spoilers).items():
                 ret[k + '-' + display_name] = v
