@@ -10,6 +10,10 @@ from nltk.translate.bleu_score import sentence_bleu
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 import string
+from bert_score import score
+import subprocess
+import tempfile
+
 
 def error(msg):
     print('  [\033[91mx\033[0m] ' + msg)
@@ -62,20 +66,23 @@ def spoiler_predictions_to_map(l, error=error, field='spoilerType'):
     success('Spoiler predictions have correct format. Found ' + str(len(l)))
     return {i['uuid']: i[field] if type(i[field]) is not list else i[field][0] for i in l}
 
-def normalize_spoiler_generation(i, error):
+def normalize_spoiler_generation(i, error, expected_spoiler_type=None):
     if 'uuid' not in i or 'spoiler' not in i:
         error('Spoiler generation does not have all required fields. Expected fields are uuid and spoiler. Got: ' + str(i))
         return
 
+    if expected_spoiler_type and expected_spoiler_type not in i['tags']:
+    	return
+
     return {i['uuid']: i['spoiler']}
 
-def spoiler_generations_to_map(l, error=error):
+def spoiler_generations_to_map(l, error=error, expected_spoiler_type=None):
     if l is None or len(l) == 0:
         error('Spoiler predictions are empty.')
     uuids = []
 
     for i in l:
-        i = normalize_spoiler_generation(i, error)
+        i = normalize_spoiler_generation(i, error, expected_spoiler_type)
         if not i:
             return
         uuids += list(i.keys())
@@ -83,7 +90,7 @@ def spoiler_generations_to_map(l, error=error):
     if len(l) != len(set(uuids)):
             error('Spoiler generations have dupliates. I found ' + str(len(l)) + ' entries but only ' + str(len(set(uuids))) + ' unique uuids.')
 
-    l = [normalize_spoiler_generation(i, error) for i in l]
+    l = [normalize_spoiler_generation(i, error, expected_spoiler_type) for i in l]
 
     success('Spoiler generations have correct format. Found ' + str(len(l)))
     ret = {}
@@ -202,8 +209,32 @@ def bleu_score(truth, prediction):
     return lem_score / len(truth)
 
 
+def bert_score(truth, prediction):
+    assert len(truth) == len(prediction)
+    prec, rec, f1 = score(prediction, truth, lang="en")
+    
+    return f1.mean()
+
+
+def meteor_score(truth, prediction):
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        assert len(truth) == len(prediction)
+        
+        with open(tmpdirname + '/truths.txt', 'w') as truths, open(tmpdirname + '/preds.txt', 'w') as preds:
+            for t in truth:
+                truths.write(t + '\n')
+            
+            for p in prediction:
+                preds.write(p + '\n')
+
+        cmd = ['java', '-Xmx2G', '-jar', '/meteor-1.5.jar', tmpdirname + '/truths.txt', tmpdirname + '/preds.txt', '-l', 'en', '-norm', '-t', 'adq']
+        meteor_output = subprocess.check_output(cmd)
+
+        return float(meteor_output.decode('utf-8').split('\n\nFinal score:')[1].strip())
+
+
 def create_protobuf_for_task_2(actual, expected):
-    keys = sorted(actual.keys())
+    keys = sorted(expected.keys())
     missing_predictions = 0
     
     y_true = []
@@ -218,11 +249,13 @@ def create_protobuf_for_task_2(actual, expected):
             missing_predictions += 1
             y_pred += ['']
 
-    return to_prototext({
+    return {
         "result-size": len(keys),
         'bleu-score': bleu_score(y_true, y_pred),
+        'bert-score': bert_score(y_true, y_pred),
+        'meteor-score': meteor_scorey_true, y_pred),
         'missing-predictions': missing_predictions
-    })
+    }
 
 def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_file):
     input_run = spoiler_generations_to_map(input_run)
@@ -230,9 +263,16 @@ def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_f
         ret = to_prototext({"result-size": len(input_run.keys())})
         success('No ground-truth is passed. I tested the input run and the input run is valid.')
     else:
-        ground_truth_spoilers = spoiler_generations_to_map(ground_truth_spoilers)
-        ret = create_protobuf_for_task_2(input_run, ground_truth_spoilers)
+        ret = {}
+        for (display_name, tag_name) in [('all-spoilers', None), ('phrase-spoilers', 'phrase'), ('passage-spoilers', 'passage'), ('multi-spoilers', 'multi')]:
+            ground_truth_spoilers = spoiler_generations_to_map(ground_truth_spoilers, expected_spoiler_type=tag_name)
 
+            for k,v in create_protobuf_for_task_2(input_run, ground_truth_spoilers).items()
+                ret[k + '-' + display_name] = v
+
+        ret = to_prototext(ret)
+
+	
     if output_file:
         with open(output_file, 'w') as f:
             f.write(ret)
