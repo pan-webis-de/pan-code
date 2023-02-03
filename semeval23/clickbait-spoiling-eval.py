@@ -214,7 +214,7 @@ def bert_score(truth, prediction):
     assert len(truth) == len(prediction)
     prec, rec, f1 = score(prediction, truth, lang="en")
     
-    return f1.mean()
+    return float(f1.mean())
 
 
 def meteor_score(truth, prediction):
