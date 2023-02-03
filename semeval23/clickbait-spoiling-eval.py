@@ -241,10 +241,18 @@ def create_protobuf_for_task_2(actual, expected):
     y_pred = []
     
     for k in keys:
-        y_true += [expected[k]]
+        exp = expected[k]
+        if type(exp) is list:
+            exp = ' '.join(exp)
+        
+        y_true += [exp]
         
         if k in actual:
-            y_pred += [actual[k]]
+            act = actual[k]
+            if type(act) is list:
+                act = ' '.join(act)
+            
+            y_pred += [act]
         else:
             missing_predictions += 1
             y_pred += ['']
@@ -253,7 +261,7 @@ def create_protobuf_for_task_2(actual, expected):
         "result-size": len(keys),
         'bleu-score': bleu_score(y_true, y_pred),
         'bert-score': bert_score(y_true, y_pred),
-        'meteor-score': meteor_scorey_true, y_pred),
+        'meteor-score': meteor_score(y_true, y_pred),
         'missing-predictions': missing_predictions
     }
 
@@ -267,7 +275,7 @@ def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_f
         for (display_name, tag_name) in [('all-spoilers', None), ('phrase-spoilers', 'phrase'), ('passage-spoilers', 'passage'), ('multi-spoilers', 'multi')]:
             ground_truth_spoilers = spoiler_generations_to_map(ground_truth_spoilers, expected_spoiler_type=tag_name)
 
-            for k,v in create_protobuf_for_task_2(input_run, ground_truth_spoilers).items()
+            for k,v in create_protobuf_for_task_2(input_run, ground_truth_spoilers).items():
                 ret[k + '-' + display_name] = v
 
         ret = to_prototext(ret)

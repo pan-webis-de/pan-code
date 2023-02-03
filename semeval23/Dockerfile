@@ -6,12 +6,14 @@ RUN pip3 install sklearn nltk bert_score jupyterlab \
 
 RUN python3 -c 'import nltk; nltk.download("punkt"); nltk.download("stopwords")'
 RUN python3 -c 'from bert_score import score; print(score(["28-Year-Old Chef Found Dead at San Francisco Mall"], ["28-year-old chef found dead in San Francisco mall"], lang="en"))'
-COPY clickbait-spoiling-eval.py .
 COPY evaluation/meteor-1.5/meteor-1.5.jar /meteor-1.5.jar
 RUN apt-get install -y wget \
+	&& pip3 install scikit-learn \
 	&& mkdir /data \
 	&& cd /data \
 	&& wget https://files.webis.de/data-in-production/data-research/acl22-clickbait-spoiling/paraphrase-en.gz
+
+COPY clickbait-spoiling-eval.py .
 
 
 ENTRYPOINT [ "./clickbait-spoiling-eval.py" ]
