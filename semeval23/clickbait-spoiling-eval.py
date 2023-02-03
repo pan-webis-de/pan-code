@@ -90,7 +90,7 @@ def spoiler_generations_to_map(l, error=error, expected_spoiler_type=None):
             continue
         uuids += list(i.keys())
 
-    if len(l) != len(set(uuids)):
+    if not expected_spoiler_type and len(l) != len(set(uuids)):
             error('Spoiler generations have dupliates. I found ' + str(len(l)) + ' entries but only ' + str(len(set(uuids))) + ' unique uuids.')
 
     l = [normalize_spoiler_generation(i, error, expected_spoiler_type) for i in l]
