@@ -82,7 +82,7 @@ def spoiler_generations_to_map(l, error=error, expected_spoiler_type=None):
         error('Spoiler predictions are empty.')
     uuids = []
 
-    for i in l:
+    for i in deepcopy(l):
         i = normalize_spoiler_generation(i, error, expected_spoiler_type)
         if not i:
             return
