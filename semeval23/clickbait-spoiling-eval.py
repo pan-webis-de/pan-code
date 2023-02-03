@@ -73,7 +73,7 @@ def normalize_spoiler_generation(i, error, expected_spoiler_type=None):
         return
 
     if expected_spoiler_type and expected_spoiler_type not in i['tags']:
-    	return
+    	return True
 
     return {i['uuid']: i['spoiler']}
 
@@ -86,12 +86,15 @@ def spoiler_generations_to_map(l, error=error, expected_spoiler_type=None):
         i = normalize_spoiler_generation(i, error, expected_spoiler_type)
         if not i:
             return
+        elif i is True:
+            continue
         uuids += list(i.keys())
 
     if len(l) != len(set(uuids)):
             error('Spoiler generations have dupliates. I found ' + str(len(l)) + ' entries but only ' + str(len(set(uuids))) + ' unique uuids.')
 
     l = [normalize_spoiler_generation(i, error, expected_spoiler_type) for i in l]
+    l = [i for i in l if i and i is not True]
 
     success('Spoiler generations have correct format. Found ' + str(len(l)))
     ret = {}
