@@ -278,9 +278,9 @@ def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_f
         ret = {}
         for (display_name, tag_name) in [('all-spoilers', None), ('phrase-spoilers', 'phrase'), ('passage-spoilers', 'passage'), ('multi-spoilers', 'multi')]:
             print('Run evaluation for ' + display_name)
-            ground_truth_spoilers = spoiler_generations_to_map(deepcopy(ground_truth_spoilers), expected_spoiler_type=tag_name)
+            filtered_ground_truth_spoilers = spoiler_generations_to_map(deepcopy(ground_truth_spoilers), expected_spoiler_type=tag_name)
 
-            for k,v in create_protobuf_for_task_2(input_run, ground_truth_spoilers).items():
+            for k,v in create_protobuf_for_task_2(input_run, filtered_ground_truth_spoilers).items():
                 ret[k + '-' + display_name] = v
 
         ret = to_prototext(ret)
