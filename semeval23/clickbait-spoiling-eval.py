@@ -4,7 +4,7 @@ import argparse
 from os.path import exists
 from glob import glob
 from os.path import isdir
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import balanced_accuracy_score, precision_score, recall_score, f1_score
 import json
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.tokenize import word_tokenize
@@ -126,6 +126,32 @@ def to_prototext(d):
     
     return ret.strip()
 
+def filter_to(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = [], []
+    for i in range(len(y_true)):
+        if y_true[i] == filter_value or y_pred[i] == filter_value:
+            y_true_filtered += [1 if y_true[i] == filter_value else 0]
+            y_pred_filtered += [1 if y_pred[i] == filter_value else 0]
+    
+    return (y_true_filtered, y_pred_filtered)
+
+def precision_on(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = filter_to(y_true, y_pred, filter_value)
+
+    return precision_score(y_true_filtered, y_pred_filtered)
+
+def recall_on(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = filter_to(y_true, y_pred, filter_value)
+
+    return recall_score(y_true_filtered, y_pred_filtered)
+
+
+def f1_on(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = filter_to(y_true, y_pred, filter_value)
+
+    return f1_score(y_true_filtered, y_pred_filtered)
+
+
 def create_protobuf_for_task_1(actual, expected):
     keys = sorted(actual.keys())
     missing_predictions = 0
@@ -142,11 +168,20 @@ def create_protobuf_for_task_1(actual, expected):
             missing_predictions += 1
             y_pred += ['']
 
-    return to_prototext({
+    return {
         "result-size": len(keys),
         'balanced-accuracy': balanced_accuracy_score(y_true, y_pred),
+        'precision-for-phrase-spoilers': precision_on(y_true, y_pred, 'phrase'),
+        'recall-for-phrase-spoilers': recall_on(y_true, y_pred, 'phrase'),
+        'f1-for-phrase-spoilers': f1_on(y_true, y_pred, 'phrase'),
+        'precision-for-passage-spoilers': precision_on(y_true, y_pred, 'passage'),
+        'recall-for-passage-spoilers': recall_on(y_true, y_pred, 'passage'),
+        'f1-for-passage-spoilers': f1_on(y_true, y_pred, 'passage'),
+        'precision-for-multi-spoilers': precision_on(y_true, y_pred, 'multi'),
+        'recall-for-multi-spoilers': recall_on(y_true, y_pred, 'multi'),
+        'f1-for-multi-spoilers': f1_on(y_true, y_pred, 'multi'),
         'missing-predictions': missing_predictions
-    })
+    }
 
 def eval_task_1(input_run, ground_truth_classes, output_file):
     input_run = spoiler_predictions_to_map(input_run)
@@ -157,7 +192,7 @@ def eval_task_1(input_run, ground_truth_classes, output_file):
         
     else:
         ground_truth_classes = spoiler_predictions_to_map(ground_truth_classes, field='tags')
-        ret = create_protobuf_for_task_1(input_run, ground_truth_classes)
+        ret = to_prototext(create_protobuf_for_task_1(input_run, ground_truth_classes))
 
     if output_file:
         with open(output_file, 'w') as f:
