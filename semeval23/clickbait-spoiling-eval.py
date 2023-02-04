@@ -4,7 +4,7 @@ import argparse
 from os.path import exists
 from glob import glob
 from os.path import isdir
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import balanced_accuracy_score, precision_score, recall_score, f1_score
 import json
 from nltk.translate.bleu_score import sentence_bleu
 from nltk.tokenize import word_tokenize
@@ -13,6 +13,7 @@ import string
 from bert_score import score
 import subprocess
 import tempfile
+from copy import deepcopy
 
 
 def error(msg):
@@ -72,7 +73,7 @@ def normalize_spoiler_generation(i, error, expected_spoiler_type=None):
         return
 
     if expected_spoiler_type and expected_spoiler_type not in i['tags']:
-    	return
+    	return True
 
     return {i['uuid']: i['spoiler']}
 
@@ -81,16 +82,19 @@ def spoiler_generations_to_map(l, error=error, expected_spoiler_type=None):
         error('Spoiler predictions are empty.')
     uuids = []
 
-    for i in l:
+    for i in deepcopy(l):
         i = normalize_spoiler_generation(i, error, expected_spoiler_type)
         if not i:
             return
+        elif i is True:
+            continue
         uuids += list(i.keys())
 
-    if len(l) != len(set(uuids)):
+    if not expected_spoiler_type and len(l) != len(set(uuids)):
             error('Spoiler generations have dupliates. I found ' + str(len(l)) + ' entries but only ' + str(len(set(uuids))) + ' unique uuids.')
 
     l = [normalize_spoiler_generation(i, error, expected_spoiler_type) for i in l]
+    l = [i for i in l if i and i is not True]
 
     success('Spoiler generations have correct format. Found ' + str(len(l)))
     ret = {}
@@ -122,6 +126,32 @@ def to_prototext(d):
     
     return ret.strip()
 
+def filter_to(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = [], []
+    for i in range(len(y_true)):
+        if y_true[i] == filter_value or y_pred[i] == filter_value:
+            y_true_filtered += [1 if y_true[i] == filter_value else 0]
+            y_pred_filtered += [1 if y_pred[i] == filter_value else 0]
+    
+    return (y_true_filtered, y_pred_filtered)
+
+def precision_on(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = filter_to(y_true, y_pred, filter_value)
+
+    return precision_score(y_true_filtered, y_pred_filtered)
+
+def recall_on(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = filter_to(y_true, y_pred, filter_value)
+
+    return recall_score(y_true_filtered, y_pred_filtered)
+
+
+def f1_on(y_true, y_pred, filter_value):
+    y_true_filtered, y_pred_filtered = filter_to(y_true, y_pred, filter_value)
+
+    return f1_score(y_true_filtered, y_pred_filtered)
+
+
 def create_protobuf_for_task_1(actual, expected):
     keys = sorted(actual.keys())
     missing_predictions = 0
@@ -138,11 +168,20 @@ def create_protobuf_for_task_1(actual, expected):
             missing_predictions += 1
             y_pred += ['']
 
-    return to_prototext({
+    return {
         "result-size": len(keys),
         'balanced-accuracy': balanced_accuracy_score(y_true, y_pred),
+        'precision-for-phrase-spoilers': precision_on(y_true, y_pred, 'phrase'),
+        'recall-for-phrase-spoilers': recall_on(y_true, y_pred, 'phrase'),
+        'f1-for-phrase-spoilers': f1_on(y_true, y_pred, 'phrase'),
+        'precision-for-passage-spoilers': precision_on(y_true, y_pred, 'passage'),
+        'recall-for-passage-spoilers': recall_on(y_true, y_pred, 'passage'),
+        'f1-for-passage-spoilers': f1_on(y_true, y_pred, 'passage'),
+        'precision-for-multi-spoilers': precision_on(y_true, y_pred, 'multi'),
+        'recall-for-multi-spoilers': recall_on(y_true, y_pred, 'multi'),
+        'f1-for-multi-spoilers': f1_on(y_true, y_pred, 'multi'),
         'missing-predictions': missing_predictions
-    })
+    }
 
 def eval_task_1(input_run, ground_truth_classes, output_file):
     input_run = spoiler_predictions_to_map(input_run)
@@ -153,7 +192,7 @@ def eval_task_1(input_run, ground_truth_classes, output_file):
         
     else:
         ground_truth_classes = spoiler_predictions_to_map(ground_truth_classes, field='tags')
-        ret = create_protobuf_for_task_1(input_run, ground_truth_classes)
+        ret = to_prototext(create_protobuf_for_task_1(input_run, ground_truth_classes))
 
     if output_file:
         with open(output_file, 'w') as f:
@@ -213,7 +252,7 @@ def bert_score(truth, prediction):
     assert len(truth) == len(prediction)
     prec, rec, f1 = score(prediction, truth, lang="en")
     
-    return f1.mean()
+    return float(f1.mean())
 
 
 def meteor_score(truth, prediction):
@@ -228,9 +267,11 @@ def meteor_score(truth, prediction):
                 preds.write(p + '\n')
 
         cmd = ['java', '-Xmx2G', '-jar', '/meteor-1.5.jar', tmpdirname + '/truths.txt', tmpdirname + '/preds.txt', '-l', 'en', '-norm', '-t', 'adq']
-        meteor_output = subprocess.check_output(cmd)
-
-        return float(meteor_output.decode('utf-8').split('\n\nFinal score:')[1].strip())
+        meteor_output = subprocess.check_output(cmd).decode('utf-8')
+        try:
+            return float(meteor_output.split('\n\nFinal score:')[1].strip())
+        except:
+            raise ValueError('Could not extract the final score out of "' + meteor_output + '".')
 
 
 def create_protobuf_for_task_2(actual, expected):
@@ -241,10 +282,18 @@ def create_protobuf_for_task_2(actual, expected):
     y_pred = []
     
     for k in keys:
-        y_true += [expected[k]]
+        exp = expected[k]
+        if type(exp) is list:
+            exp = ' '.join(exp)
+        
+        y_true += [exp.replace('\n', ' ').strip()]
         
         if k in actual:
-            y_pred += [actual[k]]
+            act = actual[k]
+            if type(act) is list:
+                act = ' '.join(act)
+            
+            y_pred += [act.replace('\n', ' ').strip()]
         else:
             missing_predictions += 1
             y_pred += ['']
@@ -253,7 +302,7 @@ def create_protobuf_for_task_2(actual, expected):
         "result-size": len(keys),
         'bleu-score': bleu_score(y_true, y_pred),
         'bert-score': bert_score(y_true, y_pred),
-        'meteor-score': meteor_scorey_true, y_pred),
+        'meteor-score': meteor_score(y_true, y_pred),
         'missing-predictions': missing_predictions
     }
 
@@ -265,9 +314,10 @@ def eval_task_2(input_run, ground_truth_classes, ground_truth_spoilers, output_f
     else:
         ret = {}
         for (display_name, tag_name) in [('all-spoilers', None), ('phrase-spoilers', 'phrase'), ('passage-spoilers', 'passage'), ('multi-spoilers', 'multi')]:
-            ground_truth_spoilers = spoiler_generations_to_map(ground_truth_spoilers, expected_spoiler_type=tag_name)
+            print('Run evaluation for ' + display_name)
+            filtered_ground_truth_spoilers = spoiler_generations_to_map(deepcopy(ground_truth_spoilers), expected_spoiler_type=tag_name)
 
-            for k,v in create_protobuf_for_task_2(input_run, ground_truth_spoilers).items()
+            for k,v in create_protobuf_for_task_2(input_run, filtered_ground_truth_spoilers).items():
                 ret[k + '-' + display_name] = v
 
         ret = to_prototext(ret)

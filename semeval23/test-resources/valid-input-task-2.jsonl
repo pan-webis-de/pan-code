@@ -1,2 +1,2 @@
-{"uuid": "1", "spoiler": "some spoiler 1"}
-{"uuid": "2", "spoiler": "some spoiler 2"}
+{"uuid": "1", "spoiler": "some spoiler 1", "tags": ["multi"]}
+{"uuid": "2", "spoiler": "some spoiler 2", "tags": ["phrase"]}

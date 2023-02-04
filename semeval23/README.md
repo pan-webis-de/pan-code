@@ -24,13 +24,13 @@ The [test-resources/](test-resources/) directory contains examples for task 1 an
 Assuming you have a run `run.jsonl` in your current directory, you can verify that the run is valid for task 1 with:
 
 ```
-docker run -v ${PWD}:/input --rm -ti webis/pan-clickbait-spoiling-evaluator:0.0.2 --task 1 --input_run /input/run.jsonl
+docker run -v ${PWD}:/input --rm -ti webis/pan-clickbait-spoiling-evaluator:0.0.11 --task 1 --input_run /input/run.jsonl
 ```
 
 Assuming you have a run `run.jsonl` in your current directory, you can verify that the run is valid for task 2 with:
 
 ```
-docker run -v ${PWD}:/input --rm -ti webis/pan-clickbait-spoiling-evaluator:0.0.1 --task 2 --input_run /input/run.jsonl
+docker run -v ${PWD}:/input --rm -ti webis/pan-clickbait-spoiling-evaluator:0.0.11 --task 2 --input_run /input/run.jsonl
 ```
 
 ## Evaluation for Task 1 and Task 2
