@@ -1,12 +1,11 @@
 """
-Validator for the shared task on Trigger Detection at PAN@CLEF2023.
+Evaluator for the shared task on Trigger Detection at PAN@CLEF2023.
 
-This script checks if the given input file is a valid submission to the task.
+This script checks if the given input file is a valid submission to the task and then calculates the evaluation results.
 
-You can check you model output (on the validation date) in code via:
-    `_validate(path_to_model_output, path_to_truth)`
-or from the command line:
-    ~$ python3 validator.py -p path-to-model-output -t path-to-truth
+You can use the evaluator in-code by calling
+    `_evaluate(y_true, y_predicted)`
+  where y_true and y_predicted are 2-d array-likes (i.e. the array representation of the labels of this task)
 
 Contact: matti.wiegmann@uni-weimar.de
          or create an issue/PR on Github: https://github.com/pan-webis-de/pan-code
@@ -16,6 +15,7 @@ import click
 from pathlib import Path
 import json
 from util import LABELS, to_array_representation
+import numpy as np
 from validator import _validate
 from sklearn.metrics import f1_score, roc_auc_score, accuracy_score, precision_score, recall_score
 
@@ -43,23 +43,33 @@ def _evaluate(y_true: List[List[int]], y_predictions: List[List[int]], extended=
     Extended evaluation shows:
         - subset accuracy
         - roc-auc score
-        - micro F1 scores for only high-frequency labels
-        - micro F1 scores for only mid-frequency labels
-        - micro F1 scores for only bottom-frequency labels
+        - micro F1 scores for only middle-frequency labels (top 2-15)
+        - micro F1 scores for only bottom-frequency labels (top 16-bottom)
         - class wise (micro) F1 scores
     """
+    y_true = np.asarray(y_true)
+    y_predictions = np.asarray(y_predictions)
     results = {
-        "mic_p": precision_score(y_true, y_predictions, average='micro'),
-        "mic_r": recall_score(y_true, y_predictions, average='micro'),
-        "mic_f1": f1_score(y_true, y_predictions, average='micro'),
+        "mac_f1": f1_score(y_true, y_predictions, average='macro'),
         "mac_p": precision_score(y_true, y_predictions, average='macro'),
         "mac_r": recall_score(y_true, y_predictions, average='macro'),
-        "mac_f1": f1_score(y_true, y_predictions, average='macro')
+        "mic_f1": f1_score(y_true, y_predictions, average='micro'),
+        "mic_p": precision_score(y_true, y_predictions, average='micro'),
+        "mic_r": recall_score(y_true, y_predictions, average='micro'),
+        "sub_acc": accuracy_score(y_true, y_predictions)
     }
     if extended:
-        results["sub_acc"] = accuracy_score(y_true, y_predictions)
         results["roc_auc"] = roc_auc_score(y_true, y_predictions)
-        results["roc_auc"] = None
+        results["mid_f1"] = f1_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro')
+        results["mid_p"] = precision_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro')
+        results["mid_r"] = recall_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro')
+        results["bot_f1"] = f1_score(y_true[:, 15:], y_predictions[:, 15:], average='micro')
+        results["bot_p"] = precision_score(y_true[:, 15:], y_predictions[:, 15:], average='micro')
+        results["bot_r"] = recall_score(y_true[:, 15:], y_predictions[:, 15:], average='micro')
+        for idx, label in enumerate(LABELS):
+            results[f"{label}_f1"] = f1_score(y_true[:, idx], y_predictions[:, idx], average='micro')
+            results[f"{label}_p"] = precision_score(y_true[:, idx], y_predictions[:, idx], average='micro')
+            results[f"{label}_r"] = recall_score(y_true[:, idx], y_predictions[:, idx], average='micro')
 
     return results
 
@@ -71,14 +81,15 @@ def write_evaluations(results: dict, output_directory: Path, form: str = 'protob
      @param form: in which format to write the results, protobuf or json
      """
     output_directory.mkdir(parents=True, exist_ok=True)
+    print(results)
 
     def _write_protobuf():
-        with open(output_directory / "evaluation.prototext") as of:
-            for k, v in results:
-                of.write('measure{{\n  key: "{}"\n  value: "{}"\n}}\n'.format(k, str(v)))
+        with open(output_directory / 'evaluation.prototext', 'w') as of:
+            for k, v in results.items():
+                of.write("measure{{\n  key: '{}'\n  value: '{}'\n}}\n".format(k, str(v)))
 
     def _write_json():
-        with open(output_directory / "evaluation.json") as of:
+        with open(output_directory / "evaluation.json", 'w') as of:
             of.write(json.dumps(results))
 
     if form == 'protobuf':
@@ -94,13 +105,20 @@ def write_evaluations(results: dict, output_directory: Path, form: str = 'protob
               help='Path to the labels.jsonl that contains the predictions.')
 @click.option('-t', '--truth', type=click.Path(exists=True, file_okay=True, dir_okay=False),
               help='Path to the labels.jsonl that contains truth corresponding to the given predictions.')
-@click.option('-o', '--output-dir', type=click.Path(exists=True, file_okay=True, dir_okay=False),
+@click.option('-o', '--output-dir', type=click.Path(exists=True, file_okay=False, dir_okay=True),
               default="./", help='Path where to write the output to')
 @click.option('-f', '--output-format', type=str,
-              default="protobuf", help='Path where to write the output to')
-@click.option('-e', '--extended', type=bool, default=False, help='If set, also compute the extended metrics.')
+              default="json", help='Path where to write the output to')
+@click.option('-e', '--extended', type=bool, default=False, is_flag=True,
+              help='If set, also compute the extended metrics.')
 def evaluate(predictions: str, truth: str, output_dir: str, output_format: str, extended: bool):
-    """ This the cli command for the validator. The CLI checks if the passed files exists and then calls `_validate` """
+    """ This the cli command for the evaluator.
+        - check if files exist and input are valid (by calling the validator)
+        - load truth and predictions, calculate results, and write in the desired output format.
+
+        ~$ python3 evaluator.py --extended -p "<model-output/labels.jsonl>" -t "<dataset-truth/labels.jsonl>" -o "./"
+
+    """
     truth = Path(truth)
     predictions = Path(predictions)
 
