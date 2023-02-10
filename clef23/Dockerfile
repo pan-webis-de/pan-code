@@ -1,6 +1,6 @@
-FROM python:3.7
+FROM python:3.10
+
+RUN pip3 install click numpy pandas scikit-learn
 
 RUN mkdir /clef23
 COPY . /clef23
-
-RUN pip3 install -r /clef23/requirements.txt
