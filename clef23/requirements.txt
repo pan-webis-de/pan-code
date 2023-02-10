@@ -1,2 +1,4 @@
 click
+numpy
+pandas
 scikit-learn

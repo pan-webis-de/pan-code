@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """
 Evaluator for the shared task on Trigger Detection at PAN@CLEF2023.
 
@@ -131,3 +134,4 @@ def evaluate(predictions: str, truth: str, output_dir: str, output_format: str, 
 
 if __name__ == '__main__':
     evaluate()
+
