@@ -25,7 +25,7 @@ class ValidationError(Exception):
     pass
 
 
-def _check_format(labels_file: Path) -> List[Dict[str, str | List[str]]]:
+def _check_format(labels_file: Path) -> List[Dict[str, List[str]]]:
     """ check if
      - this file has a json loadable item on each line (which is utf-8 readable)
      - this has the correct keys (work_id and labels) for each example
