@@ -139,8 +139,8 @@ def main():
         raise ValueError('The output path is required')
 
     # loads files
-    df_truth = load_file(args.g.joinpath("test_truth.json"))
-    df_prediction = load_file(args.s.joinpath("subtask2.json"))
+    df_truth = load_file(args.g)
+    df_prediction = load_file(args.s)
     # evaluation
 
     list_labels = (list(set(df_truth["class"])))
