@@ -1,6 +1,10 @@
 """
+XGBoost baseline for the shared task on Trigger Detection at PAN23.
 
-# TODO: ablation for features, feature selection, and model
+This is the trainer script. It contains code to fit the vectorizer, train the model, and save both to disk.
+The runner script will then load model and vectorizer and make predictions.
+
+This file also contains the code for the ablation study which can be run on one dataset (excluding data balance).
 """
 import logging
 from typing import Tuple, Iterable, Dict, List
@@ -23,17 +27,17 @@ import xgboost as xgb
 logging.basicConfig(filename=f"logs/log-{dt.now().isoformat()}.log", encoding='utf-8', level=logging.DEBUG)
 
 # NOTE These are the parameters for the ablation study
-ABL_MODEL_PARAM = {'max_depth': [2, 4, 5],
+ABL_MODEL_PARAM = {'max_depth': [2, 4],
                    'learning_rate': [0.25, 0.5, 1],
                    # 'n_estimators': [50, 75, 100]
                    }
 ABL_VEC_PARAMS = [
-    # {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
-    # {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
-    # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
-    # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
-    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
-    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
+    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
+    {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
+    {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
     {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
     {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
     {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'},
@@ -98,7 +102,7 @@ def _train_model(x_train, y_train, x_validation, y_validation, savepoint: Path, 
     :return: (y_predicted, parameters) the predicted labels on the validation split
     """
     _time(True)
-    clf = xgb.XGBClassifier(tree_method="hist", n_estimators=200, max_depth=2, learning_rate=1, n_jobs=6)
+    clf = xgb.XGBClassifier(tree_method="hist", n_estimators=200, max_depth=2, learning_rate=1, n_jobs=16)
 
     if ablate:
         split_index = [-1] * len(y_train) + [0] * len(y_validation)

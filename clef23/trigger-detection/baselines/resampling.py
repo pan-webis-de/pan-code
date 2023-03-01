@@ -1,9 +1,13 @@
+"""
+Utilities for the shared task on Trigger Detection at PAN23.
+
+This script contains code to resample the dataset (as it is on zenodo) to modify the class balance.
+"""
 import json
 import logging
 from typing import Tuple, Union, List
 from tqdm import tqdm
 from pathlib import Path
-from datetime import datetime as dt
 import random
 import numpy as np
 from numpy.typing import ArrayLike
@@ -29,6 +33,23 @@ def __update_counts(classes_sampled, indices_sampled, labels):
         for nc in new_labels:
             classes_sampled[nc] += 1
     print(f"to {classes_sampled}")
+
+
+def __get_sample_target(target_sample_count, source_class_size, already_sampled):
+    """
+    Determine the free slots for a class `cls` in the given sampling settings
+    :return:
+    """
+    if not isinstance(target_sample_count, int):
+        free_slots = np.Infinity
+        previous_distance = np.Infinity
+        for free_slot_candidate in target_sample_count:
+            if abs(free_slot_candidate - source_class_size) < previous_distance:
+                previous_distance = abs(free_slot_candidate - source_class_size)
+                free_slots = free_slot_candidate
+    else:
+        free_slots = target_sample_count
+    return free_slots - already_sampled
 
 
 def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLike[int], oversample: bool = True,
@@ -57,22 +78,14 @@ def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLi
         cls_indices = np.where(source_labels == 1)[cls]
         logging.info(f"sample index {cls} with {len(cls_indices)} examples")
 
-        # add target samples, if there is enough space
-        if isinstance(target_sample_count, int):
-            free_slots = target_sample_count - classes_sampled[cls]
-        else:  # search the closest "step" to the current number of labels
-            free_slots = np.Infinity
-            previous_distance = np.Infinity
-            for free_slot_candidate in target_sample_count:
-                if abs(free_slot_candidate - source_class_sizes[cls]) < previous_distance:
-                    previous_distance = abs(free_slot_candidate - source_class_sizes[cls])
-                    free_slots = free_slot_candidate
+        # search the closest "step" to the current number of labels
+        free_slots = __get_sample_target(target_sample_count, source_class_sizes[cls], classes_sampled[cls])
 
         # There are fewer free slots than examples, now we undersample
         if free_slots < len(cls_indices):
             new_sample = []
             if undersample:
-                logging.info(f"undersampling examples for class {cls}")
+                logging.info(f"undersampling examples for class {cls} to ")
                 while free_slots > 0:
                     _ = random.choice(cls_indices)
                     if sum(source_labels[_]) == 1:
@@ -102,7 +115,7 @@ def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLi
     return [index for example_list in sampled_ids.values() for index in example_list]
 
 
-def _resample_rms(work_id: List[str], x: List[str],
+def _resample_ruos_m(work_id: List[str], x: List[str],
                   y: ArrayLike[int]) -> Tuple[List[str], List[str], ArrayLike[int]]:
     """ randomly stratify to the mean (rsm): stratify everything to the number of example that the
      example at the median index has. This means undersampling for the frequent half of labels,
@@ -119,13 +132,13 @@ def _resample_rms(work_id: List[str], x: List[str],
             np.asarray([y[idx] for idx in indices_of_new_data_sample]))
 
 
-def _resample_rus_top3(work_id: List[str], x: List[str],
+def _resample_rus_top(work_id: List[str], x: List[str],
                        y: ArrayLike[int]) -> Tuple[List[str], List[str], ArrayLike[int]]:
-    """randomly undersample the top 1/3 most frequent labels (rus-top3):
-    undersample the top 1/3 by frequency (i.e. cutoff). """
-    target_index = round(len(y[0])*(2/3))
+    """randomly undersample the top 1/4 most frequent labels (rus-top3):
+    undersample the top 1/4 by frequency (i.e. cutoff). """
+    target_index = round(len(y[0])*(3/4))
     target_sample_count = sum(y[:, target_index])
-    logging.info(f"RUS-q3 to index {target_index} with {target_sample_count} examples")
+    logging.info(f"RUS-Q to index {target_index} with {target_sample_count} examples")
 
     indices_of_new_data_sample = __sample(target_sample_count, y, oversample=False, undersample=True)
 
@@ -134,15 +147,38 @@ def _resample_rus_top3(work_id: List[str], x: List[str],
             np.asarray([y[idx] for idx in indices_of_new_data_sample]))
 
 
-def _resample_rsq(work_id: List[str], x: List[str],
-                  y: ArrayLike[int], quantil: int = 3) -> Tuple[List[str], List[str], ArrayLike[int]]:
-    """  randomly stratify to the closest 3-quartil (rsq):
-    stratify to 2*median, median, or 1/2*median, whatever is closer """
-    quantil_size = len(y[0]) / (quantil+1)
-    target_indices = [round(i*quantil_size) for i in range(1, quantil+1)]
+def _resample_ruos_ends(work_id: List[str], x: List[str],
+                       y: ArrayLike[int]) -> Tuple[List[str], List[str], ArrayLike[int]]:
+    """ randomly undersample the top 1/4 most frequent labels and
+        oversample everything below the 25th percentil (of classes)
+    """
+    undersample_index = round(len(y[0])*(3/4))
+    undersample_target_count = sum(y[:, undersample_index])
+    oversample_index = round(len(y[0])*(1/4))
+    oversample_target_count = sum(y[:, oversample_index])
+    logging.info(f"RUOS-ENDS undersample to index {undersample_index} with {undersample_target_count} examples and "
+                 f"oversample to index {oversample_index} with {oversample_target_count} examples.")
+
+    indices_of_new_data_sample = __sample(undersample_target_count, y, oversample=False, undersample=True)
+    indices_of_new_data_sample2 = __sample(oversample_target_count,
+                                           np.asarray([y[idx] for idx in indices_of_new_data_sample]),
+                                           oversample=True,
+                                           undersample=False)
+
+    return ([work_id[idx] for idx in indices_of_new_data_sample2],
+            [x[idx] for idx in indices_of_new_data_sample2],
+            np.asarray([y[idx] for idx in indices_of_new_data_sample2]))
+
+
+def _resample_ruos_q(work_id: List[str], x: List[str],
+                  y: ArrayLike[int], steps: int = 4) -> Tuple[List[str], List[str], ArrayLike[int]]:
+    """  randomly over and undersample to balance the quartils. This means we select the median element of each quartil
+    and balance all others to this value"""
+    step_halves = len(y[0]) / steps*2
+    target_indices = [round(i*step_halves) for i in range(1, (steps*2)+1, 2)]
     target_sample_counts = [sum(y[:, idx]) for idx in target_indices]
 
-    logging.info(f"RSQ to the indices {target_indices} with {target_sample_counts} examples")
+    logging.info(f"RUOS-Q to the indices {target_indices} with {target_sample_counts} examples")
 
     indices_of_new_data_sample = __sample(target_sample_counts, y, oversample=True, undersample=True)
 
@@ -151,15 +187,15 @@ def _resample_rsq(work_id: List[str], x: List[str],
             np.asarray([y[idx] for idx in indices_of_new_data_sample]))
 
 
-def _resample_rusq(work_id: List[str], x: List[str],
-                   y: ArrayLike[int], quantil: int = 3) -> Tuple[List[str], List[str], ArrayLike[int]]:
+def _resample_rus_q(work_id: List[str], x: List[str],
+                   y: ArrayLike[int], steps: int = 4) -> Tuple[List[str], List[str], ArrayLike[int]]:
     """ randomly undersample to the closest 3-quartil (rusq):
     undersample to 2*median, median, or 1/2*median, whatever is closer """
-    quantil_size = len(y[0]) / (quantil+1)
-    target_indices = [round(i*quantil_size) for i in range(1, quantil+1)]
+    step_halves = len(y[0]) / steps*2
+    target_indices = [round(i*step_halves) for i in range(1, (steps*2)+1, 2)]
     target_sample_counts = [sum(y[:, idx]) for idx in target_indices]
 
-    logging.info(f"RSQ to the indices {target_indices} with {target_sample_counts} examples")
+    logging.info(f"RUS-Q to the indices {target_indices} with {target_sample_counts} examples")
 
     indices_of_new_data_sample = __sample(target_sample_counts, y, oversample=False, undersample=True)
 
@@ -181,10 +217,11 @@ def resample(input_dataset_dir: Path, output_dataset_dir: Path, strategy: str = 
     """ Resample the dataset to reduce class imbalance.
 
     Promising strategies:
-    - randomly stratify to the mean (rsm): stratify everything to the median index
-    - randomly undersample the top 1/3 most frequent labels (rus-top3): undersample the top 1/3 by frequency (i.e. cutoff).
-    - randomly stratify to the closest 3-quartil (rsq): stratify to 2*median, median, or 1/2*median, whatever is closer
-    - randomly undersample to the closest 3-quartil (rusq): undersample to 2*median, median, or 1/2*median, whatever is closer
+    - randomly under and oversample to the mean (ruos-m): sample everything to the median index class frequency
+    - randomly undersample everything above the 75th percentil (of classes) (rus-top): undersample the top 1/4 of classes
+    - randomly undersample everything above the 75th percentil and oversample everything below the 25th percentil (of classes) (ruos-ends): undersample the top 1/4 of classes
+    - randomly under and oversample to the closest ruos (ruos-q)
+    - randomly undersample to the closest quartil (rus-q): undersample to 2*median, median, or 1/2*median, whatever is closer
 
     Oversampling is random, undersampling prioritizes examples with few (1) labels.
 
@@ -195,14 +232,16 @@ def resample(input_dataset_dir: Path, output_dataset_dir: Path, strategy: str = 
     """
     work_id, x, y = load_data(input_dataset_dir, preprocess=False)
 
-    if strategy == 'rsm':
-        work_id_resampled, x_resampled, y_resampled = _resample_rms(work_id, x, y)
-    elif strategy == 'rus-top3':
-        work_id_resampled, x_resampled, y_resampled = _resample_rus_top3(work_id, x, y)
-    elif strategy == 'rsq':
-        work_id_resampled, x_resampled, y_resampled = _resample_rsq(work_id, x, y)
-    elif strategy == 'rusq':
-        work_id_resampled, x_resampled, y_resampled = _resample_rusq(work_id, x, y)
+    if strategy == 'ruos-m':
+        work_id_resampled, x_resampled, y_resampled = _resample_ruos_m(work_id, x, y)
+    elif strategy == 'rus-top':
+        work_id_resampled, x_resampled, y_resampled = _resample_rus_top(work_id, x, y)
+    elif strategy == 'ruos-ends':
+        work_id_resampled, x_resampled, y_resampled = _resample_ruos_ends(work_id, x, y)
+    elif strategy == 'ruos-q':
+        work_id_resampled, x_resampled, y_resampled = _resample_ruos_q(work_id, x, y)
+    elif strategy == 'rus-q':
+        work_id_resampled, x_resampled, y_resampled = _resample_rus_q(work_id, x, y)
     else:
         raise AttributeError(f"invalid strategy {strategy}")
 
