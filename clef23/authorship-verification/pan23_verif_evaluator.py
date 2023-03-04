@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-# Evaluation script for the Cross-Domain Authorship Verification task @PAN2022.
+# Evaluation script for the Cross-Domain Authorship Verification task @PAN2023.
 ## Measures
 The following evaluation measures are provided:
     - F1-score [Pedregosa et al. 2011]
@@ -40,15 +40,15 @@ Please note:
 - scikit-learn
 ## Usage
 From the command line:
->>> python pan22-verif-evaluator.py -i TRUTH -a ANSWERS -o OUTPUT
+>>> python pan23-verif-evaluator.py -i TRUTH -a ANSWERS -o OUTPUT
 where
     TRUTH is the path to the folder of 'truth.jsonl' file with the ground truth
     ANSWERS is the path to the folder of the 'answers.jsonl' file for a submitted method
     OUTPUT is the path to the folder where the results of the evaluation will be saved
 Example: 
->>> python pan22_verif_evaluator.py -i "datasets/test_truth" \
+>>> python pan23_verif_evaluator.py -i "datasets/test_truth" \
         -a "submitted_models/answers" \
-        -o "pan22-evaluation"
+        -o "pan23-evaluation"
 ## References
 - E. Stamatatos, et al. Overview of the Author Identification
   Task at PAN 2014. CLEF Working Notes (2014): 877-897.
@@ -276,7 +276,7 @@ def evaluate_all(true_y, pred_y):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Evaluation script AA@PAN2020')
+    parser = argparse.ArgumentParser(description='Evaluation script AV@PAN2023')
     parser.add_argument('-i', type=str,
                         help='Path to the folder of jsonl-file with ground truth')
     parser.add_argument('-a', type=str,
