@@ -306,7 +306,7 @@ def test(model_dir,eval_data_file,output_folder,radius):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser = argparse.ArgumentParser(description='PAN-22 Cross-domain Authorship Verification task: Baseline Compressor')
+    parser = argparse.ArgumentParser(description='PAN-23 Cross-domain Authorship Verification task: Baseline Compressor')
     parser.add_argument('--train', action='store_true', help='If True, train a model from the given '
                                                              'model directory and input training dataset. If False, load a model'
                                                              'and test on the dataset of test dir')
