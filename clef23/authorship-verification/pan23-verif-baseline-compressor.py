@@ -14,20 +14,20 @@
      https://github.com/pan-webis-de/teahan03
  Questions/comments: stamatatos@aegean.gr
 
- It can be applied to datasets of PAN-2022 cross-discourse-type authorship verification task.
- See details here: http://pan.webis.de/clef22/pan22-web/author-identification.html
+ It can be applied to datasets of PAN-2023 cross-discourse-type authorship verification task.
+ See details here: http://pan.webis.de/clef23/pan23-web/author-identification.html
  Dependencies:
  - Python 2.7 or 3.6 (we recommend the Anaconda Python distribution)
 
  Example usage from the command line to train the model: 
-    > python pan22-verif-baseline-compressor.py --train \
+    > python pan23-verif-baseline-compressor.py --train \
      -model_dir "models/baseline" \
-     -train_dir "datasets/pan22-authorship-verification-train" \
+     -train_dir "datasets/pan23-authorship-verification-train" \
      
  Example usage from the command line to test the model: 
-    > python pan22-verif-baseline-compressor.py \
+    > python pan23-verif-baseline-compressor.py \
      -model_dir "models/baseline" \
-     -test_dir "datasets/pan22-authorship-verification-test" \
+     -test_dir "datasets/pan23-authorship-verification-test" \
      -out_dir "models/answers" 
  
 """
