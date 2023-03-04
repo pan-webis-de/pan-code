@@ -26,18 +26,18 @@ by the imposters approach.
 ## Dependencies
 - Python 3.6+ (we recommend the Anaconda Python distribution)
 - scikit-learn, numpy, scipy
-- pan22_verif_evaluator.py
+- pan23_verif_evaluator.py
 Example usage from the command line to train the model:
->>> python pan22-verif-baseline-cngdist.py \
+>>> python pan23-verif-baseline-cngdist.py \
           --train \
           --model_dir="models/baseline" \
-          -p="datasets/pan22-authorship-verification-training" \
-          -t="datasets/pan22-authorship-verification-training" \
+          -p="datasets/pan23-authorship-verification-training" \
+          -t="datasets/pan23-authorship-verification-training" \
           -num_iterations=0 
 Example usage from the command line to test the model:
->>> python pan22-verif-baseline-cngdist.py \
+>>> python pan23-verif-baseline-cngdist.py \
           --model_dir="models/baseline" \
-          -i="datasets/pan22-authorship-verification-test" \
+          -i="datasets/pan23-authorship-verification-test" \
           -num_iterations=0 \
           -o="out"
 """
@@ -232,7 +232,7 @@ def test(test_pairs, output_dir, model_directory, num_iterations):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='PAN-22 Cross-domain Authorship Verification task: Distance-based baseline')
+        description='PAN-23 Cross-domain Authorship Verification task: Distance-based baseline')
     # data settings:
     parser.add_argument('--train', action='store_true', help='If True, train a model from the given '
                                                              'input pair and input truth. If False, load a model'
