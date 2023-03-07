@@ -102,7 +102,7 @@ def _train_model(x_train, y_train, x_validation, y_validation, savepoint: Path, 
     :return: (y_predicted, parameters) the predicted labels on the validation split
     """
     _time(True)
-    clf = xgb.XGBClassifier(tree_method="hist", n_estimators=200, max_depth=2, learning_rate=1, n_jobs=16)
+    clf = xgb.XGBClassifier(tree_method="hist", n_estimators=100, max_depth=2, learning_rate=1, n_jobs=16)
 
     if ablate:
         split_index = [-1] * len(y_train) + [0] * len(y_validation)
