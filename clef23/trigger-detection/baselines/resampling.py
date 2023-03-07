@@ -11,6 +11,7 @@ from pathlib import Path
 import random
 import numpy as np
 from numpy.typing import ArrayLike
+import click
 
 from util import load_data
 
@@ -246,3 +247,21 @@ def resample(input_dataset_dir: Path, output_dataset_dir: Path, strategy: str = 
         raise AttributeError(f"invalid strategy {strategy}")
 
     _write_dataset(work_id_resampled, x_resampled, y_resampled, output_dataset_dir)
+
+
+@click.command()
+@click.option('--works', type=click.Path(exists=True, file_okay=False, dir_okay=True),
+              help='Path to the directory with the pan23-trigger-detection-training data (from the PAN23 distribution).')
+@click.option('--output', type=click.Path(exists=False, file_okay=False, dir_okay=True),
+              help='Path to a directory where to write the new works.jsonl')
+@click.option('--strategy', type=click.Path(exists=True, file_okay=False, dir_okay=True),
+              help='The resampling strategy to use (ruos-m, rus-top, ruos-ends, ruos-q, rus-q) ')
+def run(works: str, output: str, strategy: str):
+    output = Path(output)
+    if not output.exists():
+        output.mkdir()
+    resample(Path(works), output, strategy)
+
+
+if __name__ == "__main__":
+    run()

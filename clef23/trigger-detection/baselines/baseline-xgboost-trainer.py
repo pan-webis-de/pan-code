@@ -27,20 +27,20 @@ import xgboost as xgb
 logging.basicConfig(filename=f"logs/log-{dt.now().isoformat()}.log", encoding='utf-8', level=logging.DEBUG)
 
 # NOTE These are the parameters for the ablation study
-ABL_MODEL_PARAM = {'max_depth': [2, 4],
-                   'learning_rate': [0.25, 0.5, 1],
+ABL_MODEL_PARAM = {'max_depth': [2, 3],
+                   'learning_rate': [0.25, 0.5, 0.75],
                    # 'n_estimators': [50, 75, 100]
                    }
 ABL_VEC_PARAMS = [
-    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
-    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
-    {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
-    {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
+    # {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
+    # {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
+    # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
+    # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
+    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'}, # crash
+    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'}, # crash try again with lower max_depth
+    # {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'}, # crash
     {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
-    {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'},
+    # {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'}, # crash
     {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'chi2'}]
 
 
