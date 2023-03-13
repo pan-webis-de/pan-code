@@ -24,7 +24,9 @@ from util import _time, load_data
 import joblib
 import xgboost as xgb
 
-logging.basicConfig(filename=f"logs/log-{dt.now().isoformat()}.log", encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename=f"logs/log-xgboost-{dt.now().isoformat()}.log", encoding='utf-8', level=logging.WARN)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # NOTE These are the parameters for the ablation study
 ABL_MODEL_PARAM = {'max_depth': [2, 3],
@@ -32,15 +34,15 @@ ABL_MODEL_PARAM = {'max_depth': [2, 3],
                    # 'n_estimators': [50, 75, 100]
                    }
 ABL_VEC_PARAMS = [
-    # {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
-    # {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
+    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
     # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
-    # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
-    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'}, # crash
-    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'}, # crash try again with lower max_depth
-    # {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'}, # crash
+    {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
+    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
+    {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
     {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
-    # {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'}, # crash
+    # {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'},
     {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'chi2'}]
 
 
@@ -59,7 +61,7 @@ def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
     """
 
     if fit:
-        logging.info("fit vectorizer")
+        logger.debug("fit vectorizer")
         vec = TfidfVectorizer(lowercase=False, analyzer=analyzer, ngram_range=n_gram_range, min_df=min_df)
         x = vec.fit_transform(x_text)
         _time()
@@ -68,7 +70,7 @@ def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
         if f_select is None or f_select == 'None':
             return x, y
 
-        logging.info("fit feature selection")
+        logging.debug("fit feature selection")
         if f_select == 'chi2':
             feature_selector = SelectKBest(chi2, k=10000)
         else:
@@ -77,9 +79,9 @@ def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
         _time()
         joblib.dump(feature_selector, savepoint / "feature-selector.joblib")
     else:
-        logging.info("load vectorizer")
+        logging.debug("load vectorizer")
         vec = joblib.load(savepoint / "vectorizer.joblib")
-        logging.info("load feature selection")
+        logging.debug("load feature selection")
         x = vec.transform(x_text)
         if f_select == 'chi2':
             feature_selector = joblib.load(savepoint / "feature-selector.joblib")
@@ -145,24 +147,23 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
     logging.debug(f"Run Ablation: {ablate}")
 
     def _run(xt, yt, xv, yv, vectorizer_params: Dict, model_params: Dict):
-        logging.warning(f"Vectorizer Parameters: {vectorizer_params}")
-        logging.info("fit training vectorizer")
+        logging.debug("fit training vectorizer")
         x_train, y_train = fit_vectorizer(xt, yt, savepoint, fit=True, **vectorizer_params)
-        logging.info("vectorize validation data")
+        logging.debug("vectorize validation data")
         x_validation, y_validation = fit_vectorizer(xv, yv, savepoint, **vectorizer_params)
 
-        logging.info("train model")
+        logging.debug("train model")
         y_predicted, parameters = _train_model(x_train, y_train, x_validation, y_validation, savepoint, ablate=ablate, **model_params)
 
-        logging.warning(f"Model Parameters: {parameters}")
-        logging.warning(
-            f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}"),
-        logging.warning(f"trained with validation scores of {f1_score(y_validation, y_predicted, average='macro')} "
-                        f"macro f1 and {f1_score(y_validation, y_predicted, average='micro')} micro f1")
+        logging.info(f"Vectorizer Parameters: {vectorizer_params}")
+        logging.info(f"Model Parameters: {parameters}")
+        logging.info(f"trained with validation scores of {f1_score(y_validation, y_predicted, average='macro')} "
+                     f"macro f1 and {f1_score(y_validation, y_predicted, average='micro')} micro f1")
+        logging.info(f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}"),
 
-    logging.info("load training data")
+    logging.debug("load training data")
     _, x_train_text, y_train = load_data(training_dataset_dir)
-    logging.info("load validation data")
+    logging.debug("load validation data")
     _, x_validation_text, y_validation = load_data(validation_dataset_dir)
 
     if ablate:
@@ -192,8 +193,8 @@ def train(training, validation, savepoint, ablate):
 
 
     $ python3 baseline-xgboost-trainer.py -a \
-        --training "/home/mike4537/data/pan23-ml/pan23-trigger-detection-train" \
-        --validation "/home/mike4537/data/pan23-ml/pan23-trigger-detection-validation"
+        --training "/home/mike4537/data/pan23-trigger-detection/samples/rus-m" \
+        --validation "/home/mike4537/data/pan23-trigger-detection/pan23-trigger-detection-validation"
 
     """
     Path(savepoint).mkdir(parents=True, exist_ok=True)

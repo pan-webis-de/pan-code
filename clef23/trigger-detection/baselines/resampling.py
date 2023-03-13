@@ -17,10 +17,22 @@ import click
 
 from util import load_data
 
-logging.basicConfig(filename=f'logs/log-resampling-{dt.now().isoformat()}', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename=f'logs/log-resampling-{dt.now().isoformat()}', encoding='utf-8', level=logging.INFO)
 # logging.basicConfig(encoding='utf-8', level=logging.DEBUG)
 
 random = default_rng(42)
+
+
+def __class_count(labels: ArrayLike) -> Tuple[ArrayLike, List[int]]:
+    """ Returns the number of number of examples per class in the array (in order of the input matrix).
+        Also returns the class indices in descending order.
+    :param labels: a (n x c) matrix of n examples and c binary classes. Entries are 0 or 1.
+    :return:
+    """
+    class_counts = labels.sum(axis=0)
+    class_order = [ind for ind, _ in sorted(list(enumerate(class_counts)), reverse=True, key=lambda x: x[1])]
+    logging.debug(f"Loaded classes {class_order} and class counts {class_counts}")
+    return class_counts, class_order
 
 
 def __update_counts(old_sampled_class_ids, labels, all_sampled_ids):
@@ -45,25 +57,27 @@ def __update_counts(old_sampled_class_ids, labels, all_sampled_ids):
     return new_sampled_classes_count, new_sampled_class_ids
 
 
-def __get_sample_target(target_sample_count: Union[int | DTypeLike | list], source_class_size, already_sampled):
+def __get_sample_target(target_sample_count: Union[int | DTypeLike | list], source_class_size):
     """
     Determine the free slots for a class `cls` in the given sampling settings
+    :param oversample: If oversampling is false, the target slots is at most source_class_size
     :return:
     """
     if isinstance(target_sample_count, list):
-        free_slots = np.Infinity
+        target_slots = np.Infinity
         previous_distance = np.Infinity
         for free_slot_candidate in target_sample_count:
             if abs(free_slot_candidate - source_class_size) < previous_distance:
                 previous_distance = abs(free_slot_candidate - source_class_size)
-                free_slots = free_slot_candidate
+                target_slots = free_slot_candidate
     else:
-        free_slots = target_sample_count
-    return free_slots - already_sampled
+        target_slots = target_sample_count
+    return target_slots
 
 
-def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLike, oversample: bool = True,
-             undersample: bool = True) -> List[int]:
+def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLike,
+             class_count: List[int], classes: List[int],
+             oversample: bool = True, undersample: bool = True) -> List[int]:
     """
     This method does the actual sampling.
     The oversampling only draws examples with 1 label.
@@ -72,6 +86,8 @@ def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLi
                                 List -> a list of possible "steps" to which we can sample.
                                 The sampler will check which of these "steps" is closest and sample that many examples.
     :param source_labels: the original label matrix
+    :param classes: A list with the indices of the classes (ordered in reverse order)
+    :param class_count: How many examples the class with idx has.
     :param oversample: True -> Examples will be oversampled to match `target_sample_count`.
                        False -> All examples of the rare classes will be added once
     :param undersample: True -> Examples will be randomly undersampled to match `target_sample_count`
@@ -79,112 +95,159 @@ def __sample(target_sample_count: Union[int | List[int]], source_labels: ArrayLi
     :return: A list of examples as indices from `source_labels`
     """
     logging.info(f"Start sampling with oversampling: {oversample} and undersampling: {undersample}")
-    classes = list(range(len(source_labels[0])))
-    source_class_sizes = [sum(source_labels[:, c]) for c in classes]
+    # classes = list(range(len(source_labels[0])))
     sampled_classes_count = {x: 0 for x in classes}  # This counts how many labels there are in total
     sampled_class_ids = {x: [] for x in classes}  # this tracks the indices of examples in the argument lists
     all_sampled_ids = []
 
-    for cls in sorted(classes, reverse=True):
+    for cls in reversed(classes):
         cls_indices = np.asarray(source_labels[:, cls] == 1).nonzero()[0]
-        logging.info(f"Sample index {cls} ({len(cls_indices)} examples)")
+        logging.debug(f"Sample class {cls} ({len(cls_indices)} original examples)")
 
         # search the closest "step" to the current number of labels
-        free_slots = __get_sample_target(target_sample_count, source_class_sizes[cls], sampled_classes_count[cls])
+        target_sample_size = __get_sample_target(target_sample_count, class_count[cls])
+        # if we should oversample but oversample is false:
+        if (target_sample_size > class_count[cls] and not oversample) or \
+                (target_sample_size < class_count[cls] and not undersample):
+            target_sample_size = class_count[cls]
+        free_slots = target_sample_size - sampled_classes_count[cls]
         new_sample = []
 
         # There are fewer free slots than examples, now we undersample
-        if free_slots <= len(cls_indices):
-            # for undersampling, we only offer elements that are not already sampled:
-            candidates = [idx for idx in cls_indices if idx not in sampled_class_ids[cls]]
-            if len(candidates) == free_slots or not undersample:
-                logging.info(f"Adding all missing examples for class {cls}")
-                new_sample.extend(candidates)
+        logging.debug(f"sample for class {cls} has  {free_slots} free slots.")
 
-            elif undersample:
-                logging.info(f"Undersampling class {cls}, filling {free_slots} slots from {len(candidates)} candidate examples")
-                fails = 0
-                while free_slots > 0:
-                    _ = random.choice(candidates)
-                    if sum(source_labels[_]) == 1 or fails > 3000:
-                        new_sample.append(_)
-                        free_slots -= 1
-                    else:
-                        fails += 1
+        if free_slots < 0:  # Problem. Happens through side effects. What to do?
+            logging.warning(f"Class {cls} is too full by {free_slots}")
+            continue
+            # raise ValueError(f"Class {cls} is too full by {free_slots}")
+
+        # Assign the leftovers to get the original sample, if there are free slots
+        leftovers = [idx for idx in cls_indices if idx not in sampled_class_ids[cls]]
+        if free_slots >= len(leftovers):
+            logging.debug(f"Adding {len(leftovers)} leftover examples for class {cls} into {free_slots} free slots.")
+            new_sample.extend(leftovers)
+            free_slots -= len(leftovers)
+
+        elif free_slots < len(leftovers):  # this happens by oversampling smaller classes with side effects.
+            single_class_leftovers = {_ for _ in leftovers if sum(source_labels[_]) == 1}
+            multi_class_leftovers = [_ for _ in leftovers if _ not in single_class_leftovers]
+            logging.debug(f"Undersampling ({free_slots}) free slots from ({len(leftovers)}) leftovers: ({len(single_class_leftovers)}) single class and ({len(multi_class_leftovers)}) multi class examples.")
+
+            # assert undersample
+            if not undersample:
+                logging.warning(f"Undersampling is false, but free slots ({free_slots}) is smaller than leftovers {len(leftovers)}. Undersample leftovers to fill the class.")
+
+            if free_slots < len(single_class_leftovers) or free_slots < len(single_class_leftovers) * 3 or len(single_class_leftovers) > len(multi_class_leftovers) * 10:
+                _ = random.choice(list(single_class_leftovers), free_slots)
+                logging.debug(f"Added {len(_)} single label leftovers through undersamping.")
             else:
-                raise ValueError(f"free_slots is {free_slots} <= {len(cls_indices)} but undersampling is not true. ")
+                # check how distorted the sample is
+                _ = random.choice(leftovers, free_slots)
+                logging.debug(f"Added {len(_)} (s/m label) leftovers through undersamping.")
+            new_sample.extend(_)
+            free_slots -= len(_)
 
-        # oversample: add all examples + oversample new amount by random
-        elif free_slots > len(cls_indices):
-            # First, we add all missing examples of that class (which have not already been sampled)
-            new_sample.extend([idx for idx in cls_indices if idx not in sampled_class_ids[cls]])
-            if oversample:
-                logging.info(f"Oversampling class {cls}, filling {free_slots} slots from {len(cls_indices)} examples")
-                oversample_by = free_slots - len(cls_indices)
-                logging.info(f"\tby {oversample_by}")
-                _ = random.choice(cls_indices, size=(oversample_by))
-                # TODO: only oversample examples without side effects?
-                new_sample.extend(_)
+        # All original classes are assigned. If there are still free slots, oversample.
+        assert free_slots >= 0
+
+        if free_slots > 0:
+            single_class_examples = {_ for _ in cls_indices if sum(source_labels[_]) == 1}
+            multi_class_examples = [_ for _ in cls_indices if _ not in single_class_examples]
+            logging.debug(f"Oversampling ({free_slots}) free slots from {class_count[cls]} examples: ({len(single_class_examples)}) single class and ({len(multi_class_examples)}) multi class examples.")
+
+            assert oversample  # if oversampling is false, there was an unexpected error before
+
+            if free_slots < len(single_class_examples) or free_slots < len(single_class_examples) * 3 or len(single_class_examples) > len(multi_class_examples) * 10:
+                _ = random.choice(list(single_class_examples), size=(free_slots))
+                logging.debug(f"Added {len(_)} single label leftovers through undersamping.")
             else:
-                logging.info(f"Adding nothing to class {cls}. ({free_slots} > {len(cls_indices)}) but oversampling is False")
+                _ = random.choice(cls_indices, size=(free_slots))
+                logging.debug(f"Added {len(_)} (s/m label) leftovers through undersamping.")
+            new_sample.extend(_)
+            free_slots -= len(_)
 
-        # there are already more examples of this class as there should be. Handle this when it happens.
-        else:
-            raise ValueError(f"free_slots is invalid with {free_slots}")
+        assert free_slots == 0
+        assert sampled_classes_count[cls] + len(new_sample) == target_sample_size
 
+        logging.debug(f"Adding {len(new_sample)} new examples to the sample.")
         all_sampled_ids.extend(new_sample)
         sampled_classes_count, sampled_class_ids = __update_counts(sampled_class_ids, source_labels, all_sampled_ids)
 
-    return [index for example_list in sampled_class_ids.values() for index in example_list]
+    logging.info(f"Sampled class counts: {sampled_classes_count}")
+    return all_sampled_ids
 
 
-def _resample_ruos_m(work_id: List[str], x: List[str],
-                  y: ArrayLike) -> Tuple[List[str], List[str], ArrayLike]:
+def _resample_ruos_m(work_id: List[str], x: List[str], y: ArrayLike,
+                     class_count: List[int], class_order: List[int]) -> Tuple[List[str], List[str], ArrayLike]:
     """ randomly stratify to the mean (rsm): stratify everything to the number of example that the
      example at the median index has. This means undersampling for the frequent half of labels,
      and oversampling for the rare half
      """
-    median_index = round(len(y[0])/2)
-    target_sample_count = sum(y[:, median_index])
-    logging.info(f"RSM to median index ({median_index}) with {target_sample_count} examples")
+    median_index = class_order[round(len(class_order)/2)]  # index with the median sample count
+    target_sample_count = class_count[median_index]
+    logging.info(f"RUOS-M to median index ({median_index}) with {target_sample_count} examples")
 
-    indices_of_new_data_sample = __sample(target_sample_count, y, oversample=True, undersample=True)
+    indices_of_new_data_sample = __sample(target_sample_count, y, class_count, class_order,
+                                          oversample=True, undersample=True)
 
     return ([work_id[idx] for idx in indices_of_new_data_sample],
             [x[idx] for idx in indices_of_new_data_sample],
             np.asarray([y[idx] for idx in indices_of_new_data_sample]))
 
 
-def _resample_rus_top(work_id: List[str], x: List[str],
-                       y: ArrayLike) -> Tuple[List[str], List[str], ArrayLike]:
+def _resample_rus_m(work_id: List[str], x: List[str], y: ArrayLike,
+                    class_count: List[int], class_order: List[int]) -> Tuple[List[str], List[str], ArrayLike]:
+    """ randomly stratify to the mean (rsm): stratify everything to the number of example that the
+     example at the median index has. This means undersampling for the frequent half of labels,
+     and oversampling for the rare half
+     """
+    median_index = class_order[round(len(class_order)/2)]  # index with the median sample count
+    target_sample_count = class_count[median_index]
+    logging.info(f"RUS-M to median index ({median_index}) with {target_sample_count} examples")
+
+    indices_of_new_data_sample = __sample(target_sample_count, y, class_count, class_order,
+                                          oversample=False, undersample=True)
+
+    return ([work_id[idx] for idx in indices_of_new_data_sample],
+            [x[idx] for idx in indices_of_new_data_sample],
+            np.asarray([y[idx] for idx in indices_of_new_data_sample]))
+
+
+def _resample_rus_top(work_id: List[str], x: List[str], y: ArrayLike,
+                      class_count: List[int], class_order: List[int]) -> Tuple[List[str], List[str], ArrayLike]:
     """randomly undersample the top 1/4 most frequent labels (rus-top3):
     undersample the top 1/4 by frequency (i.e. cutoff). """
-    target_index = round(len(y[0])*(1/4))
-    target_sample_count = sum(y[:, target_index])
+    target_index = class_order[round(len(class_order)*(1/4))]
+    target_sample_count = class_count[target_index]
     logging.info(f"RUS-TOP to index {target_index} with {target_sample_count} examples")
 
-    indices_of_new_data_sample = __sample(target_sample_count, y, oversample=False, undersample=True)
+    indices_of_new_data_sample = __sample(target_sample_count, y, class_count, class_order,
+                                          oversample=False, undersample=True)
 
     return ([work_id[idx] for idx in indices_of_new_data_sample],
             [x[idx] for idx in indices_of_new_data_sample],
             np.asarray([y[idx] for idx in indices_of_new_data_sample]))
 
 
-def _resample_ruos_ends(work_id: List[str], x: List[str],
-                       y: ArrayLike) -> Tuple[List[str], List[str], ArrayLike]:
+def _resample_ruos_ends(work_id: List[str], x: List[str], y: ArrayLike,
+                        class_count: List[int], class_order: List[int]) -> Tuple[List[str], List[str], ArrayLike]:
     """ randomly undersample the top 1/4 most frequent labels and
         oversample everything below the 25th percentil (of classes)
     """
-    undersample_index = round(len(y[0])*(1/4))
-    undersample_target_count = sum(y[:, undersample_index])
-    oversample_index = round(len(y[0])*(3/4))
-    oversample_target_count = sum(y[:, oversample_index])
+    undersample_index = class_order[round(len(class_order)*(1/4))]
+    undersample_target_count = class_count[undersample_index]
+    oversample_index = class_order[round(len(class_order)*(3/4))]
+    oversample_target_count = class_count[oversample_index]
     logging.info(f"RUOS-ENDS undersample to index {undersample_index} with {undersample_target_count} examples and "
                  f"oversample to index {oversample_index} with {oversample_target_count} examples.")
 
-    indices_of_new_data_sample = __sample(undersample_target_count, y, oversample=False, undersample=True)
+    indices_of_new_data_sample = __sample(undersample_target_count, y, class_count, class_order,
+                                          oversample=False, undersample=True)
+    new_y = np.asarray([y[idx] for idx in indices_of_new_data_sample])
+    class_count, class_order = __class_count(new_y)
     indices_of_new_data_sample2 = __sample(oversample_target_count,
                                            np.asarray([y[idx] for idx in indices_of_new_data_sample]),
+                                           class_count, class_order,
                                            oversample=True,
                                            undersample=False)
 
@@ -193,34 +256,41 @@ def _resample_ruos_ends(work_id: List[str], x: List[str],
             np.asarray([y[idx] for idx in indices_of_new_data_sample2]))
 
 
-def _resample_ruos_q(work_id: List[str], x: List[str],
-                  y: ArrayLike, steps: int = 4) -> Tuple[List[str], List[str], ArrayLike]:
+def _resample_ruos_q(work_id: List[str], x: List[str], y: ArrayLike,
+                     class_count: List[int], class_order: List[int],
+                     steps: int = 3) -> Tuple[List[str], List[str], ArrayLike]:
     """  randomly over and undersample to balance the quartils. This means we select the median element of each quartil
     and balance all others to this value"""
-    step_halves = len(y[0]) / (steps*2)
-    target_indices = [round(i*step_halves) for i in range(1, (steps*2)+1, 2)]
-    target_sample_counts = [sum(y[:, idx]) for idx in target_indices]
+    # get order of classes
+    step_halves = len(class_order) / (steps*2)
+    target_indices = [class_order[round(i*step_halves)] for i in range(1, (steps*2)+1, 2)]
+    target_sample_counts = [class_count[idx] for idx in target_indices]
 
     logging.info(f"RUOS-Q to the indices {target_indices} with {target_sample_counts} examples")
 
-    indices_of_new_data_sample = __sample(target_sample_counts, y, oversample=True, undersample=True)
+    indices_of_new_data_sample = __sample(target_sample_counts, y,
+                                          class_count, class_order,
+                                          oversample=True, undersample=True)
 
     return ([work_id[idx] for idx in indices_of_new_data_sample],
             [x[idx] for idx in indices_of_new_data_sample],
             np.asarray([y[idx] for idx in indices_of_new_data_sample]))
 
 
-def _resample_rus_q(work_id: List[str], x: List[str],
-                   y: ArrayLike, steps: int = 4) -> Tuple[List[str], List[str], ArrayLike]:
+def _resample_rus_q(work_id: List[str], x: List[str], y: ArrayLike,
+                    class_count: List[int], class_order: List[int],
+                    steps: int = 3) -> Tuple[List[str], List[str], ArrayLike]:
     """ randomly undersample to the closest 3-quartil (rusq):
     undersample to 2*median, median, or 1/2*median, whatever is closer """
-    step_halves = len(y[0]) / (steps*2)
-    target_indices = [round(i*step_halves) for i in range(1, (steps*2)+1, 2)]
-    target_sample_counts = [sum(y[:, idx]) for idx in target_indices]
+    step_halves = len(class_order) / (steps*2)
+    target_indices = [class_order[round(i*step_halves)] for i in range(1, (steps*2)+1, 2)]
+    target_sample_counts = [class_count[idx] for idx in target_indices]
 
     logging.info(f"RUS-Q to the indices {target_indices} with {target_sample_counts} examples")
 
-    indices_of_new_data_sample = __sample(target_sample_counts, y, oversample=False, undersample=True)
+    indices_of_new_data_sample = __sample(target_sample_counts, y,
+                                          class_count, class_order,
+                                          oversample=False, undersample=True)
 
     return ([work_id[idx] for idx in indices_of_new_data_sample],
             [x[idx] for idx in indices_of_new_data_sample],
@@ -254,30 +324,36 @@ def resample(input_dataset_dir: Path, output_dataset_dir: Path, strategy: str = 
     :return: None
     """
     work_id, x, y = load_data(input_dataset_dir, preprocess=False)
+    class_count, class_order = __class_count(y)
+    def _s(method, strategy):
+        work_id_resampled, x_resampled, y_resampled = method(work_id, x, y, class_count, class_order)
+        (output_dataset_dir / strategy).mkdir(exist_ok=True, parents=False)
+        _write_dataset(work_id_resampled, x_resampled, y_resampled, output_dataset_dir / strategy)
 
-    if strategy == 'ruos-m':
-        work_id_resampled, x_resampled, y_resampled = _resample_ruos_m(work_id, x, y)
-    elif strategy == 'rus-top':
-        work_id_resampled, x_resampled, y_resampled = _resample_rus_top(work_id, x, y)
-    elif strategy == 'ruos-ends':
-        work_id_resampled, x_resampled, y_resampled = _resample_ruos_ends(work_id, x, y)
-    elif strategy == 'ruos-q':
-        work_id_resampled, x_resampled, y_resampled = _resample_ruos_q(work_id, x, y)
-    elif strategy == 'rus-q':
-        work_id_resampled, x_resampled, y_resampled = _resample_rus_q(work_id, x, y)
-    else:
+    if strategy == 'ruos-m' or strategy == 'all':
+        _s(_resample_ruos_m, 'ruos-m')
+    if strategy == 'ruos-ends' or strategy == 'all':
+        _s(_resample_ruos_ends, 'ruos-ends')
+    if strategy == 'ruos-q' or strategy == 'all':
+        _s(_resample_ruos_q, 'ruos-ends')
+    if strategy == 'rus-m' or strategy == 'all':
+        _s(_resample_rus_m, 'rus-m')
+    if strategy == 'rus-top' or strategy == 'all':
+        _s(_resample_rus_top, 'rus-top')
+    if strategy == 'rus-q' or strategy == 'all':
+        _s(_resample_rus_q, 'rus-q')
+
+    if strategy not in {'ruos-m', 'rus-top', 'ruos-ends', 'rus-m', 'ruos-q', 'rus-q', 'all'}:
         raise AttributeError(f"invalid strategy {strategy}")
-
-    _write_dataset(work_id_resampled, x_resampled, y_resampled, output_dataset_dir)
 
 
 @click.command()
 @click.option('--works', type=click.Path(exists=True, file_okay=False, dir_okay=True),
               help='Path to the directory with the pan23-trigger-detection-training data (from the PAN23 distribution).')
 @click.option('--output', type=click.Path(exists=False, file_okay=False, dir_okay=True),
-              help='Path to a directory where to write the new works.jsonl')
+              help='Path to a directory where to write the new <strategy>/works.jsonl')
 @click.option('--strategy', type=str,
-              help='The resampling strategy to use (ruos-m, rus-top, ruos-ends, ruos-q, rus-q) ')
+              help='The resampling strategy to use (ruos-m, rus-top, ruos-ends, ruos-q, rus-q, or all) ')
 def run(works: str, output: str, strategy: str):
     """
     $ python3 resampling.py \
