@@ -335,7 +335,7 @@ def resample(input_dataset_dir: Path, output_dataset_dir: Path, strategy: str = 
     if strategy == 'ruos-ends' or strategy == 'all':
         _s(_resample_ruos_ends, 'ruos-ends')
     if strategy == 'ruos-q' or strategy == 'all':
-        _s(_resample_ruos_q, 'ruos-ends')
+        _s(_resample_ruos_q, 'ruos-q')
     if strategy == 'rus-m' or strategy == 'all':
         _s(_resample_rus_m, 'rus-m')
     if strategy == 'rus-top' or strategy == 'all':

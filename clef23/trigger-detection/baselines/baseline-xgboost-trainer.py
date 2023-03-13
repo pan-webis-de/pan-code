@@ -70,7 +70,7 @@ def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
         if f_select is None or f_select == 'None':
             return x, y
 
-        logging.debug("fit feature selection")
+        logger.debug("fit feature selection")
         if f_select == 'chi2':
             feature_selector = SelectKBest(chi2, k=10000)
         else:
@@ -79,9 +79,9 @@ def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
         _time()
         joblib.dump(feature_selector, savepoint / "feature-selector.joblib")
     else:
-        logging.debug("load vectorizer")
+        logger.debug("load vectorizer")
         vec = joblib.load(savepoint / "vectorizer.joblib")
-        logging.debug("load feature selection")
+        logger.debug("load feature selection")
         x = vec.transform(x_text)
         if f_select == 'chi2':
             feature_selector = joblib.load(savepoint / "feature-selector.joblib")
@@ -114,8 +114,8 @@ def _train_model(x_train, y_train, x_validation, y_validation, savepoint: Path, 
         gs = GridSearchCV(clf, {'max_depth': max_depth,
                                 'learning_rate': learning_rate}, verbose=1, cv=ps, scoring='f1_macro')
         gs.fit(x, y, early_stopping_rounds=10, eval_set=[(x_validation, y_validation)])
-        logging.info(f"Best score in grid search: {gs.best_score_}")
-        logging.info(f"Best parameters in grid search: {gs.best_params_}")
+        logger.info(f"Best score in grid search: {gs.best_score_}")
+        logger.info(f"Best parameters in grid search: {gs.best_params_}")
         be = gs.best_estimator_
         parameters = gs.best_params_
     else:
@@ -124,7 +124,7 @@ def _train_model(x_train, y_train, x_validation, y_validation, savepoint: Path, 
         parameters = {'n_estimators': 100, 'max_depth': 2, 'learning_rate': 1}
 
     _time()
-    logging.info(f"save model to {savepoint}")
+    logger.info(f"save model to {savepoint}")
     joblib.dump(be, savepoint / "clf-ovr.joblib")
     predictions = be.predict(x_validation)
     return predictions, parameters
@@ -144,26 +144,26 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
     :param ablate: If True, run the ablation study.
     :return: None
     """
-    logging.debug(f"Run Ablation: {ablate}")
+    logger.debug(f"Run Ablation: {ablate}")
 
     def _run(xt, yt, xv, yv, vectorizer_params: Dict, model_params: Dict):
-        logging.debug("fit training vectorizer")
+        logger.debug("fit training vectorizer")
         x_train, y_train = fit_vectorizer(xt, yt, savepoint, fit=True, **vectorizer_params)
-        logging.debug("vectorize validation data")
+        logger.debug("vectorize validation data")
         x_validation, y_validation = fit_vectorizer(xv, yv, savepoint, **vectorizer_params)
 
-        logging.debug("train model")
+        logger.debug("train model")
         y_predicted, parameters = _train_model(x_train, y_train, x_validation, y_validation, savepoint, ablate=ablate, **model_params)
 
-        logging.info(f"Vectorizer Parameters: {vectorizer_params}")
-        logging.info(f"Model Parameters: {parameters}")
-        logging.info(f"trained with validation scores of {f1_score(y_validation, y_predicted, average='macro')} "
+        logger.info(f"Vectorizer Parameters: {vectorizer_params}")
+        logger.info(f"Model Parameters: {parameters}")
+        logger.info(f"trained with validation scores of {f1_score(y_validation, y_predicted, average='macro')} "
                      f"macro f1 and {f1_score(y_validation, y_predicted, average='micro')} micro f1")
-        logging.info(f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}"),
+        logger.info(f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}"),
 
-    logging.debug("load training data")
+    logger.debug("load training data")
     _, x_train_text, y_train = load_data(training_dataset_dir)
-    logging.debug("load validation data")
+    logger.debug("load validation data")
     _, x_validation_text, y_validation = load_data(validation_dataset_dir)
 
     if ablate:
