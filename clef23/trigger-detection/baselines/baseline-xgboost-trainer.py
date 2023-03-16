@@ -10,6 +10,7 @@ import logging
 from typing import Tuple, Iterable, Dict, List
 import click
 from pathlib import Path
+import json
 
 from sklearn.metrics import f1_score, classification_report
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -29,25 +30,24 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # NOTE These are the parameters for the ablation study
-ABL_MODEL_PARAM = {'max_depth': [2, 3],
+ABL_MODEL_PARAM = {'max_depth': [2, 3, 4],
                    'learning_rate': [0.25, 0.5, 0.75],
-                   # 'n_estimators': [50, 75, 100]
                    }
 ABL_VEC_PARAMS = [
-    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
-    {'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
-    # {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
-    {'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
-    # {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
-    {'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
-    {'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
-    # {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'},
-    {'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'chi2'}]
+    {'dir': 'word-1-all', 'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
+    {'dir': 'word-1-chi2', 'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'dir': 'word-2-all', 'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
+    {'dir': 'word-2-chi2', 'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'dir': 'word-3-all', 'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
+    {'dir': 'word-3-chi2', 'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
+    {'dir': 'char-3-all', 'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
+    {'dir': 'char-3-chi2', 'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
+    {'dir': 'char-5-all', 'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'},
+    {'dir': 'char-5-chi2', 'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'chi2'}]
 
 
 def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
-                   n_gram_range=(1, 2), min_df=5, analyzer='word', f_select='chi2') -> Tuple[Iterable, Iterable]:
+                   n_gram_range=(3, 3), min_df=5, analyzer='char', f_select='None', **kwargs) -> Tuple[Iterable, Iterable]:
     """
     :param x_text: the texts
     :param y: the labels
@@ -57,9 +57,9 @@ def fit_vectorizer(x_text, y, savepoint: Path, fit: bool = False,
     :param min_df: vectorizer parameter, set here for ablation
     :param analyzer: vectorizer parameter, set here for ablation
     :param f_select: feature selection to use. 'None" or 'chi2'
+    :param subdir: the subdir where to save the vectorizer or None
     :return:
     """
-
     if fit:
         logger.debug("fit vectorizer")
         vec = TfidfVectorizer(lowercase=False, analyzer=analyzer, ngram_range=n_gram_range, min_df=min_df)
@@ -104,7 +104,10 @@ def _train_model(x_train, y_train, x_validation, y_validation, savepoint: Path, 
     :return: (y_predicted, parameters) the predicted labels on the validation split
     """
     _time(True)
-    clf = xgb.XGBClassifier(tree_method="hist", n_estimators=100, max_depth=2, learning_rate=1, n_jobs=16)
+    parameters = {'n_estimators': 300, 'max_depth': 3, 'learning_rate': 0.25}
+    clf = xgb.XGBClassifier(tree_method="hist", n_estimators=parameters['n_estimators'],
+                            early_stopping_rounds=10,
+                            max_depth=parameters['max_depth'], learning_rate=parameters['learning_rate'], n_jobs=16)
 
     if ablate:
         split_index = [-1] * len(y_train) + [0] * len(y_validation)
@@ -113,15 +116,14 @@ def _train_model(x_train, y_train, x_validation, y_validation, savepoint: Path, 
         ps = PredefinedSplit(test_fold=split_index)
         gs = GridSearchCV(clf, {'max_depth': max_depth,
                                 'learning_rate': learning_rate}, verbose=1, cv=ps, scoring='f1_macro')
-        gs.fit(x, y, early_stopping_rounds=10, eval_set=[(x_validation, y_validation)])
+        gs.fit(x, y, eval_set=[(x_validation, y_validation)])
         logger.info(f"Best score in grid search: {gs.best_score_}")
         logger.info(f"Best parameters in grid search: {gs.best_params_}")
         be = gs.best_estimator_
         parameters = gs.best_params_
     else:
-        clf.fit(x_train, y_train, eval_set=[(x_validation, y_validation)], early_stopping_rounds=10)
+        clf.fit(x_train, y_train, eval_set=[(x_validation, y_validation)])
         be = clf
-        parameters = {'n_estimators': 100, 'max_depth': 2, 'learning_rate': 1}
 
     _time()
     logger.info(f"save model to {savepoint}")
@@ -146,31 +148,37 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
     """
     logger.debug(f"Run Ablation: {ablate}")
 
-    def _run(xt, yt, xv, yv, vectorizer_params: Dict, model_params: Dict):
+    def _run(xt, yt, xv, yv, vectorizer_params: Dict, model_params: Dict, savepoint: Path):
+        savepoint = savepoint if not vectorizer_params["dir"] else savepoint / vectorizer_params["dir"]
+        savepoint.mkdir(exist_ok=True)
         logger.debug("fit training vectorizer")
         x_train, y_train = fit_vectorizer(xt, yt, savepoint, fit=True, **vectorizer_params)
         logger.debug("vectorize validation data")
         x_validation, y_validation = fit_vectorizer(xv, yv, savepoint, **vectorizer_params)
 
-        logger.debug("train model")
+        logger.info("train model")
         y_predicted, parameters = _train_model(x_train, y_train, x_validation, y_validation, savepoint, ablate=ablate, **model_params)
 
         logger.info(f"Vectorizer Parameters: {vectorizer_params}")
         logger.info(f"Model Parameters: {parameters}")
-        logger.info(f"trained with validation scores of {f1_score(y_validation, y_predicted, average='macro')} "
-                     f"macro f1 and {f1_score(y_validation, y_predicted, average='micro')} micro f1")
-        logger.info(f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}"),
+        micro_f1 = f1_score(y_validation, y_predicted, average='micro')
+        macro_f1 = f1_score(y_validation, y_predicted, average='macro')
+        logger.info(f"trained with validation scores of {macro_f1} macro f1 and {micro_f1} micro f1")
+        logger.info(f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}")
+        results = {**vectorizer_params, **model_params, "micro_f1": micro_f1, "macro_f1": macro_f1}
+        open(savepoint / 'results.json', 'w').write(json.dumps(results))
+        return results
 
-    logger.debug("load training data")
+    logger.info("load training data")
     _, x_train_text, y_train = load_data(training_dataset_dir)
-    logger.debug("load validation data")
+    logger.info("load validation data")
     _, x_validation_text, y_validation = load_data(validation_dataset_dir)
 
     if ablate:
-        for ablation_parameter in ABL_VEC_PARAMS:
-            _run(x_train_text, y_train, x_validation_text, y_validation, ablation_parameter, ABL_MODEL_PARAM)
+        for vectorizer_parameter in ABL_VEC_PARAMS:
+            _run(x_train_text, y_train, x_validation_text, y_validation, vectorizer_parameter, ABL_MODEL_PARAM, savepoint)
     else:
-        _run(x_train_text, y_train, x_validation_text, y_validation, {}, {})
+        _run(x_train_text, y_train, x_validation_text, y_validation, {'dir': None}, {}, savepoint=savepoint)
 
 
 @click.option('--training', type=click.Path(exists=True, file_okay=False, dir_okay=True),
@@ -187,10 +195,6 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
 @click.command()
 def train(training, validation, savepoint, ablate):
     """
-    $ python3 baseline-xgboost-trainer.py \
-        --training "/home/mike4537/data/pan23-trigger-detection/pan23-trigger-detection-train" \
-        --validation "/home/mike4537/data/pan23-trigger-detection/pan23-trigger-detection-validation"
-
 
     $ python3 baseline-xgboost-trainer.py -a \
         --training "/home/mike4537/data/pan23-trigger-detection/samples/rus-m" \

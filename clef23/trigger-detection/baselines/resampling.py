@@ -358,8 +358,8 @@ def run(works: str, output: str, strategy: str):
     """
     $ python3 resampling.py \
         --works "/home/mike4537/data/pan23-trigger-detection/pan23-trigger-detection-train" \
-        --output "/home/mike4537/data/pan23-trigger-detection/samples/ruos-m" \
-        --strategy "ruos-m"
+        --output "/home/mike4537/data/pan23-trigger-detection/samples/" \
+        --strategy "all"
     """
     output = Path(output)
     output.mkdir(exist_ok=True, parents=False)
