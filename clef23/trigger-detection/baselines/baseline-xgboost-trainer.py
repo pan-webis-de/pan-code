@@ -34,15 +34,14 @@ ABL_MODEL_PARAM = {'max_depth': [2, 3, 4],
                    'learning_rate': [0.25, 0.5, 0.75],
                    }
 ABL_VEC_PARAMS = [
-    {'dir': 'word-1-all', 'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
-    {'dir': 'word-1-chi2', 'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'dir': 'word-2-all', 'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
-    {'dir': 'word-2-chi2', 'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'dir': 'word-3-all', 'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
-    {'dir': 'word-3-chi2', 'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
-    {'dir': 'char-3-all', 'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
-    {'dir': 'char-3-chi2', 'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
-    {'dir': 'char-5-all', 'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'None'},
+    # {'dir': 'word-1-all', 'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'None'},
+    # {'dir': 'word-1-chi2', 'n_gram_range': (1, 1), 'analyzer': 'word', 'f_select': 'chi2'},
+    # {'dir': 'word-2-all', 'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'None'},
+    # {'dir': 'word-2-chi2', 'n_gram_range': (1, 2), 'analyzer': 'word', 'f_select': 'chi2'},
+    # {'dir': 'word-3-all', 'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'None'},
+    # {'dir': 'word-3-chi2', 'n_gram_range': (1, 3), 'analyzer': 'word', 'f_select': 'chi2'},
+    # {'dir': 'char-3-all', 'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'None'},
+    # {'dir': 'char-3-chi2', 'n_gram_range': (3, 3), 'analyzer': 'char', 'f_select': 'chi2'},
     {'dir': 'char-5-chi2', 'n_gram_range': (3, 5), 'analyzer': 'char', 'f_select': 'chi2'}]
 
 
@@ -165,7 +164,7 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
         macro_f1 = f1_score(y_validation, y_predicted, average='macro')
         logger.info(f"trained with validation scores of {macro_f1} macro f1 and {micro_f1} micro f1")
         logger.info(f"Classification report on the validation data: {classification_report(y_validation, y_predicted)}")
-        results = {**vectorizer_params, **model_params, "micro_f1": micro_f1, "macro_f1": macro_f1}
+        results = {**vectorizer_params, **parameters, "micro_f1": micro_f1, "macro_f1": macro_f1}
         open(savepoint / 'results.json', 'w').write(json.dumps(results))
         return results
 
@@ -188,7 +187,7 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
               help='Path to the pan23-trigger-detection-validation (or test) directory (from the PAN23 distribution). '
                    'It should contain a works.jsonl with the `labels` key')
 @click.option('-s', '--savepoint', type=click.Path(exists=False, file_okay=False),
-              default="../models/xgboost-baseline-full",
+              default="../models/xgboost-rus-m",
               help="Path where to store the trained model. Will be overwritten if it already exists.")
 @click.option('-a', '--ablate', type=bool, default=False, is_flag=True,
               help='If set, run the ablation study.')
