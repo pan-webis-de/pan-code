@@ -187,17 +187,18 @@ def run_trainer(training_dataset_dir: Path, validation_dataset_dir: Path, savepo
               help='Path to the pan23-trigger-detection-validation (or test) directory (from the PAN23 distribution). '
                    'It should contain a works.jsonl with the `labels` key')
 @click.option('-s', '--savepoint', type=click.Path(exists=False, file_okay=False),
-              default="../models/xgboost-rus-m",
+              default="./models/xgb-baseline",
               help="Path where to store the trained model. Will be overwritten if it already exists.")
 @click.option('-a', '--ablate', type=bool, default=False, is_flag=True,
               help='If set, run the ablation study.')
 @click.command()
 def train(training, validation, savepoint, ablate):
     """
+    Use the following command to train a model and save it to the default directoy.
 
-    $ python3 baseline-xgboost-trainer.py -a \
-        --training "/home/mike4537/data/pan23-trigger-detection/samples/rus-m" \
-        --validation "/home/mike4537/data/pan23-trigger-detection/pan23-trigger-detection-validation"
+    python3 baseline-xgboost-trainer.py \
+        --training "<input-dataset-path>" \
+        --validation "<validation-path>"
 
     """
     Path(savepoint).mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,7 @@
+FROM python:3.10
+
+RUN mkdir -p /baseline/model
+COPY *.py /baseline/
+COPY ./models/xgb-baseline /baseline/model
+COPY requirements.txt /baseline/
+RUN pip3 install -r /baseline/requirements.txt

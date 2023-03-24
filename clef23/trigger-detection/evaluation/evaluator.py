@@ -53,26 +53,26 @@ def _evaluate(y_true: List[List[int]], y_predictions: List[List[int]], extended=
     y_true = np.asarray(y_true)
     y_predictions = np.asarray(y_predictions)
     results = {
-        "mac_f1": f1_score(y_true, y_predictions, average='macro'),
-        "mac_p": precision_score(y_true, y_predictions, average='macro'),
-        "mac_r": recall_score(y_true, y_predictions, average='macro'),
-        "mic_f1": f1_score(y_true, y_predictions, average='micro'),
-        "mic_p": precision_score(y_true, y_predictions, average='micro'),
-        "mic_r": recall_score(y_true, y_predictions, average='micro'),
-        "sub_acc": accuracy_score(y_true, y_predictions)
+        "mac_f1": round(f1_score(y_true, y_predictions, average='macro'), 4),
+        "mac_p": round(precision_score(y_true, y_predictions, average='macro'), 4),
+        "mac_r": round(recall_score(y_true, y_predictions, average='macro'), 4),
+        "mic_f1": round(f1_score(y_true, y_predictions, average='micro'), 4),
+        "mic_p": round(precision_score(y_true, y_predictions, average='micro'), 4),
+        "mic_r": round(recall_score(y_true, y_predictions, average='micro'), 4),
+        "sub_acc": round(accuracy_score(y_true, y_predictions), 4)
     }
     if extended:
-        results["roc_auc"] = roc_auc_score(y_true, y_predictions)
-        results["mid_f1"] = f1_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro')
-        results["mid_p"] = precision_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro')
-        results["mid_r"] = recall_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro')
-        results["bot_f1"] = f1_score(y_true[:, 15:], y_predictions[:, 15:], average='micro')
-        results["bot_p"] = precision_score(y_true[:, 15:], y_predictions[:, 15:], average='micro')
-        results["bot_r"] = recall_score(y_true[:, 15:], y_predictions[:, 15:], average='micro')
+        results["roc_auc"] = round(roc_auc_score(y_true, y_predictions), 4)
+        results["mid_f1"] = round(f1_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro'), 4)
+        results["mid_p"] = round(precision_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro'), 4)
+        results["mid_r"] = round(recall_score(y_true[:, 1:15], y_predictions[:, 1:15], average='micro'), 4)
+        results["bot_f1"] = round(f1_score(y_true[:, 15:], y_predictions[:, 15:], average='micro'), 4)
+        results["bot_p"] = round(precision_score(y_true[:, 15:], y_predictions[:, 15:], average='micro'), 4)
+        results["bot_r"] = round(recall_score(y_true[:, 15:], y_predictions[:, 15:], average='micro'), 4)
         for idx, label in enumerate(LABELS):
-            results[f"{label}_f1"] = f1_score(y_true[:, idx], y_predictions[:, idx], average='micro')
-            results[f"{label}_p"] = precision_score(y_true[:, idx], y_predictions[:, idx], average='micro')
-            results[f"{label}_r"] = recall_score(y_true[:, idx], y_predictions[:, idx], average='micro')
+            results[f"{label}_f1"] = round(f1_score(y_true[:, idx], y_predictions[:, idx], average='micro', labels=[1]), 4)
+            results[f"{label}_p"] = round(precision_score(y_true[:, idx], y_predictions[:, idx], average='micro', labels=[1]), 4)
+            results[f"{label}_r"] = round(recall_score(y_true[:, idx], y_predictions[:, idx], average='micro', labels=[1]), 4)
 
     return results
 

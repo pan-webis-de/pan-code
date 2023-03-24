@@ -20,8 +20,9 @@ def vectorize(x_text: List[str], savepoint: Path):
     vec = joblib.load(savepoint / "vectorizer.joblib")
     logging.info("load feature selection")
     x = vec.transform(x_text)
-    feature_selector = joblib.load(savepoint / "feature-selector.joblib")
-    x = feature_selector.transform(x)
+    if (savepoint / "feature-selector.joblib").exists():
+        feature_selector = joblib.load(savepoint / "feature-selector.joblib")
+        x = feature_selector.transform(x)
     return x
 
 
@@ -38,16 +39,15 @@ def run_experiment(input_dataset_dir: Path, output_dir: Path, savepoint: Path):
               help="Path to the works.jsonl.")
 @click.option('-o', '--output-dir', type=click.Path(exists=True, file_okay=False), default="./output",
               help="Path where to write the output file")
-@click.option('-s', '--savepoint', type=click.Path(exists=True, file_okay=False), default="./models/xgboost-baseline-full",
+@click.option('-s', '--savepoint', type=click.Path(exists=True, file_okay=False), default="/baseline/model",
               help="Path to the saved model. Should hava a model.joblib and a tokenizer.joblib")
 @click.command()
 def run(input_dataset_dir, output_dir, savepoint):
     """
     $ python3 baseline-xgboost-runner.py \
-        -i "/home/mike4537/data/pan23-trigger-detection/pan23-trigger-detection-test" \
-        -d "./output" \
-        -s "./models"
-
+        -i "<input-data-path>" \
+        -o "<output-dir>" \
+        -s "<saved-model-dir>"
     """
     run_experiment(Path(input_dataset_dir), Path(output_dir), Path(savepoint))
 

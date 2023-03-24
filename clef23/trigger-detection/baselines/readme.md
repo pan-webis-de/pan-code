@@ -33,7 +33,7 @@ For a software submission on tira, you can dockerize the trained model with the 
 1. After training the model, as shown above, run:
 
     ```
-   docker build -t <dockerhub-user>/pan23-trigger-detection-baseline-xgb:latest -f Dockerfile .
+   docker build -t <dockerhub-user>/pan23-trigger-detection-baseline-xgboost:latest -f dockerfile.xgb .
    ```
 
 2. Upload the image to a public docker repository, i.e. dockerhub. 
@@ -42,11 +42,11 @@ For a software submission on tira, you can dockerize the trained model with the 
    1. Enter the  following image tag into TIRA
     
       ```
-      <dockerhub-user>/pan23-trigger-detection-baseline-xgb:latest
+      <dockerhub-user>/pan23-trigger-detection-baseline-xgboost:latest
       ```
    
    2. Enter the following command in TIRA to execute the software:
 
       ```
-      python3 baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir --savepoint /baseline/models/xgb-baseline
+      python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir
       ```
