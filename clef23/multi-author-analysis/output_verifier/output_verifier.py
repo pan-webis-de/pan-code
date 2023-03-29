@@ -18,6 +18,7 @@ class ParseError(Enum):
     INVALID_LENGTH = "Task solution array length does not match number of paragraph pairs."
     MISSING_KEY = "Task solution key not contained in JSON."
 
+
 class Task(Enum):
     """ENUM for task types"""
 
@@ -72,7 +73,7 @@ def get_chunk_count(problem_id: str, input_folder: str) -> int:
     :param problem_id: problem id for which paragraphs are counted
     :param input_folder: path to folder holding input files (input texts, .txt)
     """
-    with open(os.path.join(input_folder, f"problem-{problem_id}.txt")) as txt_file:
+    with open(os.path.join(input_folder, f"problem-{problem_id}.txt"), 'r', newline="") as txt_file:
         return txt_file.read().count("\n") + 1
 
 
@@ -98,9 +99,11 @@ def check_output_files(problem_ids: list, output_path: str, input_folder: str, t
             if not errors:
                 print(f"[problem {problem_id}, {task.value}]: OK")
             else:
-                [print(f"[problem {problem_id}: {task.value}]: {x.value}") for x in errors]
+                [print(f"[problem {problem_id}: {task.value}]: {x.value}")
+                 for x in errors]
         else:
-            print(f"[problem {problem_id}, {task.value}]: no solution file found: {file_path}" )
+            print(
+                f"[problem {problem_id}, {task.value}]: no solution file found: {file_path}")
 
 
 def get_problem_ids(input_folder: str) -> list:
@@ -136,15 +139,18 @@ def main():
 
     # task 1
     problem_ids = get_problem_ids(os.path.join(args.input, "dataset1"))
-    check_output_files(problem_ids, os.path.join(args.output, "dataset1"), os.path.join(args.input, "dataset1"), Task.TASK1)
+    check_output_files(problem_ids, os.path.join(
+        args.output, "dataset1"), os.path.join(args.input, "dataset1"), Task.TASK1)
 
     # task 2
     problem_ids = get_problem_ids(os.path.join(args.input, "dataset2"))
-    check_output_files(problem_ids, os.path.join(args.output, "dataset2"), os.path.join(args.input, "dataset2"), Task.TASK2)
+    check_output_files(problem_ids, os.path.join(
+        args.output, "dataset2"), os.path.join(args.input, "dataset2"), Task.TASK2)
 
     # task 3
     problem_ids = get_problem_ids(os.path.join(args.input, "dataset3"))
-    check_output_files(problem_ids, os.path.join(args.output, "dataset3"), os.path.join(args.input, "dataset3"), Task.TASK3)
+    check_output_files(problem_ids, os.path.join(
+        args.output, "dataset3"), os.path.join(args.input, "dataset3"), Task.TASK3)
 
 
 if __name__ == "__main__":
