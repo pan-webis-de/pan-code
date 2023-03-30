@@ -16,4 +16,4 @@ Build the container for the evaluator:
 
 ## Running the baselines
 
-tbd. 
+Check out the Readme files in the baseline directories. 

@@ -1,5 +1,4 @@
 click
-torch
-transformers
-datasets
 scikit-learn
+xgboost
+resiliparse
