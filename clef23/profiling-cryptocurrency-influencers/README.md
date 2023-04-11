@@ -14,6 +14,6 @@ Build the container for the evaluator:
     evaluation/~$ docker build -t <dockerhub-user>/pan23-profiling-cryptocurrency-influencers-evaluator:latest -f Dockerfile .
 
 
-## Running the baselines
+## TIRA baselines
 
 tbd. 
