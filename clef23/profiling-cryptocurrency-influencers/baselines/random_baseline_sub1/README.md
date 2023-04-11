@@ -10,6 +10,8 @@ To publish the image to dockerhub, run: `docker push pan-profiling-cryptocurrenc
 
 ## TIRA Command
 Insert it with the command 
+
 `python3 /random-baseline-subtask-1.py --input $inputDataset/train_text.json --output $outputDir/subtask1.json` - (training dataset) 
+
 `python3 /random-baseline-subtask-1.py --input $inputDataset/test_text.json --output $outputDir/subtask1.json` - (test dataset).
 
