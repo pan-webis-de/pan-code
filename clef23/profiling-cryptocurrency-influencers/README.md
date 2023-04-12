@@ -14,6 +14,10 @@ Build the container for the evaluator:
     evaluation/~$ docker build -t <dockerhub-user>/pan23-profiling-cryptocurrency-influencers-evaluator:latest -f Dockerfile .
 
 
-## TIRA baselines
+## TIRA baseline
 
-tbd. 
+TIRA baselines are available in the baselines directory. You have available a random baseline model for each subtask.
+Included files:
+README.md
+Dockerfile
+
