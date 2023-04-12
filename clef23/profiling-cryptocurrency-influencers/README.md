@@ -16,8 +16,5 @@ Build the container for the evaluator:
 
 ## TIRA baseline
 
-TIRA baselines are available in the baselines directory. You have available a random baseline model for each subtask.
-Included files:
-README.md
-Dockerfile
+TIRA baselines are available in the baselines directory. You have available a random baseline model for each subtask. Check out the Readme files in the baseline directories.
 
