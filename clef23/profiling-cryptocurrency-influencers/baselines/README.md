@@ -2,7 +2,7 @@
 For each subtask you have a available thee file. 
 1. random-baseline-subtask-.py script makes random prediction and and save the predictions in the TIRA format.  
 2. Dockerfile is a text file that contains the instructions that you would execute on the command line to create an image.
-3. Readme.md
+3. README.md
 
 # Create docker imagen and Tira submission steps
 
