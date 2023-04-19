@@ -38,7 +38,21 @@ For a software submission on tira, you can dockerize the trained model with the 
 
 2. Upload the image to a public docker repository, i.e. dockerhub. 
 
-3. Create a new docker software on TIRA (follow the tira *getting started* guides).
+   ```
+   docker push <dockerhub-user>/pan23-trigger-detection-baseline-xgboost:latest
+   ```
+
+3. Test if your image works locally with the tira python utiliti
+
+   ```
+   pip install tira
+   cd pan-code/clef23/trigger-detection
+   tira-run --image <dockerhub-user>/pan23-trigger-detection-baseline-xgboost:latest \
+      --input-directory ${PWD}/../sample-data/input \
+      --command 'python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir'
+   ```
+
+4. Create a new docker software on TIRA (follow the tira *getting started* guides).
    1. Enter the  following image tag into TIRA
     
       ```
