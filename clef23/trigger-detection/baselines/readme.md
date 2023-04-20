@@ -4,6 +4,8 @@ This baseline uses [Gradient Boosted Trees](xgboost.readthedocs.io) based on a t
 The `baseline-xgboost-trainer.py` script trains and saves the model and can run a ablation study. 
 The `baseline-xgboost-runner.py` script loads the saved model and makes predictions. 
 
+A pre-build version of this image is uploaded at [mattiwiegmann/pan23-trigger-detection-baseline-xgboost:latest](https://hub.docker.com/repository/docker/mattiwiegmann/pan23-trigger-detection-baseline-xgboost/general)
+
 ### Usage
 
 1. Set up the training environment and train the model. Set the `-a` flag to run the ablation study instead.
@@ -42,7 +44,7 @@ For a software submission on tira, you can dockerize the trained model with the 
    docker push <dockerhub-user>/pan23-trigger-detection-baseline-xgboost:latest
    ```
 
-3. Test if your image works locally with the tira python utiliti
+3. Test if your image works locally with the tira python utility. 
 
    ```
    pip install tira
@@ -52,7 +54,7 @@ For a software submission on tira, you can dockerize the trained model with the 
       --command 'python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir'
    ```
 
-4. Create a new docker software on TIRA (follow the tira *getting started* guides).
+4. Create a new docker software on TIRA (follow the tira [getting started](https://www.tira.io/t/getting-started/1364) guides).
    1. Enter the  following image tag into TIRA
     
       ```
