@@ -6,7 +6,19 @@ The `baseline-xgboost-runner.py` script loads the saved model and makes predicti
 
 A pre-build version of this image is uploaded at [mattiwiegmann/pan23-trigger-detection-baseline-xgboost:latest](https://hub.docker.com/repository/docker/mattiwiegmann/pan23-trigger-detection-baseline-xgboost/general). You can use this image to test the submission to TIRA from Step 3.
 
-### Usage
+### Usage (Re-Run Prebuilt Baseline)
+
+The official baseline (building instructions below) can be executed via the following command:
+
+```
+pip install tira
+cd pan-code/clef23/trigger-detection
+tira-run --image mattiwiegmann/pan23-trigger-detection-baseline-xgboost \
+   --input-directory ${PWD}/../sample-data/input \
+   --command 'python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir'
+```
+
+### Usage (Development)
 
 1. Set up the training environment and train the model. Set the `-a` flag to run the ablation study instead.
 
