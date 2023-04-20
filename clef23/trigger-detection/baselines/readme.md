@@ -14,7 +14,7 @@ The official baseline (building instructions below) can be executed via the foll
 pip install tira
 cd pan-code/clef23/trigger-detection
 tira-run --image mattiwiegmann/pan23-trigger-detection-baseline-xgboost \
-   --input-directory ${PWD}/../sample-data/input \
+   --input-directory ${PWD}/sample-data/input \
    --command 'python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir'
 ```
 
@@ -62,7 +62,7 @@ For a software submission on tira, you can dockerize the trained model with the 
    pip install tira
    cd pan-code/clef23/trigger-detection
    tira-run --image <dockerhub-user>/pan23-trigger-detection-baseline-xgboost:latest \
-      --input-directory ${PWD}/../sample-data/input \
+      --input-directory ${PWD}/sample-data/input \
       --command 'python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir'
    ```
 
