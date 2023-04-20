@@ -18,6 +18,14 @@ tira-run --image mattiwiegmann/pan23-trigger-detection-baseline-xgboost \
    --command 'python3 /baseline/baseline-xgboost-runner.py --input-dataset-dir $inputDataset --output-dir $outputDir'
 ```
 
+This should create an output in tira-output/labels.jsonl` like (`head -3 tira-output/labels.jsonl` gives):
+
+```
+{"work_id": "23796682", "labels": ["pornographic-content"]}
+{"work_id": "23812675", "labels": ["pornographic-content"]}
+{"work_id": "23800645", "labels": ["pornographic-content", "sexual-assault"]}
+```
+
 ### Usage (Development)
 
 1. Set up the training environment and train the model. Set the `-a` flag to run the ablation study instead.
