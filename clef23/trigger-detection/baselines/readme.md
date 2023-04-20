@@ -1,6 +1,6 @@
 # XGBoost Baseline for the shared task on Trigger Detection at PAN23
 
-This baseline uses [Gradient Boosted Trees](xgboost.readthedocs.io) based on a tf-idf document vectors. 
+This baseline uses [Gradient Boosted Trees](https://xgboost.readthedocs.io) based on a tf-idf document vectors. 
 The `baseline-xgboost-trainer.py` script trains and saves the model and can run a ablation study. 
 The `baseline-xgboost-runner.py` script loads the saved model and makes predictions. 
 
