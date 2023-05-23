@@ -120,7 +120,16 @@ def write_evaluations(results: dict, output_directory: Path):
     except IOError:
         print("Could not read file:", output_directory)
 
-
+def check_user_id(df_truth, df_prediction):
+    user_id_prediction_check=[]
+    class_prediction_check=[]
+    for i in df_truth['twitter user id']:
+        user_id_prediction_check.append(i)
+        class_prediction_check.append(df_prediction[df_prediction['twitter user id']==i]['class'].tolist()[0])
+    dict_ = {"twitter user id": user_id_prediction_check, 'class': class_prediction_check} 
+    df_prediction_check=pd.DataFrame(dict_)
+    return (df_prediction_check)
+        
 def main():
     parser = argparse.ArgumentParser(description='Evaluation script Author Profiling@PAN2023 - subtask1')
     parser.add_argument('-g', type=Path,
@@ -142,11 +151,15 @@ def main():
     # loads files
     df_truth = load_file(args.g)
     df_prediction = load_file(args.s)
+    
+    #Check user id
+    df_prediction_check = check_user_id(df_truth, df_prediction)
+    
     # evaluation
 
     list_labels = (list(set(df_truth["class"])))
     eval = Evaluation()
-    metrics_user = eval.evaluation(df_truth, df_prediction, list_labels)
+    metrics_user = eval.evaluation(df_truth, df_prediction_check, list_labels)
     print(metrics_user)
 
     write_evaluations(metrics_user, output_path)
