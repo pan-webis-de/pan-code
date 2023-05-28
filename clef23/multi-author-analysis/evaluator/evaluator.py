@@ -91,52 +91,23 @@ def main():
     parser = argparse.ArgumentParser(
         description='PAN23 Style Change Detection Task: Evaluator')
     parser.add_argument("-p", "--predictions",
-                        help="path to the dir holding the predictions (in a folder for each dataset/task)", required=True)
+                        help="path to the dir holding the predictions a task", required=True)
     parser.add_argument(
-        "-t", "--truth", help="path to the dir holding the true labels (in a folder for each dataset/task)", required=True)
+        "-t", "--truth", help="path to the dir holding the true labels for a task", required=True)
     parser.add_argument(
         "-o", "--output", help="path to the dir to write the results to", required=True)
     args = parser.parse_args()
 
-    task1_solutions = read_solution_files(
-        os.path.join(args.predictions, 'dataset1'))
-    task1_truth = read_ground_truth_files(
-        os.path.join(args.truth, 'dataset1/test'))
+    task_solutions = read_solution_files(args.predictions)
+    task_truth = read_ground_truth_files(args.truth)
 
     try:
-        task1_f1 = compute_score_multiple_predictions(
-            task1_truth, task1_solutions, 'changes', labels=[0, 1])
+        f1 = compute_score_multiple_predictions(task_truth, task_solutions, 'changes', labels=[0, 1])
     except KeyError as _:
-        task1_f1 = None
+        f1 = None
         print("No solution file found for one or more problems, please check the output. Exiting task 1.")
 
-    task2_solutions = read_solution_files(
-        os.path.join(args.predictions, 'dataset2'))
-    task2_truth = read_ground_truth_files(
-        os.path.join(args.truth, 'dataset2/test'))
-
-    try:
-        task2_f1 = compute_score_multiple_predictions(
-            task2_truth, task2_solutions,  'changes', labels=[0, 1])
-    except KeyError as _:
-        task2_f1 = None
-        print("No solution file found for one or more problems, please check the output. Exiting task 2.")
-
-    task3_solutions = read_solution_files(
-        os.path.join(args.predictions, 'dataset3'))
-    task3_truth = read_ground_truth_files(
-        os.path.join(args.truth, 'dataset3/test'))
-    try:
-        task3_f1 = compute_score_multiple_predictions(
-            task3_truth, task3_solutions, 'changes', labels=[0, 1])
-    except KeyError as _:
-        task3_f1 = None
-        print("No solution file found for one or more problems, please check the output. Exiting task 3.")
-
-    for k, v in {
-        "task1_f1_score": task1_f1,
-        "task2_f1_score": task2_f1,
-            "task3_f1_score": task3_f1}.items():
+    for k, v in {"f1_score": f1}.items():
         write_output(os.path.join(args.output, EV_OUT), k, v),
 
 
