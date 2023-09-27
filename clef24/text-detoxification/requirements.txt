@@ -1,0 +1,8 @@
+transformers
+numpy
+scikit-learn
+torch
+sentencepiece
+pandas
+tqdm
+sacrebleu
