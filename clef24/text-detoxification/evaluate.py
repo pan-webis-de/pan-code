@@ -228,9 +228,9 @@ def format_prototext(measure: str, value: str) -> str:
 
 
 def run_evaluation(args, evaluator):
-    original_texts = [line.strip() for line in args.input.readlines()][:10]
-    rewritten_texts = [sentence.strip() for sentence in args.prediction.readlines()][:10]
-    references = [line.strip() for line in args.golden.readlines()][:10]
+    original_texts = [line.strip() for line in args.input.readlines()]
+    rewritten_texts = [sentence.strip() for sentence in args.prediction.readlines()]
+    references = [line.strip() for line in args.golden.readlines()]
 
     assert all(len(x) > 0 for x in original_texts)
     assert all(len(x) > 0 for x in rewritten_texts)
