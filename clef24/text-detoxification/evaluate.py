@@ -250,7 +250,7 @@ def main() -> None:
                         help='Initial texts before style transfer')
     parser.add_argument('-g', '--golden', type=argparse.FileType('r', encoding='UTF-8'), required=True,
                         help='Ground truth texts after style transfer')
-    parser.add_argument('-o', '--output', type=argparse.FileType('wb'), default=sys.stdout,
+    parser.add_argument('-o', '--output', type=argparse.FileType('w', encoding='UTF-8'), default=sys.stdout,
                         help='Where to print the evaluation results')
     parser.add_argument('--style-model', type=str, required=True,
                         help='Style evaluation model on Hugging Face Hub')
