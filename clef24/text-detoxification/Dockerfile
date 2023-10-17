@@ -10,7 +10,7 @@ apt-get install -y make && \
 rm -rf /var/lib/apt/lists/* && \
 pip3 install -r requirements.txt
 
-CMD evaluate.py --cuda
+CMD evaluate.py
 
 ARG LANGUAGE
 

@@ -24,7 +24,7 @@ models-russian:
 	huggingface-cli download SkolkovoInstitute/ruRoberta-large-RuCoLa-v1
 
 evaluate-english:
-	./evaluate.py --cuda \
+	./evaluate.py \
 	--input=sample/english/input.jsonl \
 	--golden=sample/english/references.jsonl \
 	--style-model=s-nlp/roberta_toxicity_classifier \
@@ -33,7 +33,7 @@ evaluate-english:
 	sample/english/references.jsonl
 
 evaluate-russian:
-	./evaluate.py --cuda \
+	./evaluate.py \
 	--input=sample/russian/input.jsonl \
 	--golden=sample/russian/references.jsonl \
 	--style-model=IlyaGusev/rubertconv_toxic_clf \

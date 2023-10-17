@@ -290,16 +290,16 @@ def main() -> None:
                         help='Meaning evaluation model on Hugging Face Hub')
     parser.add_argument('--fluency-model', type=str, required=True,
                         help='Fluency evaluation model on Hugging Face Hub')
-    parser.add_argument('--cuda', action='store_true', default=False,
+    parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='Whether to use CUDA acceleration, if possible')
     parser.add_argument('prediction', type=argparse.FileType('rb'),
                         help='Your model predictions')
 
     args = parser.parse_args()
 
-    style_model, style_tokenizer = load_model(args.style_model, use_cuda=args.cuda)
-    meaning_model, meaning_tokenizer = load_model(args.meaning_model, use_cuda=args.cuda)
-    fluency_model, fluency_tokenizer = load_model(args.fluency_model, use_cuda=args.cuda)
+    style_model, style_tokenizer = load_model(args.style_model, use_cuda=not args.no_cuda)
+    meaning_model, meaning_tokenizer = load_model(args.meaning_model, use_cuda=not args.no_cuda)
+    fluency_model, fluency_tokenizer = load_model(args.fluency_model, use_cuda=not args.no_cuda)
 
     run_evaluation(args, evaluator=partial(
         evaluate_style_transfer,
