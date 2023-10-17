@@ -1,20 +1,29 @@
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
+DOCKER := $(if $(shell which podman),podman,docker)
+
 all: mypy
 
 mypy:
 	mypy .
 
-models:
+docker-%:
+	$(DOCKER) build -f Dockerfile --build-arg "LANGUAGE=$*" --tag "clef24-text-detoxification-evaluator:$*"
+
+models: models-english models-russian
+
+models-english:
 	huggingface-cli download s-nlp/roberta_toxicity_classifier
 	huggingface-cli download Elron/bleurt-large-128
 	huggingface-cli download cointegrated/roberta-large-cola-krishna2020
+
+models-russian:
 	huggingface-cli download IlyaGusev/rubertconv_toxic_clf
 	huggingface-cli download s-nlp/rubert-base-cased-conversational-paraphrase-v1
 	huggingface-cli download SkolkovoInstitute/ruRoberta-large-RuCoLa-v1
 
-english:
+evaluate-english:
 	./evaluate.py \
 	--input=sample/english/original.txt \
 	--golden=sample/english/references.txt \
@@ -23,7 +32,7 @@ english:
 	--fluency-model=cointegrated/roberta-large-cola-krishna2020 \
 	sample/english/references.txt
 
-russian:
+evaluate-russian:
 	./evaluate.py \
 	--input=sample/russian/original.txt \
 	--golden=sample/russian/references.txt \
