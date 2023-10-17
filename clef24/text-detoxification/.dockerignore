@@ -1,3 +1,4 @@
+*.prototext
 .dockerignore
 .git
 .mypy_cache
