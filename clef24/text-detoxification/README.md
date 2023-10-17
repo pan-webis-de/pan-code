@@ -2,20 +2,20 @@
 
 ```shell
 ./evaluate.py --cuda \
-	--input=sample/english/original.txt \
-	--golden=sample/english/references.txt \
+	--input=sample/english/input.jsonl \
+	--golden=sample/english/references.jsonl \
 	--style-model=s-nlp/roberta_toxicity_classifier \
 	--meaning-model=Elron/bleurt-large-128 \
 	--fluency-model=cointegrated/roberta-large-cola-krishna2020 \
-	sample/english/references.txt
+	sample/english/references.jsonl
 ```
 
 ```shell
 ./evaluate.py --cuda \
-	--input=sample/russian/original.txt \
-	--golden=sample/russian/references.txt \
+	--input=sample/russian/input.jsonl \
+	--golden=sample/russian/references.jsonl \
 	--style-model=IlyaGusev/rubertconv_toxic_clf \
 	--meaning-model=s-nlp/rubert-base-cased-conversational-paraphrase-v1 \
 	--fluency-model=SkolkovoInstitute/ruRoberta-large-RuCoLa-v1 \
-	sample/russian/references.txt
+	sample/russian/references.jsonl
 ```

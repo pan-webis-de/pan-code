@@ -9,6 +9,7 @@ from typing import Optional, Type, Tuple, Dict, Callable, List, Union
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 import torch
 from sacrebleu import CHRF  # type: ignore
 from tqdm.auto import trange
@@ -238,16 +239,33 @@ def run_evaluation(
         args: argparse.Namespace,
         evaluator: Callable[..., Dict[str, npt.NDArray[np.float64]]]
 ) -> Dict[str, npt.NDArray[np.float64]]:
-    original_texts = [line.strip() for line in args.input.readlines()]
-    rewritten_texts = [sentence.strip() for sentence in args.prediction.readlines()]
-    references = [line.strip() for line in args.golden.readlines()]
+    df_input = pd.read_json(args.input, convert_dates=False, lines=True)
+    df_input = df_input[['id', 'text']]
+    df_input.set_index('id', inplace=True)
+    df_input.rename(columns={'text': 'input'}, inplace=True)
 
-    assert all(len(x) > 0 for x in original_texts)
-    assert all(len(x) > 0 for x in rewritten_texts)
-    assert all(isinstance(x, str) for x in original_texts)
-    assert all(isinstance(x, str) for x in rewritten_texts)
+    df_prediction = pd.read_json(args.prediction, convert_dates=False, lines=True)
+    df_prediction = df_prediction[['id', 'text']]
+    df_prediction.set_index('id', inplace=True)
+    df_prediction.rename(columns={'text': 'prediction'}, inplace=True)
 
-    result = evaluator(original_texts=original_texts, rewritten_texts=rewritten_texts, references=references)
+    df_references = pd.read_json(args.golden, convert_dates=False, lines=True)
+    df_references = df_references[['id', 'text']]
+    df_references.set_index('id', inplace=True)
+    df_references.rename(columns={'text': 'reference'}, inplace=True)
+
+    df = df_input.join(df_prediction).join(df_references)
+
+    assert len(df) == len(df_input) == len(df_prediction) == len(df_references), \
+        f'Dataset lengths {len(df_input)} & {len(df_prediction)} & {len(df_references)} != {len(df)}'
+
+    assert not df.isna().values.any(), 'Datasets contain missing entries'
+
+    result = evaluator(
+        original_texts=df['input'].tolist(),
+        rewritten_texts=df['prediction'].tolist(),
+        references=df['reference'].tolist()
+    )
 
     aggregated = {measure: np.mean(values).item() for measure, values in result.items()}
 
@@ -260,9 +278,9 @@ def run_evaluation(
 def main() -> None:
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-i', '--input', type=argparse.FileType('r', encoding='UTF-8'), required=True,
+    parser.add_argument('-i', '--input', type=argparse.FileType('rb'), required=True,
                         help='Initial texts before style transfer')
-    parser.add_argument('-g', '--golden', type=argparse.FileType('r', encoding='UTF-8'), required=True,
+    parser.add_argument('-g', '--golden', type=argparse.FileType('rb'), required=True,
                         help='Ground truth texts after style transfer')
     parser.add_argument('-o', '--output', type=argparse.FileType('w', encoding='UTF-8'), default=sys.stdout,
                         help='Where to print the evaluation results')
@@ -274,7 +292,7 @@ def main() -> None:
                         help='Fluency evaluation model on Hugging Face Hub')
     parser.add_argument('--cuda', action='store_true', default=False,
                         help='Whether to use CUDA acceleration, if possible')
-    parser.add_argument('prediction', type=argparse.FileType('r', encoding='UTF-8'),
+    parser.add_argument('prediction', type=argparse.FileType('rb'),
                         help='Your model predictions')
 
     args = parser.parse_args()
