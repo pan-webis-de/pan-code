@@ -1,8 +1,8 @@
-transformers
 numpy
-scikit-learn
-torch
-sentencepiece
 pandas
-tqdm
 sacrebleu
+scikit-learn
+sentencepiece
+torch
+tqdm
+transformers
