@@ -19,3 +19,10 @@
 	--fluency-model=SkolkovoInstitute/ruRoberta-large-RuCoLa-v1 \
 	sample/russian/references.jsonl
 ```
+
+## Docker Images for Evaluation
+
+```shell
+make docker-english  # => clef24-text-detoxification-evaluator:english
+make docker-russian  # => clef24-text-detoxification-evaluator:russian
+```
