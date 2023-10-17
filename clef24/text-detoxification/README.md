@@ -1,7 +1,7 @@
 # Text Detoxification
 
 ```shell
-./evaluate.py \
+./evaluate.py --cuda \
 	--input=sample/english/original.txt \
 	--golden=sample/english/references.txt \
 	--style-model=s-nlp/roberta_toxicity_classifier \
@@ -11,7 +11,7 @@
 ```
 
 ```shell
-./evaluate.py \
+./evaluate.py --cuda \
 	--input=sample/russian/original.txt \
 	--golden=sample/russian/references.txt \
 	--style-model=IlyaGusev/rubertconv_toxic_clf \
