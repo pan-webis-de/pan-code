@@ -1,0 +1,6 @@
+.dockerignore
+.git
+.mypy_cache
+Dockerfile
+__pycache__
+mypy.ini
