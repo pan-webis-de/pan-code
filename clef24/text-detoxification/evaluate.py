@@ -291,7 +291,7 @@ def main() -> None:
     parser.add_argument('--fluency-model', type=str, required=True,
                         help='Fluency evaluation model on Hugging Face Hub')
     parser.add_argument('--no-cuda', action='store_true', default=False,
-                        help='Whether to use CUDA acceleration, if possible')
+                        help='Disable the use of CUDA')
     parser.add_argument('prediction', type=argparse.FileType('rb'),
                         help='Your model predictions')
 
