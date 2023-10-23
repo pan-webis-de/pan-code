@@ -23,6 +23,6 @@
 ## Docker Images for Evaluation
 
 ```shell
-make docker-english  # => clef24-text-detoxification-evaluator:english
-make docker-russian  # => clef24-text-detoxification-evaluator:russian
+make docker-english  # => webis/clef24-text-detoxification-evaluator:english
+make docker-russian  # => webis/clef24-text-detoxification-evaluator:russian
 ```
