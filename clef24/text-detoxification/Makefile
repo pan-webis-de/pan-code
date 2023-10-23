@@ -9,7 +9,7 @@ mypy:
 	mypy .
 
 docker-%:
-	$(DOCKER) build -f Dockerfile --build-arg "LANGUAGE=$*" --tag "webis/clef24-text-detoxification-evaluator:$*"
+	$(DOCKER) build -f Dockerfile --build-arg "LANGUAGE=$*" --tag "webis/clef24-text-detoxification-evaluator:$*" .
 
 models: models-english models-russian
 
