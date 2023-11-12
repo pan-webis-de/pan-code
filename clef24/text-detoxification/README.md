@@ -26,3 +26,9 @@
 make docker-english  # => webis/clef24-text-detoxification-evaluator:english
 make docker-russian  # => webis/clef24-text-detoxification-evaluator:russian
 ```
+
+### Build the Docker file
+
+```
+docker build -t webis/clef24-text-detoxification-evaluator:0.0.1 .
+```
