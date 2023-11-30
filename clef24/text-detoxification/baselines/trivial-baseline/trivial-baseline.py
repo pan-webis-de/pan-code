@@ -1,61 +1,87 @@
 #!/usr/bin/env python3
+
 import argparse
-from glob import glob
 import json
+import logging
 import re
+from pathlib import Path
+from typing import Set, Container, Optional
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='The trivial baseline for the PAN 2023 text detoxification task that removes all/none/or specified stopwrods from given text for detoxification.')
 
-    parser.add_argument('--input', help='The input file, expected a jsonl file.', required=True)
-    parser.add_argument('--output', help='The output file, will create a jsonl file.', required=True)
-    parser.add_argument('--stopword-directory', help='An optional pointer to a directory containing stopwords.', required=False, default=None)
-    parser.add_argument('--remove-all-terms', help='Generate the empty string.', required=False, default=False, type=bool)
-    parser.add_argument('--remove-no-terms', help='Output the text without modification.', required=False, default=False, type=bool)
+def parse_stopwords(path: Path) -> Set[str]:
+    stopwords: Set[str] = set()
 
-    return parser.parse_args()
+    if not path:
+        return stopwords
 
-def parse_stopwords(stopword_dir):
-    ret = set()
+    logging.info('Loading stopwords from directory: %s', path.absolute())
 
-    if not stopword_dir:
-        return ret
+    for path_file in path.iterdir():
+        if path_file.is_file():
+            with open(path_file, encoding='UTF-8') as f:
+                logging.info('Loading stopwords from file: %s', path_file.name)
 
-    print('Load stopwords from ' + stopword_dir)
+                for line in f:
+                    stopwords.add(line.strip().lower())
 
-    if stopword_dir:
-        for f in glob(stopword_dir + '/*'):
-            for t in open(f).read().split('\n'):
-                ret.add(t.lower().strip())
+    logging.info('Loaded %d stopword(s)', len(stopwords))
 
-    print('Done. Loaded ' + str(len(ret)) + ' stopwords.')
+    return stopwords
 
-    return ret
 
-def detoxify_text(text, stopword_list=None, remove_all_terms=False, remove_no_terms=True):
+SPACES = re.compile(r'\s+')
+
+
+def detoxify(
+        text: str,
+        stopwords: Optional[Container[str]] = None,
+        remove_all_terms: bool = False,
+        remove_no_terms: bool = True
+) -> str:
     if remove_no_terms:
         return text
+
     if remove_all_terms:
         return ''
-    ret = []
-    
-    for token in re.split(r'\s+', text):
-        if not stopword_list or token.lower().strip() not in stopword_list:
-            ret += [token]
 
-    return ' '.join(ret)
+    tokens = []
 
-def main(args):
+    for token in SPACES.split(text):
+        if not stopwords or token.lower().strip() not in stopwords:
+            tokens.append(token)
+
+    return ' '.join(tokens)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description='The trivial baseline for the PAN 2024 text detoxification task that '
+                                                 'removes all/none/or specified stopwrods from given text for '
+                                                 'detoxification.')
+
+    parser.add_argument('--input', required=True, type=argparse.FileType('rb'),
+                        help='The input file, expected a jsonl file.')
+    parser.add_argument('--output', required=True, type=argparse.FileType('w', encoding='UTF-8'),
+                        help='The output file, will create a jsonl file.')
+    parser.add_argument('--stopword-directory', required=False, type=Path, default=None,
+                        help='An optional pointer to a directory containing stopwords.')
+    parser.add_argument('--remove-all-terms', required=False, default=False, type=bool,
+                        help='Generate the empty string.')
+    parser.add_argument('--remove-no-terms', required=False, default=False, type=bool,
+                        help='Output the text without modification.')
+
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO)
+
     stopwords = parse_stopwords(args.stopword_directory)
-    ret = []
 
-    with open(args.input, 'r') as input_file, open(args.output, 'w+') as output_file:
-        for l in input_file:
-            l = json.loads(l)
-            l['text'] = detoxify_text(l['text'], stopwords, args.remove_all_terms, args.remove_no_terms)
-            output_file.write(json.dumps(l) + '\n')
+    for line in args.input:
+        instance = json.loads(line)
+        instance['text'] = detoxify(instance['text'], stopwords, args.remove_all_terms, args.remove_no_terms)
+
+        args.output.write(json.dumps(instance, ensure_ascii=False))
+        args.output.write('\n')
+
 
 if __name__ == '__main__':
-    args = parse_args()
-    main(args)
-
+    main()

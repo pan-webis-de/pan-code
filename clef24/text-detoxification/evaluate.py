@@ -11,7 +11,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import torch
-from sacrebleu import CHRF  # type: ignore
+from sacrebleu import CHRF
 from tqdm.auto import trange
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
