@@ -2,8 +2,9 @@ FROM ubuntu:22.04
 
 RUN apt-get update \
 	&& apt-get upgrade -y python3 python3-pip python-is-python3 git \
-	&& git clone https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words.git /lodnoobw \
-	&& rm /lodnoobw/LICENSE && rm /lodnoobw/README.md && rm /lodnoobw/USERS.md
+	&& pip install datasets
 
-ADD trivial-baseline.py /trivial-baseline.py
+ADD trivial_baseline.py /trivial_baseline.py
 
+RUN chmod +x /trivial_baseline.py && \
+	python3 -c "from datasets import load_dataset; load_dataset('textdetox/multilingual_toxic_lexicon')"
