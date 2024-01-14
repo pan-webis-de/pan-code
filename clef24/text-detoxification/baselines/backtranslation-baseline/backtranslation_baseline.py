@@ -163,7 +163,10 @@ def main() -> None:
 
     tr_model, tr_tokenizer = get_model(type="translator")
 
-    sources = [json.loads(line)["text"] for line in args.input]
+    inputs = [json.loads(line) for line in args.input]
+    sources = [i['text'] for i in inputs]
+    doc_ids = [i['id'] for i in inputs]
+    del inputs
 
     print(args)
     # Check if the source language is English
@@ -175,8 +178,8 @@ def main() -> None:
             texts=sources, model=tst_model, tokenizer=tst_tokenizer
         )
 
-        for line in detoxified:
-            args.output.write(json.dumps(line, ensure_ascii=False))
+        for doc_id, text in zip(doc_ids, detoxified):
+            args.output.write(json.dumps({"id": doc_id, "text": text}, ensure_ascii=False))
             args.output.write("\n")
     else:
         logging.info("Running")
@@ -212,8 +215,8 @@ def main() -> None:
             tgt_lang_id=lang_id_mapping[args.src_lang_id],
         )
 
-        for line in backtranslated_sources:
-            args.output.write(json.dumps(line, ensure_ascii=False))
+        for doc_id, text in zip(doc_ids, backtranslated_sources):
+            args.output.write(json.dumps({"id": doc_id, "text": text}, ensure_ascii=False))
             args.output.write("\n")
 
 if __name__ == "__main__":
