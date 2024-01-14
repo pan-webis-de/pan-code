@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM pytorch/pytorch:2.1.1-cuda12.1-cudnn8-devel
 
 RUN apt-get update && apt-get install -y python3 python3-pip python-is-python3 git
 

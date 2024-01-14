@@ -12,7 +12,7 @@ Run the backtranslation baseline on a tiny dataset:
 tira-run \
     --input-dataset pan23-text-detoxification/english-tiny-20231112-training \
     --image webis/clef24-text-detoxification-baseline-backtranslation:0.0.1 \
-    --command '/backtranslation_baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references_new.jsonl --src_lang_id en'
+    --command '/backtranslation_baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --src_lang_id en'
 ```
 
 ## Development
