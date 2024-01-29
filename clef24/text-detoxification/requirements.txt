@@ -6,3 +6,4 @@ sentencepiece
 torch
 tqdm
 transformers
+protobuf

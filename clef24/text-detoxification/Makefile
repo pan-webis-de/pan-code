@@ -17,6 +17,7 @@ models-english:
 	huggingface-cli download s-nlp/roberta_toxicity_classifier
 	huggingface-cli download Elron/bleurt-large-128
 	huggingface-cli download cointegrated/roberta-large-cola-krishna2020
+	huggingface-cli download cis-lmu/glot500-base
 
 models-russian:
 	huggingface-cli download IlyaGusev/rubertconv_toxic_clf

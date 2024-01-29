@@ -1,6 +1,6 @@
 # Trivial Baseline for the PAN 2024 Text Detoxification Task
 
-This directory contains a set of trivial baselines that remove all, none, or [specific stopwords](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words) from the text.
+This directory contains a set of trivial baselines that remove all, none, or [specific stopwords](https://huggingface.co/datasets/textdetox/multilingual_toxic_lexicon) from the text.
 
 To run the baselines as [TIRA](http://tira.io) would execute them, please install Python >= 3.7, Docker, and tira on your machine (`pip3 install tira`).
 
@@ -12,7 +12,7 @@ A simple baseline that removes stopwords from the text can be executed via (on a
 tira-run \
 	--input-dataset pan23-text-detoxification/english-tiny-20231112-training \
 	--image webis/clef24-text-detoxification-baseline:0.0.1 \
-	--command '/trivial-baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --stopword-directory /lodnoobw'
+	--command '/trivial-baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --language en'
 ```
 
 The predictions can be found in the directory `tira-output/references.jsonl`
