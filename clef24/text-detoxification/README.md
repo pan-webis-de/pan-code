@@ -1,4 +1,4 @@
-# Text Detoxification
+# TextDetox
 
 The code in this directory is used to evaluate the predictions of the [text detoxification shared task at CLEF 2024](https://pan.webis.de/clef24/pan24-web/text-detoxification.html).
 
