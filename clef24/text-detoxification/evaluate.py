@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-
 __credits__ = ["David Dale", "Daniil Moskovskiy", "Dmitry Ustalov", "Elisei Stakovskii"]
 
 import argparse
 import sys
 from functools import partial
 from typing import Optional, Type, Tuple, Dict, Callable, List, Union
-
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -18,6 +16,8 @@ from transformers import (
     AutoModelForMaskedLM,
     AutoTokenizer,
 )
+from sentence_transformers import SentenceTransformer
+from scipy.spatial.distance import cosine
 
 
 def prepare_target_label(
@@ -41,7 +41,9 @@ def prepare_target_label(
     return target_label
 
 
-def get_pppl_score(model: AutoModelForMaskedLM, tokenizer: AutoTokenizer, sentence: str, device: str) -> float:
+def get_pppl_score(
+    model: AutoModelForMaskedLM, tokenizer: AutoTokenizer, sentence: str, device: str
+) -> float:
     """
     Pseudoperplexity function as realized by David Dale
     source:
@@ -50,56 +52,59 @@ def get_pppl_score(model: AutoModelForMaskedLM, tokenizer: AutoTokenizer, senten
     tensor_input = tokenizer.encode(sentence, return_tensors="pt").to(device)
     repeat_input = tensor_input.repeat(tensor_input.size(-1) - 2, 1).to(device)
     mask = torch.ones(tensor_input.size(-1) - 1).diag(1)[:-2].to(device)
-    masked_input = repeat_input.masked_fill(mask == 1, tokenizer.mask_token_id).to(device)
-    labels = repeat_input.masked_fill(masked_input != tokenizer.mask_token_id, -100).to(device)
+    masked_input = repeat_input.masked_fill(mask == 1, tokenizer.mask_token_id).to(
+        device
+    )
+    labels = repeat_input.masked_fill(masked_input != tokenizer.mask_token_id, -100).to(
+        device
+    )
     with torch.inference_mode():
         loss = model(masked_input, labels=labels).loss
     return np.exp(loss.item())
 
 
-def evaluate_cola(
-    input_sentences: List[str],
-    output_sentences: List[str],
-    model: AutoModelForMaskedLM,
-    tokenizer: AutoTokenizer,
-    use_cuda: bool = True,
-) -> np.ndarray:
-    """
-    This function using pseudoperplexity performs a relative fluency estimation and outputs a list of bool values.
-    As inputs the function expects two lists of sentences. In essence, the function compares whether the pseudoperplexity score
-    of the sentence in the second list is less or equal to the score of the sentence in the first list. If it does, then the ouput is 1, i.e. fluency
-    did not become worse, otherwise the score is 0 - the sentence is not fluent, i.e. the transformation to the initial sentence made the sentence
-    ungrammatical
-    """
-    device = torch.device("cuda" if use_cuda else "cpu")
-    first_pppl_vector, second_pppl_vector, final_bools_vector = [], [], []
+# def evaluate_cola(
+#     input_sentences: List[str],
+#     output_sentences: List[str],
+#     model: AutoModelForMaskedLM,
+#     tokenizer: AutoTokenizer,
+#     use_cuda: bool = True,
+# ) -> np.ndarray:
+#     """
+#     This function using pseudoperplexity performs a relative fluency estimation and outputs a list of bool values.
+#     As inputs the function expects two lists of sentences. In essence, the function compares whether the pseudoperplexity score
+#     of the sentence in the second list is less or equal to the score of the sentence in the first list. If it does, then the ouput is 1, i.e. fluency
+#     did not become worse, otherwise the score is 0 - the sentence is not fluent, i.e. the transformation to the initial sentence made the sentence
+#     ungrammatical
+#     """
+#     device = torch.device("cuda" if use_cuda else "cpu")
+#     first_pppl_vector, second_pppl_vector, final_bools_vector = [], [], []
 
+#     assert len(input_sentences) == len(
+#         output_sentences
+#     ), "Input and output sentences number mismatch!"
 
-    assert len(input_sentences) == len(
-        output_sentences
-    ), "Input and output sentences number mismatch!"
+#     for sent in input_sentences:
+#         curr_pppl_score = get_pppl_score(
+#             sentence=sent, model=model, tokenizer=tokenizer, device=device
+#         )
+#         first_pppl_vector.append(curr_pppl_score)
 
-    for sent in input_sentences:
-        curr_pppl_score = get_pppl_score(
-            sentence=sent, model=model, tokenizer=tokenizer, device=device
-        )
-        first_pppl_vector.append(curr_pppl_score)
+#     for sent in output_sentences:
+#         curr_pppl_score = get_pppl_score(
+#             sentence=sent, model=model, tokenizer=tokenizer, device=device
+#         )
+#         second_pppl_vector.append(curr_pppl_score)
 
-    for sent in output_sentences:
-        curr_pppl_score = get_pppl_score(
-            sentence=sent, model=model, tokenizer=tokenizer, device=device
-        )
-        second_pppl_vector.append(curr_pppl_score)
+#     for i in range(len(first_pppl_vector)):
+#         if second_pppl_vector[i] <= first_pppl_vector[i]:
+#             final_bools_vector.append(1)
+#         else:
+#             final_bools_vector.append(0)
 
-    for i in range(len(first_pppl_vector)):
-        if second_pppl_vector[i] <= first_pppl_vector[i]:
-            final_bools_vector.append(1)
-        else:
-            final_bools_vector.append(0)
+#     assert len(first_pppl_vector) == len(second_pppl_vector) == len(final_bools_vector)
 
-    assert len(first_pppl_vector) == len(second_pppl_vector) == len(final_bools_vector)
-
-    return np.array(final_bools_vector)
+#     return np.array(final_bools_vector)
 
 
 def classify_texts(
@@ -162,59 +167,49 @@ def evaluate_style(
 
 
 def evaluate_meaning(
-    model: AutoModelForSequenceClassification,
-    tokenizer: AutoTokenizer,
+    model: SentenceTransformer,
     original_texts: List[str],
     rewritten_texts: List[str],
-    target_label: str = "entailment",
-    bidirectional: bool = True,
     batch_size: int = 32,
-    aggregation: str = "prod",
+    efficient_version: bool = False,
 ) -> npt.NDArray[np.float64]:
-    prepared_target_label = prepare_target_label(model, target_label)
 
-    scores = classify_texts(
-        model,
-        tokenizer,
-        original_texts,
-        prepared_target_label,
-        rewritten_texts,
-        batch_size=batch_size,
-        desc="Meaning",
-    )
-    if bidirectional:
-        reverse_scores = classify_texts(
-            model,
-            tokenizer,
-            rewritten_texts,
-            prepared_target_label,
-            original_texts,
-            batch_size=batch_size,
-            desc="Meaning",
-        )
-        if aggregation == "prod":
-            scores = reverse_scores * scores
-        elif aggregation == "mean":
-            scores = (reverse_scores + scores) / 2
-        elif aggregation == "f1":
-            scores = 2 * reverse_scores * scores / (reverse_scores + scores)
+    similarities = []
+
+    batch_size = min(batch_size, len(original_texts))
+
+    for i in range(0, len(original_texts), batch_size):
+        original_batch = original_texts[i : i + batch_size]
+        rewritten_batch = rewritten_texts[i : i + batch_size]
+
+        embeddings = model.encode(original_batch + rewritten_batch)
+        print("embeddings", embeddings, len(embeddings))
+        original_embeddings = embeddings[:batch_size]
+        rewritten_embeddings = embeddings[batch_size:]
+
+        print("original embeddings", original_embeddings)
+        print("rewritten embeddings", rewritten_embeddings)
+
+        if efficient_version:
+            similarity_matrix = np.dot(original_embeddings, rewritten_embeddings.T)
+            original_norms = np.linalg.norm(original_embeddings, axis=1)
+            rewritten_norms = np.linalg.norm(rewritten_embeddings, axis=1)
+            similarities.extend(
+                1
+                - similarity_matrix / (np.outer(original_norms, rewritten_norms) + 1e-9)
+            )
+
         else:
-            raise ValueError('agg should be one of ["mean", "prod", "f1"]')
-    return scores
+            t = [
+                1 - cosine(original_embedding, rewritten_embedding)
+                for original_embedding, rewritten_embedding in zip(
+                    original_embeddings, rewritten_embeddings
+                )
+            ]
+            print("t", t)
+            similarities.extend(t)
 
-
-# def evaluate_cola(
-#     model: AutoModelForSequenceClassification,
-#     tokenizer: AutoTokenizer,
-#     texts: List[str],
-#     target_label: int = 1,
-#     batch_size: int = 32,
-# ) -> npt.NDArray[np.float64]:
-#     target_label = prepare_target_label(model, target_label)
-#     scores = classify_texts(
-#         model, tokenizer, texts, target_label, batch_size=batch_size, desc="Fluency"
-#     )
-#     return scores
+    return similarities
 
 
 def evaluate_style_transfer(
@@ -223,13 +218,8 @@ def evaluate_style_transfer(
     style_model: AutoModelForSequenceClassification,
     style_tokenizer: AutoTokenizer,
     meaning_model: AutoModelForSequenceClassification,
-    meaning_tokenizer: AutoTokenizer,
-    fluency_model: AutoModelForSequenceClassification,
-    fluency_tokenizer: AutoTokenizer,
     references: Optional[List[str]] = None,
     style_target_label: int = 1,
-    meaning_target_label: str = "paraphrase",
-    cola_target_label: int = 1,
     batch_size: int = 32,
 ) -> Dict[str, npt.NDArray[np.float64]]:
     accuracy = evaluate_style(
@@ -241,29 +231,15 @@ def evaluate_style_transfer(
     )
 
     similarity = evaluate_meaning(
-        meaning_model,
-        meaning_tokenizer,
-        original_texts,
-        rewritten_texts,
+        model=meaning_model,
+        original_texts=original_texts,
+        rewritten_texts=rewritten_texts,
         batch_size=batch_size,
-        bidirectional=False,
-        target_label=meaning_target_label,
     )
-
-    fluency = evaluate_cola(
-        model=fluency_model,
-        tokenizer=fluency_tokenizer,
-        input_sentences=original_texts,
-        output_sentences=rewritten_texts,
-    )
-
-    joint = accuracy * similarity * fluency
 
     result = {
         "accuracy": accuracy,
         "similarity": similarity,
-        "fluency": fluency,
-        "joint": joint,
     }
 
     if references is not None:
@@ -276,6 +252,8 @@ def evaluate_style_transfer(
             ],
             dtype=np.float64,
         )
+    print(accuracy, similarity)
+    result["joint"] = result["accuracy"] * result["similarity"] * result["chrf"]
 
     return result
 
@@ -289,6 +267,11 @@ def load_model(
     ] = AutoModelForSequenceClassification,
     use_cuda: bool = True,
 ) -> Tuple[AutoModelForSequenceClassification, AutoTokenizer]:
+
+    if model_name == "sentence-transformers/LaBSE":
+        model = SentenceTransformer("sentence-transformers/LaBSE")
+        return model
+
     if model is None:
         if model_name is None:
             raise ValueError("Either model or model_name should be provided")
@@ -388,17 +371,12 @@ def main() -> None:
         required=True,
         help="Meaning evaluation model on Hugging Face Hub",
     )
+
     parser.add_argument(
-        "--fluency-model",
-        type=str,
-        required=True,
-        help="Fluency evaluation model on Hugging Face Hub",
+        "--no-cuda", action="store_true", default=False, help="Disable use of CUDA"
     )
     parser.add_argument(
-        "--no-cuda", action="store_true", default=False, help="Disable the use of CUDA"
-    )
-    parser.add_argument(
-        "prediction", type=argparse.FileType("rb"), help="Your model predictions"
+        "--prediction", type=argparse.FileType("rb"), help="Your model predictions"
     )
 
     args = parser.parse_args()
@@ -406,12 +384,7 @@ def main() -> None:
     style_model, style_tokenizer = load_model(
         args.style_model, use_cuda=not args.no_cuda
     )
-    meaning_model, meaning_tokenizer = load_model(
-        args.meaning_model, use_cuda=not args.no_cuda
-    )
-    fluency_model, fluency_tokenizer = load_model(
-        args.fluency_model, use_cuda=not args.no_cuda, model_class=AutoModelForMaskedLM
-    )
+    meaning_model = load_model(args.meaning_model, use_cuda=not args.no_cuda)
 
     run_evaluation(
         args,
@@ -420,12 +393,7 @@ def main() -> None:
             style_model=style_model,
             style_tokenizer=style_tokenizer,
             meaning_model=meaning_model,
-            meaning_tokenizer=meaning_tokenizer,
-            fluency_model=fluency_model,
-            fluency_tokenizer=fluency_tokenizer,
             style_target_label=0,
-            meaning_target_label=0,
-            cola_target_label=0,
         ),
     )
 

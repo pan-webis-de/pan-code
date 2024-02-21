@@ -1,21 +1,17 @@
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-devel
 
 WORKDIR /evaluator
 
 COPY . /evaluator
 
 RUN \
-apt-get update && \
-apt-get install -y make && \
-rm -rf /var/lib/apt/lists/* && \
-pip3 install -r requirements.txt
+    apt-get update && \
+    apt-get install -y make && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip3 install -r requirements.txt
 
 CMD evaluate.py
 
-ARG LANGUAGE
-
-LABEL language=$LANGUAGE
-
 RUN \
-make "models-$LANGUAGE" && \
-python3 -c "import transformers; transformers.utils.move_cache()"
+    # make "evaluate" && \
+    python3 -c "import transformers; transformers.utils.move_cache()"
