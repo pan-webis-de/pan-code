@@ -41,72 +41,6 @@ def prepare_target_label(
     return target_label
 
 
-def get_pppl_score(
-    model: AutoModelForMaskedLM, tokenizer: AutoTokenizer, sentence: str, device: str
-) -> float:
-    """
-    Pseudoperplexity function as realized by David Dale
-    source:
-    https://gist.github.com/avidale/f574c014cd686709636b89208f2259ce
-    """
-    tensor_input = tokenizer.encode(sentence, return_tensors="pt").to(device)
-    repeat_input = tensor_input.repeat(tensor_input.size(-1) - 2, 1).to(device)
-    mask = torch.ones(tensor_input.size(-1) - 1).diag(1)[:-2].to(device)
-    masked_input = repeat_input.masked_fill(mask == 1, tokenizer.mask_token_id).to(
-        device
-    )
-    labels = repeat_input.masked_fill(masked_input != tokenizer.mask_token_id, -100).to(
-        device
-    )
-    with torch.inference_mode():
-        loss = model(masked_input, labels=labels).loss
-    return np.exp(loss.item())
-
-
-# def evaluate_cola(
-#     input_sentences: List[str],
-#     output_sentences: List[str],
-#     model: AutoModelForMaskedLM,
-#     tokenizer: AutoTokenizer,
-#     use_cuda: bool = True,
-# ) -> np.ndarray:
-#     """
-#     This function using pseudoperplexity performs a relative fluency estimation and outputs a list of bool values.
-#     As inputs the function expects two lists of sentences. In essence, the function compares whether the pseudoperplexity score
-#     of the sentence in the second list is less or equal to the score of the sentence in the first list. If it does, then the ouput is 1, i.e. fluency
-#     did not become worse, otherwise the score is 0 - the sentence is not fluent, i.e. the transformation to the initial sentence made the sentence
-#     ungrammatical
-#     """
-#     device = torch.device("cuda" if use_cuda else "cpu")
-#     first_pppl_vector, second_pppl_vector, final_bools_vector = [], [], []
-
-#     assert len(input_sentences) == len(
-#         output_sentences
-#     ), "Input and output sentences number mismatch!"
-
-#     for sent in input_sentences:
-#         curr_pppl_score = get_pppl_score(
-#             sentence=sent, model=model, tokenizer=tokenizer, device=device
-#         )
-#         first_pppl_vector.append(curr_pppl_score)
-
-#     for sent in output_sentences:
-#         curr_pppl_score = get_pppl_score(
-#             sentence=sent, model=model, tokenizer=tokenizer, device=device
-#         )
-#         second_pppl_vector.append(curr_pppl_score)
-
-#     for i in range(len(first_pppl_vector)):
-#         if second_pppl_vector[i] <= first_pppl_vector[i]:
-#             final_bools_vector.append(1)
-#         else:
-#             final_bools_vector.append(0)
-
-#     assert len(first_pppl_vector) == len(second_pppl_vector) == len(final_bools_vector)
-
-#     return np.array(final_bools_vector)
-
-
 def classify_texts(
     model: AutoModelForSequenceClassification,
     tokenizer: AutoTokenizer,
@@ -183,12 +117,8 @@ def evaluate_meaning(
         rewritten_batch = rewritten_texts[i : i + batch_size]
 
         embeddings = model.encode(original_batch + rewritten_batch)
-        print("embeddings", embeddings, len(embeddings))
         original_embeddings = embeddings[:batch_size]
         rewritten_embeddings = embeddings[batch_size:]
-
-        print("original embeddings", original_embeddings)
-        print("rewritten embeddings", rewritten_embeddings)
 
         if efficient_version:
             similarity_matrix = np.dot(original_embeddings, rewritten_embeddings.T)
@@ -206,7 +136,6 @@ def evaluate_meaning(
                     original_embeddings, rewritten_embeddings
                 )
             ]
-            print("t", t)
             similarities.extend(t)
 
     return similarities
@@ -252,7 +181,6 @@ def evaluate_style_transfer(
             ],
             dtype=np.float64,
         )
-    print(accuracy, similarity)
     result["joint"] = result["accuracy"] * result["similarity"] * result["chrf"]
 
     return result
