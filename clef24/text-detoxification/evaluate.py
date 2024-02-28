@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 __credits__ = ["David Dale", "Daniil Moskovskiy", "Dmitry Ustalov", "Elisei Stakovskii"]
 
 import argparse
@@ -23,6 +24,19 @@ from scipy.spatial.distance import cosine
 def prepare_target_label(
     model: AutoModelForSequenceClassification, target_label: Union[int, str]
 ) -> int:
+    """
+    Prepare the target label to ensure it is valid for the given model.
+
+    Args:
+        model (AutoModelForSequenceClassification): The sequence classification model.
+        target_label (Union[int, str]): The target label to prepare.
+
+    Returns:
+        int: The prepared target label.
+
+    Raises:
+        ValueError: If the target_label is not found in the model labels or ids.
+    """
     if target_label in model.config.id2label:
         pass
     elif target_label in model.config.label2id:
@@ -51,6 +65,23 @@ def classify_texts(
     raw_logits: bool = False,
     desc: Optional[str] = None,
 ) -> npt.NDArray[np.float64]:
+    """
+    Classify a list of texts using the given model and tokenizer.
+
+    Args:
+        model (AutoModelForSequenceClassification): The sequence classification model.
+        tokenizer (AutoTokenizer): The tokenizer corresponding to the model.
+        texts (List[str]): List of texts to classify.
+        target_label (Union[int, str]): The target label for classification.
+        second_texts (Optional[List[str]]): List of secondary texts (if applicable).
+        batch_size (int): Batch size for inference.
+        raw_logits (bool): Whether to return raw logits instead of probabilities.
+        desc (Optional[str]): Description for tqdm progress bar.
+
+    Returns:
+        npt.NDArray[np.float64]: Array of classification scores for the texts.
+    """
+
     target_label = prepare_target_label(model, target_label)
 
     res = []
@@ -82,31 +113,60 @@ def classify_texts(
                 print(i, i + batch_size)
                 preds = [0] * len(inputs)
         res.append(preds)
-
     return np.concatenate(res)
 
 
-def evaluate_style(
+def evaluate_sta(
     model: AutoModelForSequenceClassification,
     tokenizer: AutoTokenizer,
     texts: List[str],
-    target_label: int = 1,  # 1 is formal, 0 is informal
+    target_label: int = 1,  # 1 is polite, 0 is toxic
     batch_size: int = 32,
 ) -> npt.NDArray[np.float64]:
+    """
+    Evaluate the STA of a list of texts using the given model and tokenizer.
+
+    Args:
+        model (AutoModelForSequenceClassification): The sequence classification model.
+        tokenizer (AutoTokenizer): The tokenizer corresponding to the model.
+        texts (List[str]): List of texts to evaluate.
+        target_label (int): The target label for style evaluation.
+        batch_size (int): Batch size for inference.
+
+    Returns:
+        npt.NDArray[np.float64]: Array of STA scores for the texts.
+    """
     target_label = prepare_target_label(model, target_label)
     scores = classify_texts(
         model, tokenizer, texts, target_label, batch_size=batch_size, desc="Style"
     )
+
     return scores
 
 
-def evaluate_meaning(
+def evaluate_sim(
     model: SentenceTransformer,
     original_texts: List[str],
     rewritten_texts: List[str],
     batch_size: int = 32,
     efficient_version: bool = False,
 ) -> npt.NDArray[np.float64]:
+
+    """
+    Evaluate the semantic similarity between original and rewritten texts using the given model.
+    Note that the subtraction is done due to the implementation of the `cosine` metric in `scipy`.
+    For more details see: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cosine.html
+
+    Args:
+        model (SentenceTransformer): The sentence transformer model.
+        original_texts (List[str]): List of original texts.
+        rewritten_texts (List[str]): List of rewritten texts.
+        batch_size (int): Batch size for inference.
+        efficient_version (bool): Whether to use an efficient calculation method.
+
+    Returns:
+        npt.NDArray[np.float64]: Array of semantic similarity scores between original and rewritten texts.
+    """
 
     similarities = []
 
@@ -128,7 +188,6 @@ def evaluate_meaning(
                 1
                 - similarity_matrix / (np.outer(original_norms, rewritten_norms) + 1e-9)
             )
-
         else:
             t = [
                 1 - cosine(original_embedding, rewritten_embedding)
@@ -137,7 +196,6 @@ def evaluate_meaning(
                 )
             ]
             similarities.extend(t)
-
     return similarities
 
 
@@ -151,7 +209,23 @@ def evaluate_style_transfer(
     style_target_label: int = 1,
     batch_size: int = 32,
 ) -> Dict[str, npt.NDArray[np.float64]]:
-    accuracy = evaluate_style(
+    """
+    Wrapper for calculating sub-metrics and joint metric.
+
+    Args:
+        original_texts (List[str]): List of original texts.
+        rewritten_texts (List[str]): List of rewritten texts.
+        style_model (AutoModelForSequenceClassification): The style classification model.
+        style_tokenizer (AutoTokenizer): The tokenizer corresponding to the style model.
+        meaning_model (AutoModelForSequenceClassification): The meaning classification model.
+        references (Optional[List[str]]): List of reference texts (if available).
+        style_target_label (int): The target label for style classification.
+        batch_size (int): Batch size for inference.
+
+    Returns:
+        Dict[str, npt.NDArray[np.float64]]: Dictionary containing evaluation metrics.
+    """
+    accuracy = evaluate_sta(
         style_model,
         style_tokenizer,
         rewritten_texts,
@@ -159,7 +233,7 @@ def evaluate_style_transfer(
         batch_size=batch_size,
     )
 
-    similarity = evaluate_meaning(
+    similarity = evaluate_sim(
         model=meaning_model,
         original_texts=original_texts,
         rewritten_texts=rewritten_texts,
@@ -167,21 +241,21 @@ def evaluate_style_transfer(
     )
 
     result = {
-        "accuracy": accuracy,
-        "similarity": similarity,
+        "STA": accuracy,
+        "SIM": similarity,
     }
 
     if references is not None:
         chrf = CHRF()
 
-        result["chrf"] = np.array(
+        result["CHRF"] = np.array(
             [
                 chrf.sentence_score(hypothesis, [reference]).score
                 for hypothesis, reference in zip(rewritten_texts, references)
             ],
             dtype=np.float64,
         )
-    result["joint"] = result["accuracy"] * result["similarity"] * result["chrf"]
+    result["J"] = result["STA"] * result["SIM"] * result["CHRF"]
 
     return result
 
@@ -195,30 +269,47 @@ def load_model(
     ] = AutoModelForSequenceClassification,
     use_cuda: bool = True,
 ) -> Tuple[AutoModelForSequenceClassification, AutoTokenizer]:
+    """
+    Load a pre-trained model and tokenizer from Hugging Face Hub.
 
+    Args:
+        model_name (Optional[str]): The name of the model to load.
+        model (Optional[AutoModelForSequenceClassification]): A pre-loaded model instance.
+        tokenizer (Optional[AutoTokenizer]): A pre-loaded tokenizer instance.
+        model_class (Type[AutoModelForSequenceClassification]): The class of the model to load.
+        use_cuda (bool): Whether to use CUDA for GPU acceleration.
+
+    Returns:
+        Tuple[AutoModelForSequenceClassification, AutoTokenizer]: The loaded model and tokenizer.
+    """
     if model_name == "sentence-transformers/LaBSE":
         model = SentenceTransformer("sentence-transformers/LaBSE")
         return model
-
     if model is None:
         if model_name is None:
             raise ValueError("Either model or model_name should be provided")
-
         model = model_class.from_pretrained(model_name)
 
         if torch.cuda.is_available() and use_cuda:
             model.cuda()
-
     if tokenizer is None:
         if model_name is None:
             raise ValueError("Either tokenizer or model_name should be provided")
-
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-
     return model, tokenizer
 
 
 def format_prototext(measure: str, value: str) -> str:
+    """
+    Format evaluation metrics into prototext format.
+
+    Args:
+        measure (str): The name of the evaluation measure.
+        value (str): The value of the evaluation measure.
+
+    Returns:
+        str: The formatted prototext string.
+    """
     return f'measure{{\n  key: "{measure}"\n  value: "{value}"\n}}\n'
 
 
@@ -226,6 +317,16 @@ def run_evaluation(
     args: argparse.Namespace,
     evaluator: Callable[..., Dict[str, npt.NDArray[np.float64]]],
 ) -> Dict[str, npt.NDArray[np.float64]]:
+    """
+    Run evaluation on input data using the specified evaluator.
+
+    Args:
+        args (argparse.Namespace): Parsed command-line arguments.
+        evaluator (Callable[..., Dict[str, npt.NDArray[np.float64]]]): The evaluation function.
+
+    Returns:
+        Dict[str, npt.NDArray[np.float64]]: Dictionary containing evaluation results.
+    """
     df_input = pd.read_json(args.input, convert_dates=False, lines=True)
     df_input = df_input[["id", "text"]]
     df_input.set_index("id", inplace=True)
@@ -259,7 +360,6 @@ def run_evaluation(
 
     for measure, value in aggregated.items():
         args.output.write(format_prototext(measure, str(value)))
-
     return result
 
 
@@ -288,19 +388,6 @@ def main() -> None:
         help="Where to print the evaluation results",
     )
     parser.add_argument(
-        "--style-model",
-        type=str,
-        required=True,
-        help="Style evaluation model on Hugging Face Hub",
-    )
-    parser.add_argument(
-        "--meaning-model",
-        type=str,
-        required=True,
-        help="Meaning evaluation model on Hugging Face Hub",
-    )
-
-    parser.add_argument(
         "--no-cuda", action="store_true", default=False, help="Disable use of CUDA"
     )
     parser.add_argument(
@@ -310,9 +397,9 @@ def main() -> None:
     args = parser.parse_args()
 
     style_model, style_tokenizer = load_model(
-        args.style_model, use_cuda=not args.no_cuda
+        "textdetox/xlmr-large-toxicity-classifier", use_cuda=not args.no_cuda
     )
-    meaning_model = load_model(args.meaning_model, use_cuda=not args.no_cuda)
+    meaning_model = load_model("sentence-transformers/LaBSE", use_cuda=not args.no_cuda)
 
     run_evaluation(
         args,

@@ -13,5 +13,5 @@ RUN \
 CMD evaluate.py
 
 RUN \
-    # make "evaluate" && \
+    make "models" && \
     python3 -c "import transformers; transformers.utils.move_cache()"

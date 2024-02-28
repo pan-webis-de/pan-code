@@ -6,6 +6,7 @@ import logging
 import re
 from typing import List
 from datasets import load_dataset
+from tqdm import tqdm
 
 SPACES = re.compile(r"\s+")
 
@@ -51,10 +52,10 @@ def main() -> None:
     )
     parser.add_argument(
         "--language",
-        required=True,
+        required=False,
         type=str,
-        default="en",
-        help="Specify language. Should be one of ['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']",
+        default=None,
+        help="Specify language. Should be one of ['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']. Without specification will load all stopwords.",
         choices=["am", "es", "ru", "uk", "en", "zh", "ar", "hi", "de"],
     )
     parser.add_argument(
@@ -76,13 +77,27 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO)
 
-    stopwords = load_dataset("textdetox/multilingual_toxic_lexicon")[args.language][
-        "text"
-    ]
-    logging.info("Loaded stopwords.")
+    if args.language is not None:
+        logging.info(f"Loading stopwords for {args.language}")
+        stopwords = load_dataset("textdetox/multilingual_toxic_lexicon")[args.language][
+            "text"
+        ]
+        stopwords = set(stopwords)
+    else:
+        logging.info(
+            "No specific language for stopwords provided. Loading all stopwords"
+        )
+        stopwords = load_dataset("textdetox/multilingual_toxic_lexicon")
+
+        words = []
+
+        for language in stopwords.keys():
+            words.extend(stopwords[language]["text"])
+
+        stopwords = set(words)
 
     logging.info("Started processing texts.")
-    for line in args.input:
+    for line in tqdm(args.input, desc="Processing 'input.jsonl'"):
         instance = json.loads(line)
         instance["text"] = detoxify(
             instance["text"], stopwords, args.remove_all_terms, args.remove_no_terms
@@ -90,6 +105,8 @@ def main() -> None:
 
         args.output.write(json.dumps(instance, ensure_ascii=False))
         args.output.write("\n")
+
+    logging.info(f"All done. Outputs are written to {args.output.name}")
 
 
 if __name__ == "__main__":

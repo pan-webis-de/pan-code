@@ -18,6 +18,29 @@ from tqdm import trange, tqdm
 from collections import defaultdict
 
 
+def get_batches_by_language(inputs: List[Dict]) -> List[List]:
+    """
+    Splits a list of dictionaries into a list of lists, where each sublist contains
+    dictionaries with the same language.
+
+    Args:
+        inputs (List[Dict]): The list of dictionaries to be split.
+
+    Returns:
+        List[List]: The list of lists containing dictionaries grouped by language.
+    """
+
+    # Create a defaultdict to store dictionaries grouped by language
+    batches_by_language = defaultdict(list)
+
+    # Group dictionaries by language
+    for entry in inputs:
+        language = entry["language"]
+        batches_by_language[language].append(entry)
+
+    return list(batches_by_language.values())
+
+
 def group_by_language(
     inputs: List[Dict],
 ) -> Dict[str, List[Dict[str, Union[str, int]]]]:
@@ -28,7 +51,10 @@ def group_by_language(
         inputs (List[Dict]): List of examples.
 
     Returns:
-        Dict[str, List[Dict[str, Union[str, int]]]]: Dict where keys are lang codes and values are lists of dicts with text, language, and original_index.
+        Dict[str, List[Dict[str, Union[str, int]]]]: \
+            Dict where keys are lang \
+                codes and values are lists of dicts with\
+                  text, language, and original_index.
     """
 
     grouped_data = defaultdict(list)
@@ -114,7 +140,7 @@ def translate(
     inputs: List[str],
     model: M2M100ForConditionalGeneration,
     tokenizer: NllbTokenizerFast,
-    # batch_size: int = 32,
+    batch_size: int = 32,
     src_lang_ids: List[str] = ["rus_Cyrl"],
     tgt_lang_ids: List[str] = ["eng_Latn"],
 ) -> List[str]:
@@ -145,21 +171,32 @@ def translate(
         f"Translating from {tokenizer.src_lang} to \
                   {tokenizer.tgt_lang}."
     )
-    for text, src_id, tgt_id in tqdm(
-        zip(inputs, src_lang_ids, tgt_lang_ids), desc="Translating"
-    ):
-        tokenizer.src_lang = src_id
-        tokenizer.tgt_lang = tgt_id
+    for i in trange(0, len(inputs), batch_size):
+        batch_text = inputs[i : i + batch_size]
+        batch_src_ids = src_lang_ids[i : i + batch_size]
+        batch_tgt_ids = tgt_lang_ids[i : i + batch_size]
+
+        tokenizer.src_lang = batch_src_ids[0]
+        tokenizer.tgt_lang = batch_tgt_ids[0]
 
         inputs_tokenized = tokenizer(
-            text, return_tensors="pt", padding=True, truncation=True
+            batch_text, return_tensors="pt", padding=True, truncation=True
         ).to(model.device)
-
         with torch.no_grad():
             outputs = model.generate(**inputs_tokenized)
-        translated = tokenizer.decode(outputs, skip_special_tokens=True)
-        translated_outputs.append(translated)
-    return translated_outputs
+            translated = [
+                tokenizer.decode(
+                    token_ids=x,
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=True,
+                )
+                for x in outputs.detach().cpu()
+            ]
+            translated_outputs.extend(translated)
+
+    assert all(len(x) for x in translated_outputs) > 0
+    assert len(translated_outputs) == len(inputs)
+    return [x[:512] for x in translated_outputs]
 
 
 def paraphrase_batch(
@@ -168,34 +205,63 @@ def paraphrase_batch(
     tokenizer,
     n: Union[None, int] = None,
     max_length: str = "auto",
-    beams: int = 5,
+    beams: int = 1,
+    batch_size=32,
 ):
+    """
+    Detoxify a batch of texts by generating paraphrases using a given model and tokenizer.
+
+    Args:
+        texts (List[str]): The list of texts to be detoxified.
+        model: The model used for generating paraphrases.
+        tokenizer: The tokenizer used for tokenizing the texts.
+        n (Union[None, int], optional): The number of paraphrases to generate for each input text. Defaults to None.
+        max_length (str, optional): The maximum length of the generated paraphrases. Defaults to "auto".
+        beams (int, optional): The number of beams to use during generation. Defaults to 5.
+
+    Returns:
+        List[str]: The list of detoxified paraphrases.
+
+    Examples:
+        >>> texts = ["I love coding", "Python is awesome"]
+        >>> model = MyModel()
+        >>> tokenizer = MyTokenizer()
+        >>> paraphrase_batch(texts, model, tokenizer)
+        ['I enjoy coding', 'Python is amazing']
+    """
     logging.info("Detoxifying texts")
-    batch_size = 32
 
     paraphrased_texts = []
     for i in trange(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
-        inputs = tokenizer(batch, return_tensors="pt", padding=True)["input_ids"].to(
-            model.device
-        )
-
+        inputs = tokenizer(
+            batch,
+            return_tensors="pt",
+            padding="max_length",
+            max_length=512,
+            truncation=True,
+        )["input_ids"].to(model.device)
+        # Adjust max_length based on the length of the input sequence
         if max_length == "auto":
             max_length = inputs.shape[1] + 10
+        else:
+            max_length = min(max_length, inputs.shape[1] + 10)
 
-        result = model.generate(
-            inputs,
-            num_return_sequences=n or 1,
-            do_sample=False,
-            temperature=1.0,
-            repetition_penalty=10.0,
-            max_length=max_length,
-            min_length=int(0.5 * max_length),
-            num_beams=beams,
-        )
+        with torch.no_grad():
+            result = model.generate(
+                inputs,
+                num_return_sequences=1,
+                do_sample=False,
+                temperature=1.0,
+                repetition_penalty=10.0,
+                max_length=max_length,
+                min_length=int(0.5 * max_length),
+                num_beams=beams,
+            )
         paraphrased_texts.extend(
             tokenizer.decode(r, skip_special_tokens=True) for r in result
         )
+
     if not n and isinstance(texts, str):
         return paraphrased_texts[0]
     return paraphrased_texts
@@ -222,13 +288,13 @@ def main() -> None:
         type=argparse.FileType("w", encoding="utf-8"),
         help="The output file, will create a `.jsonl` file.",
     )
-    # parser.add_argument(
-    #     "--batch_size",
-    #     required=False,
-    #     default=32,
-    #     type=int,
-    #     help="Batch size for translation and detoxification (default is 32).",
-    # )
+    parser.add_argument(
+        "--batch_size",
+        required=False,
+        type=int,
+        default=32,
+        help="Batch size (default is 32)",
+    )
 
     args = parser.parse_args()
 
@@ -274,6 +340,7 @@ def main() -> None:
             args.output.write("\n")
     else:
         logging.info("Running backtranslation baseline")
+
         lang_id_mapping = {
             "ru": "rus_Cyrl",
             "en": "eng_Latn",
@@ -286,28 +353,38 @@ def main() -> None:
             "de": "deu_Latn",
         }
 
-        grouped_data = group_by_language(inputs=inputs)
+        batches_by_language = get_batches_by_language(inputs)
 
-        lang_ids = [lang_id_mapping[x["language"]] for x in grouped_data]
+        lang_ids = []
+        for batch in batches_by_language:
+            lang_ids.extend(lang_id_mapping[x["language"]] for x in batch)
 
         tr_model, tr_tokenizer = get_model(type="translator")
 
-        translated_sources = translate(
-            inputs=sources,
-            model=tr_model,
-            tokenizer=tr_tokenizer,
-            batch_size=args.batch_size,
-            src_lang_ids=lang_ids,
-            tgt_lang_ids=lang_id_mapping["en"] * len(lang_ids),
-        )
+        translated_data = []
+        for language_batch in tqdm(
+            batches_by_language, desc="Processing each language"
+        ):
+            translated_data.extend(
+                translate(
+                    inputs=[x["text"] for x in language_batch],
+                    model=tr_model,
+                    tokenizer=tr_tokenizer,
+                    batch_size=args.batch_size,
+                    src_lang_ids=[
+                        lang_id_mapping[x["language"]] for x in language_batch
+                    ],
+                    tgt_lang_ids=["eng_Latn"] * len(language_batch),
+                )
+            )
 
         del tr_model
         del tr_tokenizer
 
-        tst_model, tst_tokenizer = get_model(type="paraphraser")
+        tst_model, tst_tokenizer = get_model(type="en_detoxifier")
 
         detoxified = paraphrase_batch(
-            texts=translated_sources, model=tst_model, tokenizer=tst_tokenizer
+            texts=translated_data, model=tst_model, tokenizer=tst_tokenizer
         )
 
         del tst_tokenizer
@@ -315,14 +392,18 @@ def main() -> None:
 
         tr_model, tr_tokenizer = get_model(type="translator")
 
-        backtranslated_sources = translate(
-            inputs=detoxified,
-            model=tr_model,
-            tokenizer=tr_tokenizer,
-            batch_size=args.batch_size,
-            src_lang_ids=lang_id_mapping["en"] * len(lang_ids),
-            tgt_lang_ids=lang_ids,
-        )
+        backtranslated_sources = []
+        for i in trange(0, len(detoxified), 1000):
+            backtranslated_sources.extend(
+                translate(
+                    inputs=detoxified[i : i + 1000],
+                    model=tr_model,
+                    tokenizer=tr_tokenizer,
+                    batch_size=args.batch_size,
+                    src_lang_ids=["eng_Latn"] * len(language_batch),
+                    tgt_lang_ids=lang_ids[i : i + 1000],
+                )
+            )
 
         for doc_id, text in zip(doc_ids, backtranslated_sources):
             args.output.write(
