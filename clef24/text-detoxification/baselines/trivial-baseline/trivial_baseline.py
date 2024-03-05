@@ -33,8 +33,8 @@ def detoxify(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="The trivial baseline for the PAN 2024 text detoxification task that "
-        "removes all/none/or specified stopwrods from given text for "
+        description="The trivial baseline for the PAN 2024 text detoxification task"
+        "that removes all/none/or specified stopwrods from given text for "
         "detoxification."
     )
 
@@ -55,7 +55,9 @@ def main() -> None:
         required=False,
         type=str,
         default=None,
-        help="Specify language. Should be one of ['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']. Without specification will load all stopwords.",
+        help="Specify language. Should be one of "
+        "['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']."
+        " Without specification will load all stopwords.",
         choices=["am", "es", "ru", "uk", "en", "zh", "ar", "hi", "de"],
     )
     parser.add_argument(
@@ -73,9 +75,17 @@ def main() -> None:
         help="Output the text without modification.",
     )
 
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Specify logging level (default: INFO).",
+    )
+
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=args.log_level)
 
     if args.language is not None:
         logging.info(f"Loading stopwords for {args.language}")

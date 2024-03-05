@@ -14,7 +14,6 @@ from sacrebleu import CHRF
 from tqdm.auto import trange
 from transformers import (
     AutoModelForSequenceClassification,
-    AutoModelForMaskedLM,
     AutoTokenizer,
 )
 from sentence_transformers import SentenceTransformer
@@ -28,14 +27,14 @@ def prepare_target_label(
     Prepare the target label to ensure it is valid for the given model.
 
     Args:
-        model (AutoModelForSequenceClassification): The sequence classification model.
+        model (AutoModelForSequenceClassification): Text classification model.
         target_label (Union[int, str]): The target label to prepare.
 
     Returns:
         int: The prepared target label.
 
     Raises:
-        ValueError: If the target_label is not found in the model labels or ids.
+        ValueError: If the target_label is not found in model labels or ids.
     """
     if target_label in model.config.id2label:
         pass
@@ -63,19 +62,19 @@ def classify_texts(
     second_texts: Optional[List[str]] = None,
     batch_size: int = 32,
     raw_logits: bool = False,
-    desc: Optional[str] = None,
+    desc: Optional[str] = "Calculating STA scores",
 ) -> npt.NDArray[np.float64]:
     """
     Classify a list of texts using the given model and tokenizer.
 
     Args:
-        model (AutoModelForSequenceClassification): The sequence classification model.
+        model (AutoModelForSequenceClassification): Text classification model.
         tokenizer (AutoTokenizer): The tokenizer corresponding to the model.
         texts (List[str]): List of texts to classify.
         target_label (Union[int, str]): The target label for classification.
-        second_texts (Optional[List[str]]): List of secondary texts (if applicable).
+        second_texts (Optional[List[str]]): List of secondary texts (not needed by default).
         batch_size (int): Batch size for inference.
-        raw_logits (bool): Whether to return raw logits instead of probabilities.
+        raw_logits (bool): Whether to return raw logits instead of probs.
         desc (Optional[str]): Description for tqdm progress bar.
 
     Returns:
@@ -127,7 +126,7 @@ def evaluate_sta(
     Evaluate the STA of a list of texts using the given model and tokenizer.
 
     Args:
-        model (AutoModelForSequenceClassification): The sequence classification model.
+        model (AutoModelForSequenceClassification): Text classification model.
         tokenizer (AutoTokenizer): The tokenizer corresponding to the model.
         texts (List[str]): List of texts to evaluate.
         target_label (int): The target label for style evaluation.
@@ -153,7 +152,7 @@ def evaluate_sim(
 ) -> npt.NDArray[np.float64]:
 
     """
-    Evaluate the semantic similarity between original and rewritten texts using the given model.
+    Evaluate the semantic similarity between original and rewritten texts.
     Note that the subtraction is done due to the implementation of the `cosine` metric in `scipy`.
     For more details see: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cosine.html
 
@@ -162,23 +161,22 @@ def evaluate_sim(
         original_texts (List[str]): List of original texts.
         rewritten_texts (List[str]): List of rewritten texts.
         batch_size (int): Batch size for inference.
-        efficient_version (bool): Whether to use an efficient calculation method.
+        efficient_version (bool): To use efficient calculation method.
 
     Returns:
-        npt.NDArray[np.float64]: Array of semantic similarity scores between original and rewritten texts.
+        npt.NDArray[np.float64]: Array of semantic similarity scores between \
+              original and rewritten texts.
     """
-
     similarities = []
 
     batch_size = min(batch_size, len(original_texts))
-
-    for i in range(0, len(original_texts), batch_size):
+    for i in trange(0, len(original_texts), batch_size, desc="Calculating SIM scores"):
         original_batch = original_texts[i : i + batch_size]
         rewritten_batch = rewritten_texts[i : i + batch_size]
 
         embeddings = model.encode(original_batch + rewritten_batch)
-        original_embeddings = embeddings[:batch_size]
-        rewritten_embeddings = embeddings[batch_size:]
+        original_embeddings = embeddings[: len(original_batch)]
+        rewritten_embeddings = embeddings[len(original_batch) :]
 
         if efficient_version:
             similarity_matrix = np.dot(original_embeddings, rewritten_embeddings.T)
@@ -246,16 +244,19 @@ def evaluate_style_transfer(
     }
 
     if references is not None:
+
         chrf = CHRF()
 
         result["CHRF"] = np.array(
             [
-                chrf.sentence_score(hypothesis, [reference]).score
-                for hypothesis, reference in zip(rewritten_texts, references)
+                chrf.sentence_score(hypothesis=rewritten, references=[reference]).score
+                / 100
+                for rewritten, reference in zip(rewritten_texts, references)
             ],
             dtype=np.float64,
         )
-    result["J"] = result["STA"] * result["SIM"] * result["CHRF"]
+
+        result["J"] = result["STA"] * result["SIM"] * result["CHRF"]
 
     return result
 

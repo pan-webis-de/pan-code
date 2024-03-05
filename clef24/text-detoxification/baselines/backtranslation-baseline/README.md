@@ -6,13 +6,13 @@ To run the baseline, ensure you have Python >= 3.7, Docker, and tira installed o
 
 ## Running The Baseline
 
-Run the backtranslation baseline on a tiny dataset:
+To run the backtranslation baseline on a given dataset, specify the language of the input data (should be one of `['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']`), run:
 
 ```bash
 tira-run \
-    --input-dataset pan23-text-detoxification/english-tiny-20231112-training \
+    --input-dataset pan23-text-detoxification/dev-de-20240305-training \
     --image webis/clef24-text-detoxification-baseline-backtranslation:0.0.1 \
-    --command '/backtranslation_baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl'
+    --command '/backtranslation_baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --language de'
 ```
 
 ## Development

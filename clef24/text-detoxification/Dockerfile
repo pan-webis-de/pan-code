@@ -10,8 +10,8 @@ RUN \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install -r requirements.txt
 
-CMD evaluate.py
-
 RUN \
     make "models" && \
     python3 -c "import transformers; transformers.utils.move_cache()"
+
+CMD ["python3", "evaluate.py"]

@@ -1,78 +1,24 @@
 #!/usr/bin/env python3
+
+import argparse
+import json
+import torch
+import logging
+from typing import List, Union, Tuple
+from tqdm import tqdm
 from transformers import (
-    NllbTokenizerFast,
     M2M100ForConditionalGeneration,
+    NllbTokenizerFast,
     BartTokenizerFast,
+    T5TokenizerFast,
     BartForConditionalGeneration,
     T5ForConditionalGeneration,
-    T5TokenizerFast,
-    PreTrainedModel,
     PreTrainedTokenizerFast,
+    PreTrainedModel,
 )
-import argparse
-import logging
-from typing import List, Union, Dict
-import torch
-import json
-from tqdm import trange, tqdm
-from collections import defaultdict
 
 
-def get_batches_by_language(inputs: List[Dict]) -> List[List]:
-    """
-    Splits a list of dictionaries into a list of lists, where each sublist contains
-    dictionaries with the same language.
-
-    Args:
-        inputs (List[Dict]): The list of dictionaries to be split.
-
-    Returns:
-        List[List]: The list of lists containing dictionaries grouped by language.
-    """
-
-    # Create a defaultdict to store dictionaries grouped by language
-    batches_by_language = defaultdict(list)
-
-    # Group dictionaries by language
-    for entry in inputs:
-        language = entry["language"]
-        batches_by_language[language].append(entry)
-
-    return list(batches_by_language.values())
-
-
-def group_by_language(
-    inputs: List[Dict],
-) -> Dict[str, List[Dict[str, Union[str, int]]]]:
-    """
-    Groups examples by language.
-
-    Args:
-        inputs (List[Dict]): List of examples.
-
-    Returns:
-        Dict[str, List[Dict[str, Union[str, int]]]]: \
-            Dict where keys are lang \
-                codes and values are lists of dicts with\
-                  text, language, and original_index.
-    """
-
-    grouped_data = defaultdict(list)
-    for i, example in enumerate(inputs):
-        lang = example.get("language", "unknown")
-        grouped_data[lang].append(
-            {
-                "text": example["text"],
-                "language": example.get("language", "unknown"),
-                "original_index": i,
-            }
-        )
-    return grouped_data
-
-
-def get_model(
-    type: str,
-) -> (PreTrainedModel, PreTrainedTokenizerFast):
+def get_model(type: str) -> Tuple[PreTrainedModel, PreTrainedTokenizerFast]:
     """
     Returns a pre-trained model and tokenizer based on the specified type.
 
@@ -90,258 +36,140 @@ def get_model(
         model, tokenizer = get_model("en_detoxifier")
         model, tokenizer = get_model("ru_detoxifier")
     """
-
     device = torch.device("cuda") if torch.cuda.is_available() else "cpu"
-    if type == "translator":
-        logging.info(
-            "Loading translation model: \
-                     'facebook/nllb-200-distilled-600M'"
-        )
 
-        model = (
-            M2M100ForConditionalGeneration.from_pretrained(
-                "facebook/nllb-200-distilled-600M"
-            )
-            .eval()
-            .to(device)
-        )
-        tokenizer = NllbTokenizerFast.from_pretrained(
-            "facebook/nllb-200-distilled-600M"
-        )
-    elif type == "en_detoxifier":
-        logging.info(
-            "Loading detoxification model: \
-                     's-nlp/bart-base-detox'"
-        )
-        model = (
-            BartForConditionalGeneration.from_pretrained("s-nlp/bart-base-detox")
-            .eval()
-            .to(device)
-        )
-        tokenizer = BartTokenizerFast.from_pretrained("s-nlp/bart-base-detox")
+    model_types: Dict[str, Tuple[str, PreTrainedModel, PreTrainedTokenizerFast]] = {
+        "translator": (
+            "facebook/nllb-200-distilled-600M",
+            M2M100ForConditionalGeneration,
+            NllbTokenizerFast,
+        ),
+        "en_detoxifier": (
+            "s-nlp/bart-base-detox",
+            BartForConditionalGeneration,
+            BartTokenizerFast,
+        ),
+        "ru_detoxifier": (
+            "s-nlp/ruT5-base-detox",
+            T5ForConditionalGeneration,
+            T5TokenizerFast,
+        ),
+    }
 
-    elif type == "ru_detoxifier":
-        logging.info(
-            "Loading detoxification model: \
-                     's-nlp/bart-base-detox'"
-        )
-        model = (
-            T5ForConditionalGeneration.from_pretrained("s-nlp/ruT5-base-detox")
-            .eval()
-            .to(device)
-        )
-        tokenizer = T5TokenizerFast.from_pretrained("s-nlp/ruT5-base-detox")
-    else:
+    if type not in model_types:
         raise ValueError("Invalid type choice")
+
+    model_name, ModelClass, TokenizerClass = model_types[type]
+
+    logging.info(f"Loading {type} model: {model_name}")
+
+    model = ModelClass.from_pretrained(model_name).eval().to(device)
+    tokenizer = TokenizerClass.from_pretrained(model_name)
+
     return model, tokenizer
 
 
-def translate(
-    inputs: List[str],
+def translate_batch(
+    texts: List[str],
     model: M2M100ForConditionalGeneration,
-    tokenizer: NllbTokenizerFast,
+    tokenizer: PreTrainedTokenizerFast,
     batch_size: int = 32,
-    src_lang_ids: List[str] = ["rus_Cyrl"],
-    tgt_lang_ids: List[str] = ["eng_Latn"],
 ) -> List[str]:
     """
-    Translates a list of input sentences from the src_lang_id
-    to the tgt_lang_id using (model, tokenizer).
+    Translate a batch of texts.
 
     Args:
-        inputs (List[str]): The list of input sentences to be translated.
-        model (M2M100ForConditionalGeneration): The pretrained translation model.
-        tokenizer (NllbTokenizerFast): The tokenizer used for tokenizing the input sentences.
+        texts (List[str]): The list of texts to translate.
+        model (M2M100ForConditionalGeneration): The translation model.
+        tokenizer (PreTrainedTokenizerFast): The tokenizer for the translation model.
         batch_size (int, optional): The batch size for translation. Defaults to 32.
-        src_lang_id (str, optional): The source language ID. Defaults to "rus_Cyrl".
-        tgt_lang_id (str, optional): The target language ID. Defaults to "eng_Latn".
 
     Returns:
-        List[str]: The list of translated sentences.
-
-    Examples:
-        inputs = ["Привет, как дела?", "Спасибо за помощь!"]
-        translated = translate(inputs, model, tokenizer, 1, "rus_Cyrl", "eng_Latn")
-        print(translated)
-        # Output: ["Hello, how are you?", "Thanks for the help!"]
+        List[str]: The translated texts.
     """
-
-    translated_outputs = []
-    logging.info(
-        f"Translating from {tokenizer.src_lang} to \
-                  {tokenizer.tgt_lang}."
-    )
-    for i in trange(0, len(inputs), batch_size):
-        batch_text = inputs[i : i + batch_size]
-        batch_src_ids = src_lang_ids[i : i + batch_size]
-        batch_tgt_ids = tgt_lang_ids[i : i + batch_size]
-
-        tokenizer.src_lang = batch_src_ids[0]
-        tokenizer.tgt_lang = batch_tgt_ids[0]
-
-        inputs_tokenized = tokenizer(
-            batch_text, return_tensors="pt", padding=True, truncation=True
-        ).to(model.device)
-        with torch.no_grad():
-            outputs = model.generate(**inputs_tokenized)
-            translated = [
-                tokenizer.decode(
-                    token_ids=x,
-                    skip_special_tokens=True,
-                    clean_up_tokenization_spaces=True,
-                )
-                for x in outputs.detach().cpu()
-            ]
-            translated_outputs.extend(translated)
-
-    assert all(len(x) for x in translated_outputs) > 0
-    assert len(translated_outputs) == len(inputs)
-    return [x[:512] for x in translated_outputs]
+    translations = []
+    for i in tqdm(range(0, len(texts), batch_size), desc="Translating"):
+        batch = texts[i : i + batch_size]
+        batch_translated = model.generate(
+            **tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(model.device)
+        )
+        translations.extend(
+            tokenizer.decode(tokens, skip_special_tokens=True)
+            for tokens in batch_translated
+        )
+    return translations
 
 
-def paraphrase_batch(
+def detoxify_batch(
     texts: List[str],
-    model,
-    tokenizer,
-    n: Union[None, int] = None,
-    max_length: str = "auto",
-    beams: int = 1,
-    batch_size=32,
-):
+    model: Union[BartForConditionalGeneration, T5ForConditionalGeneration],
+    tokenizer: PreTrainedTokenizerFast,
+    batch_size: int = 32,
+) -> List[str]:
     """
-    Detoxify a batch of texts by generating paraphrases using a given model and tokenizer.
+    Detoxify a batch of texts.
 
     Args:
-        texts (List[str]): The list of texts to be detoxified.
-        model: The model used for generating paraphrases.
-        tokenizer: The tokenizer used for tokenizing the texts.
-        n (Union[None, int], optional): The number of paraphrases to generate for each input text. Defaults to None.
-        max_length (str, optional): The maximum length of the generated paraphrases. Defaults to "auto".
-        beams (int, optional): The number of beams to use during generation. Defaults to 5.
+        texts (List[str]): The list of texts to detoxify.
+        model (Union[BartForConditionalGeneration, T5ForConditionalGeneration]): The detoxification model.
+        tokenizer (PreTrainedTokenizerFast): The tokenizer for the detoxification model.
+        batch_size (int, optional): The batch size for detoxification. Defaults to 32.
 
     Returns:
-        List[str]: The list of detoxified paraphrases.
-
-    Examples:
-        >>> texts = ["I love coding", "Python is awesome"]
-        >>> model = MyModel()
-        >>> tokenizer = MyTokenizer()
-        >>> paraphrase_batch(texts, model, tokenizer)
-        ['I enjoy coding', 'Python is amazing']
+        List[str]: The detoxified texts.
     """
-    logging.info("Detoxifying texts")
-
-    paraphrased_texts = []
-    for i in trange(0, len(texts), batch_size):
+    detoxified = []
+    for i in tqdm(range(0, len(texts), batch_size), desc="Detoxifying"):
         batch = texts[i : i + batch_size]
-        inputs = tokenizer(
-            batch,
-            return_tensors="pt",
-            padding="max_length",
-            max_length=512,
-            truncation=True,
-        )["input_ids"].to(model.device)
-        # Adjust max_length based on the length of the input sequence
-        if max_length == "auto":
-            max_length = inputs.shape[1] + 10
-        else:
-            max_length = min(max_length, inputs.shape[1] + 10)
-
-        with torch.no_grad():
-            result = model.generate(
-                inputs,
-                num_return_sequences=1,
-                do_sample=False,
-                temperature=1.0,
-                repetition_penalty=10.0,
-                max_length=max_length,
-                min_length=int(0.5 * max_length),
-                num_beams=beams,
-            )
-        paraphrased_texts.extend(
-            tokenizer.decode(r, skip_special_tokens=True) for r in result
+        batch_detoxified = model.generate(
+            **tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(model.device)
         )
-
-    if not n and isinstance(texts, str):
-        return paraphrased_texts[0]
-    return paraphrased_texts
+        detoxified.extend(
+            tokenizer.decode(tokens, skip_special_tokens=True)
+            for tokens in batch_detoxified
+        )
+    return detoxified
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description=(
-            "Backtranslation baseline for PAN 2024 text detox task "
-            "that performs detox: translate input (toxic) text from "
-            "source language into pivot language (English), detox it "
-            "and then translate detoxified text back into source language"
-        )
+        description="Backtranslation baseline for PAN 2024 text detoxification task"
+        "that performs detox: translate input (toxic) text from "
+        "source language into pivot language (English), detox it "
+        "and then translate detoxified text back into source language"
     )
     parser.add_argument(
         "--input",
         required=True,
-        type=argparse.FileType("rb"),
-        help="The input file, expected to be a `.jsonl` file.",
+        type=argparse.FileType("r", encoding="utf-8"),
+        help="Input JSONL file containing text examples.",
     )
     parser.add_argument(
         "--output",
         required=True,
         type=argparse.FileType("w", encoding="utf-8"),
-        help="The output file, will create a `.jsonl` file.",
+        help="Output JSONL file containing detoxified text examples.",
     )
     parser.add_argument(
-        "--batch_size",
-        required=False,
+        "--language",
+        required=True,
+        type=str,
+        choices=["am", "es", "ru", "uk", "en", "zh", "ar", "hi", "de"],
+        help="Language of the input data. Should be one of"
+        "['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']"
+
+    )
+    parser.add_argument(
+        "--batch-size",
         type=int,
         default=32,
-        help="Batch size (default is 32)",
+        help="Batch size for translation and detoxification.",
     )
 
     args = parser.parse_args()
-
     logging.basicConfig(level=logging.INFO)
 
-    inputs = [json.loads(line) for line in args.input]
-    sources = [i["text"] for i in inputs]
-    doc_ids = [i["id"] for i in inputs]
-    lang_ids = [i["language"] for i in inputs]
-
-    if all(x in ("en", "english") for x in lang_ids):
-        logging.info(
-            "Source language is English. Performing only detox with \
-                's-nlp/bart-base-detox'"
-        )
-
-        tst_model, tst_tokenizer = get_model(type="en_detoxifier")
-        detoxified = paraphrase_batch(
-            texts=sources, model=tst_model, tokenizer=tst_tokenizer
-        )
-
-        for doc_id, text in zip(doc_ids, detoxified):
-            args.output.write(
-                json.dumps({"id": doc_id, "text": text}, ensure_ascii=False)
-            )
-            args.output.write("\n")
-
-    elif all(x in ("russian", "ru") for x in lang_ids):
-        logging.info(
-            "Source language is Russian. Performing only detox with \
-                's-nlp/ruT5-base-detox'"
-        )
-
-        tst_model, tst_tokenizer = get_model(type="ru_detoxifier")
-        detoxified = paraphrase_batch(
-            texts=sources, model=tst_model, tokenizer=tst_tokenizer
-        )
-
-        for doc_id, text in zip(doc_ids, detoxified):
-            args.output.write(
-                json.dumps({"id": doc_id, "text": text}, ensure_ascii=False)
-            )
-            args.output.write("\n")
-    else:
-        logging.info("Running backtranslation baseline")
-
-        lang_id_mapping = {
+    lang_id_mapping = {
             "ru": "rus_Cyrl",
             "en": "eng_Latn",
             "am": "amh_Ethi",
@@ -351,65 +179,36 @@ def main() -> None:
             "ar": "arb_Arab",
             "hi": "hin_Deva",
             "de": "deu_Latn",
-        }
+    }
 
-        batches_by_language = get_batches_by_language(inputs)
+    inputs = [json.loads(line) for line in args.input]
+    texts = [entry["text"] for entry in inputs]
+    doc_ids = [entry["id"] for entry in inputs]
 
-        lang_ids = []
-        for batch in batches_by_language:
-            lang_ids.extend(lang_id_mapping[x["language"]] for x in batch)
+    if args.language == "en":
+        model, tokenizer = get_model("en_detoxifier")
+        detoxified_texts = detoxify_batch(texts, model, tokenizer, args.batch_size)
+    elif args.language == "ru":
+        model, tokenizer = get_model("ru_detoxifier")
+        detoxified_texts = detoxify_batch(texts, model, tokenizer, args.batch_size)
+    else:
+        model, tokenizer = get_model("translator")
 
-        tr_model, tr_tokenizer = get_model(type="translator")
+        tokenizer.src_lang = lang_id_mapping[args.language]
+        tokenizer.tgt_lang = lang_id_mapping["en"]
+        texts = translate_batch(texts, model, tokenizer, args.batch_size)
 
-        translated_data = []
-        for language_batch in tqdm(
-            batches_by_language, desc="Processing each language"
-        ):
-            translated_data.extend(
-                translate(
-                    inputs=[x["text"] for x in language_batch],
-                    model=tr_model,
-                    tokenizer=tr_tokenizer,
-                    batch_size=args.batch_size,
-                    src_lang_ids=[
-                        lang_id_mapping[x["language"]] for x in language_batch
-                    ],
-                    tgt_lang_ids=["eng_Latn"] * len(language_batch),
-                )
-            )
+        model, tokenizer = get_model("en_detoxifier")
+        detoxified_texts = detoxify_batch(texts, model, tokenizer, args.batch_size)
 
-        del tr_model
-        del tr_tokenizer
+        model, tokenizer = get_model("translator")
+        tokenizer.tgt_lang = lang_id_mapping[args.language]
+        tokenizer.src_lang = lang_id_mapping["en"]
+        detoxified_texts = translate_batch(texts, model, tokenizer, args.batch_size)
 
-        tst_model, tst_tokenizer = get_model(type="en_detoxifier")
-
-        detoxified = paraphrase_batch(
-            texts=translated_data, model=tst_model, tokenizer=tst_tokenizer
-        )
-
-        del tst_tokenizer
-        del tst_model
-
-        tr_model, tr_tokenizer = get_model(type="translator")
-
-        backtranslated_sources = []
-        for i in trange(0, len(detoxified), 1000):
-            backtranslated_sources.extend(
-                translate(
-                    inputs=detoxified[i : i + 1000],
-                    model=tr_model,
-                    tokenizer=tr_tokenizer,
-                    batch_size=args.batch_size,
-                    src_lang_ids=["eng_Latn"] * len(language_batch),
-                    tgt_lang_ids=lang_ids[i : i + 1000],
-                )
-            )
-
-        for doc_id, text in zip(doc_ids, backtranslated_sources):
-            args.output.write(
-                json.dumps({"id": doc_id, "text": text}, ensure_ascii=False)
-            )
-            args.output.write("\n")
+    for doc_id, text in zip(doc_ids, detoxified_texts):
+        args.output.write(json.dumps({"id": doc_id, "text": text}, ensure_ascii=False))
+        args.output.write("\n")
 
 
 if __name__ == "__main__":
