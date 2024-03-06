@@ -22,14 +22,16 @@ We provide a set of baselines together with instructions on how you can run them
 
 ## Evaluation
 
-Usage:
+To evaluate the performance of the method on a concrete data, run the following:
 
 ```shell
 ./evaluate.py \
-	--input=sample/russian/input.jsonl \
-	--golden=sample/russian/references.jsonl \
-	--prediction=sample/russian/references.jsonl
+	--input=path/to/your/input.jsonl \
+	--golden=path/to/your/references.jsonl \ # not available by default
+	--prediction=path/to/your/predictions.jsonl
 ```
+
+Set `--input` as a path to the `input.jsonl`, `--predictions` as a path to `predictions.jsonl`. 
 
 ## Docker Images for Evaluation
 
