@@ -6,28 +6,33 @@ To run the baselines as [TIRA](http://tira.io) would execute them, please instal
 
 ## Running The Baselines
 
-A simple baseline that removes stopwords from the text can be executed via (on a tiny dataset to ensure everything works):
+A simple baseline that removes toxic words from the text can be executed via:
 
 ```
 tira-run \
-	--input-dataset pan23-text-detoxification/english-tiny-20231112-training \
-	--image webis/clef24-text-detoxification-baseline:0.0.1 \
-	--command '/trivial-baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --language en'
+    --input-dataset pan23-text-detoxification/dev-en-20240305-training \
+    --image webis/clef24-text-detoxification-baseline:0.0.1 \
+    --command '/trivial-baseline.py --input ${inputDataset}/input.jsonl \
+                                      --output ${outputDir}/delete_stopwords_baseline_en.jsonl \
+                                      --language en'
 ```
 
-The predictions can be found in the directory `tira-output/references.jsonl`
+The predictions can be found in the directory `tira-output/delete_stopwords_baseline_en.jsonl`. You can select the desired language to load toxic words, options are `['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']`. Without specification, it will load toxic words for all the languages. 
 
 ---
 
-A simple baseline that removes all terms (on a tiny dataset to ensure everything works):
+A simple baseline that removes all terms:
 ```
 tira-run \
-	--input-dataset pan23-text-detoxification/english-tiny-20231112-training \
-	--image webis/clef24-text-detoxification-baseline:0.0.1 \
-	--command '/trivial-baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --remove-all-terms true'
+    --input-dataset pan23-text-detoxification/dev-en-20240305-training \
+    --image webis/clef24-text-detoxification-baseline:0.0.1 \
+    --command '/trivial-baseline.py --input ${inputDataset}/input.jsonl \
+                                      --output ${outputDir}/delete_all_baseline_en.jsonl \
+                                      --remove-all-terms true \
+									  --language en'
 ```
 
-The predictions can be found in the directory `tira-output/references.jsonl`
+The predictions can be found in the directory `tira-output/delete_all_baseline_en.jsonl`
 
 ---
 
@@ -35,12 +40,15 @@ A simple baseline that returns the text without modification (on a tiny dataset 
 
 ```
 tira-run \
-	--input-dataset pan23-text-detoxification/english-tiny-20231112-training \
-	--image webis/clef24-text-detoxification-baseline:0.0.1 \
-	--command '/trivial-baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/references.jsonl --remove-no-terms true'
+    --input-dataset pan23-text-detoxification/dev-en-20240305-training \
+    --image webis/clef24-text-detoxification-baseline:0.0.1 \
+    --command '/trivial-baseline.py --input ${inputDataset}/input.jsonl \
+                                      --output ${outputDir}/delete_none_baseline_en.jsonl \
+                                      --remove-no-terms true \
+									  --language en'
 ```
 
-The predictions can be found in the directory `tira-output/references.jsonl`
+The predictions can be found in the directory `tira-output/delete_none_baseline_en.jsonl`
 
 
 ## Development

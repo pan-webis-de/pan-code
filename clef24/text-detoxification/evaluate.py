@@ -150,7 +150,6 @@ def evaluate_sim(
     batch_size: int = 32,
     efficient_version: bool = False,
 ) -> npt.NDArray[np.float64]:
-
     """
     Evaluate the semantic similarity between original and rewritten texts.
     Note that the subtraction is done due to the implementation of the `cosine` metric in `scipy`.
@@ -338,23 +337,31 @@ def run_evaluation(
     df_prediction.set_index("id", inplace=True)
     df_prediction.rename(columns={"text": "prediction"}, inplace=True)
 
-    df_references = pd.read_json(args.golden, convert_dates=False, lines=True)
-    df_references = df_references[["id", "text"]]
-    df_references.set_index("id", inplace=True)
-    df_references.rename(columns={"text": "reference"}, inplace=True)
+    df = df_input.join(df_prediction)
 
-    df = df_input.join(df_prediction).join(df_references)
+    if args.golden:
+
+        df_references = pd.read_json(args.golden, convert_dates=False, lines=True)
+        df_references = df_references[["id", "text"]]
+        df_references.set_index("id", inplace=True)
+        df_references.rename(columns={"text": "reference"}, inplace=True)
+
+        df = df.join(df_references)
+
+        assert (
+            len(df) == len(df_input) == len(df_prediction) == len(df_references)
+        ), f"Dataset lengths {len(df_input)} & {len(df_prediction)} & {len(df_references)} != {len(df)}"
 
     assert (
-        len(df) == len(df_input) == len(df_prediction) == len(df_references)
-    ), f"Dataset lengths {len(df_input)} & {len(df_prediction)} & {len(df_references)} != {len(df)}"
+        len(df) == len(df_input) == len(df_prediction)
+    ), f"Dataset lengths {len(df_input)} & {len(df_prediction)} != {len(df)}"
 
     assert not df.isna().values.any(), "Datasets contain missing entries"
 
     result = evaluator(
         original_texts=df["input"].tolist(),
         rewritten_texts=df["prediction"].tolist(),
-        references=df["reference"].tolist(),
+        references=df["reference"].tolist() or None,
     )
 
     aggregated = {measure: np.mean(values).item() for measure, values in result.items()}
@@ -378,7 +385,7 @@ def main() -> None:
         "-g",
         "--golden",
         type=argparse.FileType("rb"),
-        required=True,
+        required=False,
         help="Ground truth texts after style transfer",
     )
     parser.add_argument(
@@ -386,7 +393,7 @@ def main() -> None:
         "--output",
         type=argparse.FileType("w", encoding="UTF-8"),
         default=sys.stdout,
-        help="Where to print the evaluation results",
+        help="Path where to write the evaluation results",
     )
     parser.add_argument(
         "--no-cuda", action="store_true", default=False, help="Disable use of CUDA"
