@@ -96,8 +96,8 @@ def translate_batch(
                 return_tensors="pt",
                 padding=True,
                 truncation=True,
-                forced_bos_token_id=tokenizer.lang_code_to_id[tokenizer.tgt_lang],
-            ).to(model.device)
+            ).to(model.device),
+            forced_bos_token_id=tokenizer.lang_code_to_id[tokenizer.tgt_lang],
         )
         translations.extend(
             tokenizer.decode(tokens, skip_special_tokens=True)
