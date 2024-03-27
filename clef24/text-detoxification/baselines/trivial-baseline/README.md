@@ -10,9 +10,9 @@ A simple baseline that removes toxic words from the text can be executed via:
 
 ```
 tira-run \
-    --input-dataset pan23-text-detoxification/dev-en-20240305-training \
+    --input-dataset pan24-text-detoxification/dev-en-20240305-training \
     --image webis/clef24-text-detoxification-baseline:0.0.1 \
-    --command '/trivial-baseline.py --input ${inputDataset}/input.jsonl \
+    --command '/trivial_baseline.py --input ${inputDataset}/input.jsonl \
                                       --output ${outputDir}/delete_stopwords_baseline_en.jsonl \
                                       --language en'
 ```
@@ -24,9 +24,9 @@ The predictions can be found in the directory `tira-output/delete_stopwords_base
 A simple baseline that removes all terms:
 ```
 tira-run \
-    --input-dataset pan23-text-detoxification/dev-en-20240305-training \
+    --input-dataset pan24-text-detoxification/dev-en-20240305-training \
     --image webis/clef24-text-detoxification-baseline:0.0.1 \
-    --command '/trivial-baseline.py --input ${inputDataset}/input.jsonl \
+    --command '/trivial_baseline.py --input ${inputDataset}/input.jsonl \
                                       --output ${outputDir}/delete_all_baseline_en.jsonl \
                                       --remove-all-terms true \
 									  --language en'
@@ -40,9 +40,9 @@ A simple baseline that returns the text without modification (on a tiny dataset 
 
 ```
 tira-run \
-    --input-dataset pan23-text-detoxification/dev-en-20240305-training \
+    --input-dataset pan24-text-detoxification/dev-en-20240305-training \
     --image webis/clef24-text-detoxification-baseline:0.0.1 \
-    --command '/trivial-baseline.py --input ${inputDataset}/input.jsonl \
+    --command '/trivial_baseline.py --input ${inputDataset}/input.jsonl \
                                       --output ${outputDir}/delete_none_baseline_en.jsonl \
                                       --remove-no-terms true \
 									  --language en'
