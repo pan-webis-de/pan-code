@@ -4,7 +4,7 @@ import argparse
 import json
 import torch
 import logging
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict
 from tqdm import tqdm
 from transformers import (
     M2M100ForConditionalGeneration,
@@ -91,7 +91,13 @@ def translate_batch(
     for i in tqdm(range(0, len(texts), batch_size), desc="Translating"):
         batch = texts[i : i + batch_size]
         batch_translated = model.generate(
-            **tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(model.device)
+            **tokenizer(
+                batch,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                forced_bos_token_id=tokenizer.lang_code_to_id[tokenizer.tgt_lang],
+            ).to(model.device)
         )
         translations.extend(
             tokenizer.decode(tokens, skip_special_tokens=True)
@@ -122,7 +128,9 @@ def detoxify_batch(
     for i in tqdm(range(0, len(texts), batch_size), desc="Detoxifying"):
         batch = texts[i : i + batch_size]
         batch_detoxified = model.generate(
-            **tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(model.device)
+            **tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(
+                model.device
+            )
         )
         detoxified.extend(
             tokenizer.decode(tokens, skip_special_tokens=True)
@@ -156,8 +164,7 @@ def main() -> None:
         type=str,
         choices=["am", "es", "ru", "uk", "en", "zh", "ar", "hi", "de"],
         help="Language of the input data. Should be one of"
-        "['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']"
-
+        "['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']",
     )
     parser.add_argument(
         "--batch-size",
@@ -170,15 +177,15 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
     lang_id_mapping = {
-            "ru": "rus_Cyrl",
-            "en": "eng_Latn",
-            "am": "amh_Ethi",
-            "es": "spa_Latn",
-            "uk": "ukr_Cyrl",
-            "zh": "zho_Hans",
-            "ar": "arb_Arab",
-            "hi": "hin_Deva",
-            "de": "deu_Latn",
+        "ru": "rus_Cyrl",
+        "en": "eng_Latn",
+        "am": "amh_Ethi",
+        "es": "spa_Latn",
+        "uk": "ukr_Cyrl",
+        "zh": "zho_Hans",
+        "ar": "arb_Arab",
+        "hi": "hin_Deva",
+        "de": "deu_Latn",
     }
 
     inputs = [json.loads(line) for line in args.input]

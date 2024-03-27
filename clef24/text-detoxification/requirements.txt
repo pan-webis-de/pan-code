@@ -9,3 +9,4 @@ transformers
 protobuf
 sentence-transformers
 huggingface-cli
+wandb
