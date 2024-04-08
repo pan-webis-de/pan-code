@@ -15,7 +15,7 @@ tira-run \
     --command '/trivial_baseline.py --input ${inputDataset}/input.jsonl --output ${outputDir}/predictions.jsonl'
 ```
 
-The predictions can be found in the directory `tira-output/delete_stopwords_baseline_en.jsonl`. You can select the desired language to load toxic words, options are `['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']`. Without specification, it will load toxic words for all the languages. 
+The predictions can be found in the directory `tira-output/predictions.jsonl`. You can select the desired language to load toxic words, options are `['am', 'es', 'ru', 'uk', 'en', 'zh', 'ar', 'hi', 'de']`. Without specification, it will load toxic words for all the languages. 
 
 ---
 
