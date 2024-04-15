@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from glob import glob
 import json
 import os
 
