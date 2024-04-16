@@ -2,7 +2,7 @@
 
 Run the evaluator locally (check requirements):
 
-    ~$ python3 evaluation/evaluator.py <predictions-file> <truth-file> <output-dir> [--outfile-name <name>]
+    ~$ python3 evaluator/evaluator.py <predictions-file> <truth-file> <output-dir> [--outfile-name <name>]
 
 Run in Docker container:
 
