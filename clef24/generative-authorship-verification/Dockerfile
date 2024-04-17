@@ -2,7 +2,7 @@
 FROM python:3.11
 
 RUN set -x \
-    && pip install click numpy scikit-learn
+    && pip install click numpy scikit-learn tira
 
 COPY evaluator /opt/pan24_llm_evaluator
 WORKDIR /opt/pan24_llm_evaluator
