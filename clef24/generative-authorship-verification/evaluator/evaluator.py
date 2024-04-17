@@ -218,7 +218,6 @@ def main(answer_file, truth_file, output_dir, outfile_name):
         f.write(jstr)
     with open(os.path.join(output_dir, 'evaluation.prototext'), 'w') as f:
         f.write(to_prototext([results]))
-    
 
 
 if __name__ == '__main__':
