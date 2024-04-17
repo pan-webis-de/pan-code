@@ -5,7 +5,7 @@ import os
 
 import click
 import numpy as np
-from tira.io_utils
+from tira.io_utils import to_prototext
 from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss
 
 
