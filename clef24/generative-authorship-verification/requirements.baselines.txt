@@ -1,0 +1,14 @@
+auto-gptq
+accelerate
+bitsandbytes
+click
+more_itertools
+numpy
+pyppmd
+scikit-learn
+torch
+tqdm
+transformers
+
+# Must be installed manually with `pip install --no-build-isolation` after torch
+#--no-build-isolation flash-attn
