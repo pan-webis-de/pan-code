@@ -5,8 +5,8 @@ import os
 
 import click
 import numpy as np
-from tira.io_utils import to_prototext
 from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss
+from tira.io_utils import to_prototext
 
 
 def auc(true_y, pred_y):
@@ -187,8 +187,11 @@ def evaluate_all(true_y, pred_y):
 @click.argument('answer_file', type=click.File('r'))
 @click.argument('truth_file', type=click.File('r'))
 @click.argument('output_dir', type=click.Path(exists=True, file_okay=False))
-@click.option('-o', '--outfile-name', help='Output filename', default='evaluation.json', show_default=True)
-def main(answer_file, truth_file, output_dir, outfile_name):
+@click.option('-o', '--outfile-name', default='evaluation.json', show_default=True,
+              help='Output JSON filename')
+@click.option('-p', '--skip-prototext', is_flag=True,
+              help='Skip Tira Prototext output, only write JSON')
+def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext):
     pred = load_problem_file(answer_file)
     truth = load_problem_file(truth_file)
 
@@ -216,8 +219,9 @@ def main(answer_file, truth_file, output_dir, outfile_name):
     click.echo(jstr)
     with open(os.path.join(output_dir, outfile_name), 'w') as f:
         f.write(jstr)
-    with open(os.path.join(output_dir, 'evaluation.prototext'), 'w') as f:
-        f.write(to_prototext([results]))
+    if not skip_prototext:
+        with open(os.path.join(output_dir, os.path.splitext(outfile_name)[0] + '.prototext'), 'w') as f:
+            f.write(to_prototext([results]))
 
 
 if __name__ == '__main__':
