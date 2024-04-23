@@ -86,7 +86,7 @@ def f1(true_y, pred_y):
     return f1_score(true_y, pred_y > 0.5)
 
 
-def f_05_u(true_y, pred_y):
+def f05u(true_y, pred_y):
     """
     Calculates the F0.5u score.
 
@@ -173,7 +173,7 @@ def evaluate_all(true_y, pred_y):
         'brier': brier_score(true_y, pred_y),
         'c@1': c_at_1(true_y, pred_y),
         'f1': f1(true_y, pred_y),
-        'f_05_u': f_05_u(true_y, pred_y)
+        'f05u': f05u(true_y, pred_y)
     }
     results['mean'] = np.mean(list(results.values()))
 
