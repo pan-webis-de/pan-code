@@ -81,7 +81,7 @@ $ tira-run \
     --command 'baseline BASELINENAME $inputDataset/dataset.jsonl $outputDir'
 ```
 
-Instead of `--input-dir`, you can also specify an online Tira dataset with `--input-dataset` (e.g. `--input-dataset generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-smoke-20240411_0-training`). The can find the correct name of a dataset in the Tira web UI after creating a new software submission for it.
+Instead of `--input-dir`, you can also specify an online Tira dataset with `--input-dataset` (e.g. `--input-dataset generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-smoke-20240411_0-training`). You can find the correct name of any dataset in the Tira web UI after creating a new software submission for it.
 
 
 ## Run Evaluator
