@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69.0.0", "wheel>=0.43.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pan24-llm-baselines"
+version = "1.0.0"
+description = "Baselines for the PAN'24 Generative AI Authorship verification shared task."
+authors = [
+  { name = "Janek Bevendorff" }
+]
+license = { text = "Apache License 2.0" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "auto-gptq>=0.7.1",
+    "accelerate>=0.29.3",
+    "bitsandbytes>=0.43.1",
+    "click>=8.1.7",
+    "more_itertools>=10.2.0",
+    "numpy>=1.26.4",
+    "pyppmd>=1.1.0",
+    "scikit-learn>=1.4.2",
+    "torch>=2.2.2",
+    "tqdm>=4.66.2",
+    "transformers>=4.40.0",
+]
+
+[project.optional-dependencies]
+# Flash attention cannot be installed alongside normal dependencies,
+# since it requires torch during build time. Install with
+#     pip install './pan24_llm_baselines[flash-attn]'
+# after installing everything else first.
+flash-attn = [
+    "flash-attn>=2.5.7"
+]
+
+[project.urls]
+repository = "https://github.com/pan-webis-de/pan-code/tree/master/clef24/generative-authorship-verification"
+homepage = "https://pan.webis.de/clef24/pan24-web/generated-content-analysis.html"
+
+[project.scripts]
+baseline = "pan24_llm_baselines.baseline:main"

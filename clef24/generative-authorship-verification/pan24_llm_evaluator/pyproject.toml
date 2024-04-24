@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pan24-llm-evaluator"
+version = "1.0.0"
+description = "Evaluator for the PAN'24 Generative AI Authorship verification shared task."
+authors = [
+  { name = "Janek Bevendorff" }
+]
+license = { text = "Apache License 2.0" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.7",
+    "numpy>=1.26.4",
+    "scikit-learn>=1.4.2",
+    "tira>=0.0.125",
+]
+
+[project.urls]
+repository = "https://github.com/pan-webis-de/pan-code/tree/master/clef24/generative-authorship-verification"
+homepage = "https://pan.webis.de/clef24/pan24-web/generated-content-analysis.html"
+
+[project.scripts]
+evaluator = "pan24_llm_evaluator.evaluator:main"

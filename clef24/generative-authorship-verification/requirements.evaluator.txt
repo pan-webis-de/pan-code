@@ -1,4 +1,0 @@
-click
-numpy
-scikit-learn
-tira

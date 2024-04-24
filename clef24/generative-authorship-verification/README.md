@@ -43,12 +43,20 @@ Commands:
 
 ### Run Baselines Locally
 
-Install requirements first, then run baseline. Use `--help` for more information.
-
+Install the package and its requirements first:
 ```console
 $ python3 -m venv venv && source venv/bin/activate
-$ pip install -r requirements.baselines.txt
-$ python3 pan24_llm_baselines/baseline.py BASELINENAME [OPTIONS] dataset.jsonl out
+$ pip install --upgrade pip
+$ pip install ./pan24_llm_baselines
+$ pip install ./pan24_llm_baselines[flash-attn]
+```
+The pip upgrade step is necessary if your pip version is lower than 23.0.
+
+You can skip the last step if you don't have an Ampere GPU or newer that can use flash attention. If you do, it's important to run this install step separately after installing the main components first.
+
+Then run the baselines. Use `--help` for more information.
+```console
+$ baseline BASELINENAME [OPTIONS] dataset.jsonl out
 ```
 
 ### Run in Docker
@@ -68,7 +76,7 @@ $ docker run --rm \
 
 `--gpus=all` requires the [Nvidia Container Toolkit to be installed](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). The PPMd, Unmasking, and Text length baselines can be run without this parameter, since they don't require GPU inference.
 
-### Run with tira-run
+### Run With tira-run
 
 `tira-run` is the closest you can get to test locally how a software will be run on Tira. Replace `BASELINENAME` with a baseline (e.g., `binoculars`). Use `--help` for more information.
 
@@ -90,8 +98,8 @@ To run the evaluator locally, install the requirements first:
 
 ```console
 $ python3 -m venv venv && source venv/bin/activate
-$ pip install -r requirements.evaluator.txt
-$ python3 evaluator/evaluator.py <predictions-file> <truth-file> <output-dir> [--outfile-name <name>]
+$ pip install ./pan24_llm_evaluator
+$ evaluator ANSWERS_FILE TRUTH_FILE OUTPUT_DIR [--outfile-name OUTFILE_NAME]
 ```
 
 You can also run the evaluator in a Docker container (requires you to mount input and output directories):
