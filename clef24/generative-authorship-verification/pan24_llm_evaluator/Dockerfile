@@ -8,4 +8,8 @@ RUN set -x \
     && pip install --no-cache . \
     && rm -rf ./build ./*.egg-info
 
+VOLUME /answers.jsonl
+VOLUME /truth.jsonl
+VOLUME /out
+
 CMD evaluator

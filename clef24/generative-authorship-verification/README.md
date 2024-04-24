@@ -69,7 +69,8 @@ Replace `BASELINENAME` with a baseline (e.g., `binoculars`). The `baseline` pref
 $ docker run --rm \
     -v /path/to/dataset.jsonl:/dataset.jsonl \
     -v /path/to/output:/out \
-    -v ${HOME}/.cache/huggingface:/.cache/huggingface \
+    -v ${HOME}/.cache/huggingface:/huggingface \
+    -e HF_HOME=/huggingface \
     --user=$(id -u) \
     --gpus=all \
     ghcr.io/pan-webis-de/pan24-generative-authorship-baselines:latest \
@@ -78,7 +79,7 @@ $ docker run --rm \
 
 `--gpus=all` requires the [Nvidia Container Toolkit to be installed](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). The PPMd, Unmasking, and Text length baselines can be run without this parameter, since they don't require GPU inference.
 
-Some baselines (such as Binoculars or DetectGPT) require downloading certain models from Huggingface. Adding `-v ${HOME}/.cache/huggingface:/.cache/huggingface` to the `docker run` command mounts your local Huggingface cache directory to avoid downloading them into the container. Make sure to add the `--user=$(id -u)` flag to avoid messing up your file permissions.
+Some baselines (such as Binoculars or DetectGPT) require downloading certain models from Huggingface. Adding `-v ${HOME}/.cache/huggingface:/huggingface` to the `docker run` command mounts your local Huggingface cache directory (`$HF_HOME`) to avoid downloading them into the container. Make sure to add the `--user=$(id -u)` flag to avoid messing up your file permissions.
 
 ### Run With tira-run
 

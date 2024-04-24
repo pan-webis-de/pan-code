@@ -15,4 +15,7 @@ RUN set -x \
     && pip install --no-cache .[flash-attn] \
     && rm -rf ./build ./*.egg-info
 
+VOLUME /dataset.jsonl
+VOLUME /out
+
 ENTRYPOINT ["baseline"]
