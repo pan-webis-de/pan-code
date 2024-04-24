@@ -76,6 +76,8 @@ $ docker run --rm \
 
 `--gpus=all` requires the [Nvidia Container Toolkit to be installed](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). The PPMd, Unmasking, and Text length baselines can be run without this parameter, since they don't require GPU inference.
 
+Some baselines (such as Binoculars or DetectGPT) require downloading certain models from Huggingface. To avoid downloading them into the container, you can download them beforehand to your home directory using `huggingface-cli download MODELNAME`. Once downloaded, you can mount them into the container by adding`-v ${HOME}/.cache/huggingface:/root/.cache/huggingface:ro` to the `docker run` command.
+
 ### Run With tira-run
 
 `tira-run` is the closest you can get to test locally how a software will be run on Tira. Replace `BASELINENAME` with a baseline (e.g., `binoculars`). Use `--help` for more information.
@@ -90,6 +92,8 @@ $ tira-run \
 ```
 
 Instead of `--input-dir`, you can also specify an online Tira dataset with `--input-dataset` (e.g. `--input-dataset generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-smoke-20240411_0-training`). You can find the correct name of any dataset in the Tira web UI after creating a new software submission for it.
+
+Some baselines (such as Binoculars or DetectGPT) require downloading certain models from Huggingface. Since `tira-run` sandboxes the execution environment, you need to download them beforehand using `huggingface-cli download MODELNAME`. Once downloaded, you can mount them into the Tira container by adding any number of `--mount-hf-model MODELNAME` parameters to the `tira-run` command.
 
 
 ## Run Evaluator
