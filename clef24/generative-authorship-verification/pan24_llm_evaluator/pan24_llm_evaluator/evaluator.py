@@ -51,8 +51,9 @@ def c_at_1(true_y, pred_y):
     The c@1 measure.
     """
 
-    nc = np.sum(true_y == (pred_y > 0.5))
-    nu = np.sum(pred_y == 0.5)
+    nu = pred_y == 0.5
+    nc = np.sum((true_y == (pred_y > 0.5))[~nu])
+    nu = np.sum(nu)
     return (1 / len(true_y)) * (nc + (nu * nc / len(true_y)))
 
 
