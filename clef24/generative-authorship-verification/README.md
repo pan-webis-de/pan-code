@@ -69,7 +69,7 @@ Replace `BASELINENAME` with a baseline (e.g., `binoculars`). The `baseline` pref
 $ docker run --rm \
     -v /path/to/dataset.jsonl:/dataset.jsonl \
     -v /path/to/output:/out \
-    --gpus=all
+    --gpus=all \
     ghcr.io/pan-webis-de/pan24-generative-authorship-baselines:latest \
     BASELINENAME [OPTIONS] /dataset.jsonl /out
 ```
