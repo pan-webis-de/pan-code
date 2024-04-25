@@ -4,7 +4,7 @@ Baselines and evaluator for the PAN'24 "Voight-Kampff" Generative AI Authorship 
 
 ## Run Baselines
 
-We provide six (seven) LLM detection baselines as reimplementations from the original papers:
+We provide six (seven) LLM detection baselines as re-implementations from the original papers:
 
 - PPMd Compression-based Cosine [[Sculley and Brodley, 2006](https://ieeexplore.ieee.org/abstract/document/1607268)] [[Halvani et al., 2017](https://dl.acm.org/doi/abs/10.1145/3098954.3104050)]
 - Authorship Unmasking [[Koppel and Schler, 2004](https://dl.acm.org/doi/abs/10.1145/1015330.1015448)] [[Bevendorff et al., 2019](https://aclanthology.org/N19-1068/)]
@@ -37,7 +37,7 @@ Commands:
   binoculars     PAN'24 baseline: Binoculars.
   detectgpt      PAN'24 baseline: DetectGPT.
   detectllm      PAN'24 baseline: DetectLLM.
-  fastdetectgpt  PAN'24 baseline: FastDetectGPT.
+  fastdetectgpt  PAN'24 baseline: Fast-DetectGPT.
   length         PAN'24 baseline: Text length.
   ppmd           PAN'24 baseline: Compression-based cosine.
   unmasking      PAN'24 baseline: Authorship unmasking.
