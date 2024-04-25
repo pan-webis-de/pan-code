@@ -4,16 +4,17 @@ Baselines and evaluator for the PAN'24 "Voight-Kampff" Generative AI Authorship 
 
 ## Run Baselines
 
-We provide five (six) LLM detection baselines as reimplementations from the original papers:
+We provide six (seven) LLM detection baselines as reimplementations from the original papers:
 
 - PPMd Compression-based Cosine [[Sculley and Brodley, 2006](https://ieeexplore.ieee.org/abstract/document/1607268)] [[Halvani et al., 2017](https://dl.acm.org/doi/abs/10.1145/3098954.3104050)]
 - Authorship Unmasking [[Koppel and Schler, 2004](https://dl.acm.org/doi/abs/10.1145/1015330.1015448)] [[Bevendorff et al., 2019](https://aclanthology.org/N19-1068/)]
 - Binoculars [[Hans et al., 2024](https://arxiv.org/abs/2401.12070)]
 - DetectLLM LRR and NPR [[Su et al., 2023](https://arxiv.org/abs/2306.05540)]
 - DetectGPT [[Mitchell et al., 2023](https://arxiv.org/abs/2301.11305)]
+- Fast-DetectGPT [[Bao et al., 2023](https://arxiv.org/abs/2310.05130)]
 - Text length
 
-With PPMd CBC and Authorship unmasking, we provide two bag-of-words authorship verification models. Binoculars, DetectLLM, and DetectGPT use large language models to measure text perplexity. The text length baseline serves mainly as a data sanity check and is designed to have random performance.
+With PPMd CBC and Authorship unmasking, we provide two bag-of-words authorship verification models. Binoculars, DetectLLM, and (Fast-)DetectGPT use large language models to measure text perplexity. The text length baseline serves mainly as a data sanity check and is designed to have random performance.
 
 You can run the baselines locally, in a Docker container or using `tira-run`. All baselines come with a CLI and usage instructions. The general usage for any baseline is:
 
@@ -33,12 +34,13 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  binoculars  PAN'24 baseline: Binoculars.
-  detectgpt   PAN'24 baseline: DetectGPT.
-  detectllm   PAN'24 baseline: DetectLLM.
-  length      PAN'24 baseline: Text length.
-  ppmd        PAN'24 baseline: Compression-based cosine.
-  unmasking   PAN'24 baseline: Authorship unmasking.
+  binoculars     PAN'24 baseline: Binoculars.
+  detectgpt      PAN'24 baseline: DetectGPT.
+  detectllm      PAN'24 baseline: DetectLLM.
+  fastdetectgpt  PAN'24 baseline: FastDetectGPT.
+  length         PAN'24 baseline: Text length.
+  ppmd           PAN'24 baseline: Compression-based cosine.
+  unmasking      PAN'24 baseline: Authorship unmasking.
 ```
 
 ### Run Baselines Locally

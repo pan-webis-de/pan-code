@@ -109,7 +109,7 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
 @click.option('-m', '--scoring-mode', type=click.Choice(['lrr', 'npr']), default='lrr', show_default=True)
-@click.option('-o', '--outfile-name', help='Output file name', default='detectgpt.jsonl', show_default=True)
+@click.option('-o', '--outfile-name', help='Output file name', default='detectllm.jsonl', show_default=True)
 @click.option('-s', '--span-length', type=int, default=2, show_default=True, help='Size of mask token spans')
 @click.option('-p', '--perturb-pct', type=click.FloatRange(0, 1), default=0.3, show_default=True,
               help='Percentage of tokens to perturb')
@@ -199,6 +199,40 @@ def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_p
         n_samples=n_samples,
         batch_size=batch_size,
         device=device1)
+    detect(detector, input_file, output_directory, outfile_name)
+
+
+@main.command()
+@click.argument('input_file', type=click.File('r'))
+@click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
+@click.option('-o', '--outfile-name', help='Output file name', default='fastdetectgpt.jsonl', show_default=True)
+@click.option('-n', '--n-samples', type=int, default=10000, show_default=True,
+              help='Number of perturbed samples to generate')
+@click.option('-b', '--batch-size', type=int, default=10, help='GPU task batch size')
+@click.option('-q', '--quantize', type=click.Choice(['4', '8']))
+@click.option('-f', '--flash-attn', is_flag=True, help='Use flash-attn 2 (requires Ampere GPU)')
+@click.option('--base-model', help='Base detection model', default='tiiuae/falcon-7b', show_default=True)
+@click.option('--device', help='Base model device', default='auto', show_default=True)
+def fastdetectgpt(input_file, output_directory, outfile_name, n_samples, batch_size,
+              quantize, flash_attn, base_model, device):
+    """
+    PAN'24 baseline: Fast-DetectGPT.
+
+    References:
+    ===========
+        Bao, Guangsheng, Yanbin Zhao, Zhiyang Teng, Linyi Yang, and Yue Zhang. 2023.
+        “Fast-DetectGPT: Efficient Zero-Shot Detection of Machine-Generated Text via Conditional
+        Probability Curvature.” arXiv [Cs.CL]. arXiv. https://arxiv.org/abs/2310.05130.
+    """
+    from pan24_llm_baselines.detectors import FastDetectGPT
+
+    detector = FastDetectGPT(
+        base_model=base_model,
+        quantization_bits=quantize,
+        use_flash_attn=flash_attn,
+        n_samples=n_samples,
+        batch_size=batch_size,
+        device=device)
     detect(detector, input_file, output_directory, outfile_name)
 
 
