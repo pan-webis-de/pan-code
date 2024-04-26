@@ -55,15 +55,6 @@ class FastDetectGPT(DetectGPT):
     def _normalize_scores(self, scores):
         return torch.sigmoid(1 / 25 * (scores.to(torch.float64) - 70))
 
-    def _get_ll(self, logits, labels, mask):
-        logits = logits[:, :-1].contiguous()
-        labels = labels[:, 1:].contiguous()
-        mask = mask[:, 1:].contiguous()
-
-        lprobs = torch.log_softmax(logits, dim=-1)
-        log_likelihood = lprobs.gather(dim=-1, index=labels)
-        return (log_likelihood * mask).sum(dim=1) / mask.sum(dim=1)
-
     def _proc_batch(self, logits: torch.Tensor, labels: torch.Tensor,
                     mask: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -76,9 +67,9 @@ class FastDetectGPT(DetectGPT):
         lls_orig = []
         lls_sampled = []
         for lo, la, ma in zip(logits, labels, mask):
-            lls_orig.append(self._get_ll(lo.unsqueeze(0),
-                                         la.view(1, len(la), 1),
-                                         ma.view(1, len(ma), 1)).cpu())
+            lls_orig.append(-seq_label_cross_entropy(lo.unsqueeze(0),
+                                                     la.view(1, len(la)),
+                                                     ma.view(1, len(ma))).cpu())
 
             lp = F.log_softmax(lo, dim=-1)
             if lp.is_cuda and lp.dtype == torch.bfloat16:
@@ -87,10 +78,9 @@ class FastDetectGPT(DetectGPT):
             seq_len = ma.sum()
             dist = torch.distributions.Categorical(logits=lp[:seq_len].unsqueeze(0))
             s = dist.sample(torch.Size([self.n_samples]))
-            lls_sampled.append(self._get_ll(lo[:seq_len].unsqueeze(0),
-                                            s.permute([1, 2, 0]),
-                                            ma[:seq_len].view(1, seq_len, 1)).cpu())
-
+            lls_sampled.append(-seq_label_cross_entropy(lo[:seq_len].unsqueeze(0),
+                                                        s.permute([1, 2, 0]),
+                                                        ma[:seq_len].view(1, seq_len, 1)).cpu())
         return torch.cat(lls_orig), torch.cat(lls_sampled)
 
     @torch.inference_mode()

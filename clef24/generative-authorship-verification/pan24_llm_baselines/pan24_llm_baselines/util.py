@@ -131,16 +131,21 @@ def seq_label_cross_entropy(logits: torch.Tensor, labels: torch.Tensor,
     :param shift: shift next-token logits and labels to match
     :return: average token cross-entropy values
     """
+    squeeze = False
+    if len(labels.shape) == 2:
+        labels = labels.unsqueeze(-1)
+        mask = mask.unsqueeze(-1)
+        squeeze = True
+
     if shift:
         logits = logits[..., :-1, :].contiguous()
-        labels = labels[..., 1:].contiguous()
-        mask = mask[..., 1:].contiguous()
-    mask = mask.bool()
-    labels = labels.where(mask, -100)
+        labels = labels[..., 1:, :].contiguous()
+        mask = mask[..., 1:, :].contiguous()
 
-    _, seq_length, vocab_size = logits.shape
-    ll = F.cross_entropy(logits.view(-1, vocab_size), labels.view(-1), reduction='none', ignore_index=-100)
-    return ll.view(-1, seq_length).sum(-1) / mask.sum(-1)
+    lprobs = torch.log_softmax(logits, dim=-1)
+    log_likelihood = lprobs.gather(dim=-1, index=labels)
+    ll = -(log_likelihood * mask).sum(dim=1) / mask.sum(dim=1)
+    return ll.squeeze(-1) if squeeze else ll
 
 
 @torch.inference_mode()
