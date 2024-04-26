@@ -14,6 +14,10 @@ Each line should have the following format:
 
 where `id` is the id of the instance (must be passed without modification and `text` is the to-be-detoxified text.
 
+# CodaLab baseline submission
+
+If you are participating through [CodaLab platform](https://codalab.lisn.upsaclay.fr/competitions/18243), please refer to `data` folder. There you may find the example submissions.
+
 ## Baselines
 
 We provide a set of baselines together with instructions on how you can run them on your machine:
