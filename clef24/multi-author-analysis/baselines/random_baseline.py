@@ -40,6 +40,8 @@ def run_baseline(problems: dict, output_path: str):
     :param problems: dictionary of problem files with ids as keys
     :param output_path: output folder to write solution files
     """
+    os.makedirs(output_path, exist_ok=True)
+
     for id, problem in problems.items():
         with open(f"{output_path}/solution-{id}.json", 'w') as out:
             authors = random.randint(1, 5)
@@ -53,4 +55,4 @@ if __name__ == '__main__':
     """
     args = parse_args()
     for subtask in ["easy", "medium", "hard"]:
-        run_baseline(read_problem_files(args.input+f"/{subtask}"), args.output)
+        run_baseline(read_problem_files(args.input+f"/{subtask}"), args.output+f"/{subtask}")
