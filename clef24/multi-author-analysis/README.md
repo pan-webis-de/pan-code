@@ -4,7 +4,7 @@
 
 Run the evaluator locally (check the requirements.txt)
 
-	~$ python3 evaluation/evaluator.py --predictions <predictions-dir> --truth <truth-dir> --output <output-dir>
+	~$ python3 evaluator/evaluator.py --predictions <predictions-dir> --truth <truth-dir> --output <output-dir>
 
 Run command for tira: 
 	~$ python3 evaluator.py -p ${inputRun} -t ${inputDataset} -o ${outputDir}
