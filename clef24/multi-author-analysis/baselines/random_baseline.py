@@ -22,9 +22,14 @@ def read_problem_files(problems_folder: str) -> dict:
     :return: dict of problem files with problem-id as key and file content as value
     """
     problems = {}
-    for solution_file in glob.glob(os.path.join(problems_folder, '**/problem-*.txt')):
+    solution_files = glob.glob(f'{problems_folder}/problem-*.txt') \
+        + glob.glob(f'{problems_folder}/**/problem-*.txt') \
+        + glob.glob(f'{problems_folder}/**/**/problem-*.txt')
+
+    for solution_file in solution_files:
         with open(solution_file, 'r') as fh:
             problem = fh.read()
+            print(f'Parse {solution_file}.')
             problems[os.path.basename(solution_file)[:-4]] = problem
     return problems
 
@@ -41,6 +46,7 @@ def run_baseline(problems: dict, output_path: str):
     :param output_path: output folder to write solution files
     """
     os.makedirs(output_path, exist_ok=True)
+    print(f'Write outputs to {output_path}.')
 
     for id, problem in problems.items():
         with open(f"{output_path}/solution-{id}.json", 'w') as out:
