@@ -37,14 +37,3 @@ To evaluate the performance of the method on a concrete data, run the following:
 
 Set `--input` as a path to the `input.jsonl`, `--predictions` as a path to `predictions.jsonl`. 
 
-## Docker Images for Evaluation
-
-```shell
-make docker-evaluate  # => webis/clef24-text-detoxification-evaluator:0.0.1 .
-```
-
-### Build the Docker file
-
-```
-docker build -t webis/clef24-text-detoxification-evaluator:0.0.1 .
-```
