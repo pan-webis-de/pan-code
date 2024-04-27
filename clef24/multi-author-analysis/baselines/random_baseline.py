@@ -22,7 +22,7 @@ def read_problem_files(problems_folder: str) -> dict:
     :return: dict of problem files with problem-id as key and file content as value
     """
     problems = {}
-    for solution_file in glob.glob(os.path.join(problems_folder, 'problem-*.txt')):
+    for solution_file in glob.glob(os.path.join(problems_folder, '**/problem-*.txt')):
         with open(solution_file, 'r') as fh:
             problem = fh.read()
             problems[os.path.basename(solution_file)[:-4]] = problem
@@ -56,3 +56,4 @@ if __name__ == '__main__':
     args = parse_args()
     for subtask in ["easy", "medium", "hard"]:
         run_baseline(read_problem_files(args.input+f"/{subtask}"), args.output+f"/{subtask}")
+
