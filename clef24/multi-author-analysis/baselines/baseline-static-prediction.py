@@ -3,14 +3,13 @@ import argparse
 import glob
 import json
 import os
-import random
-
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='This is a baseline for PAN24 Multi-Author Writing Style Analysis task.')
+    parser = argparse.ArgumentParser(description='This is a baseline for PAN24 Multi-Author Writing Style Analysis task that always makes a static prediction on all tasks.')
 
     parser.add_argument('--input', type=str, help='The input data for three sub tasks (expected in txt format in `easy/medium/hard` subfolders).', required=True)
-    parser.add_argument('--output', type=str, help='The classified output in json files in `easy/medium/hard` subfolders.', required=False)
+    parser.add_argument('--output', type=str, help='The classified output in json files in `easy/medium/hard` subfolders.', required=True)
+    parser.add_argument('--predict', type=int, help='The static prediction to make for all paragraphs. E.g., --predict 0 or --predict 1', required=True)
 
     return parser.parse_args()
 
@@ -34,16 +33,16 @@ def read_problem_files(problems_folder: str) -> dict:
     return problems
 
 
-def run_baseline(problems: dict, output_path: str):
+def run_baseline(problems: dict, output_path: str, pred: int):
     """
-    Write random predictions to solution files in the format:
+    Write predictions to solution files in the format:
     {
-    "authors": 2,
-    "changes": [1, 1, 0, 0, 1]
+    "changes": [0, 0, 0, 1]
     }
 
     :param problems: dictionary of problem files with ids as keys
     :param output_path: output folder to write solution files
+    :param pred: the static prediction
     """
     os.makedirs(output_path, exist_ok=True)
     print(f'Write outputs to {output_path}.')
@@ -51,7 +50,7 @@ def run_baseline(problems: dict, output_path: str):
     for id, problem in problems.items():
         with open(f"{output_path}/solution-{id}.json", 'w') as out:
             paragraphs = problem.split('\n')
-            prediction = {'changes': [random.choice([0, 1]) for _ in range(len(paragraphs) -1)]}
+            prediction = {'changes': [pred for _ in range(len(paragraphs) -1)]}
             out.write(json.dumps(prediction))
 
 
@@ -61,5 +60,5 @@ if __name__ == '__main__':
     """
     args = parse_args()
     for subtask in ["easy", "medium", "hard"]:
-        run_baseline(read_problem_files(args.input+f"/{subtask}"), args.output+f"/{subtask}")
+        run_baseline(read_problem_files(args.input+f"/{subtask}"), args.output+f"/{subtask}", args.predict)
 
