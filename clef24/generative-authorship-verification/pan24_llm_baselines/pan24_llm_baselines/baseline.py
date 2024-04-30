@@ -136,12 +136,14 @@ def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_len
     from pan24_llm_baselines.detectors import DetectLLM
     from pan24_llm_baselines.perturbators import T5MaskPerturbator
 
-    perturbator = T5MaskPerturbator(
-        model_name=perturb_model,
-        device=device2,
-        span_length=span_length,
-        mask_pct=perturb_pct,
-        batch_size=batch_size)
+    perturbator = None
+    if perturb_model and scoring_mode == 'npr':
+        perturbator = T5MaskPerturbator(
+            model_name=perturb_model,
+            device=device2,
+            span_length=span_length,
+            mask_pct=perturb_pct,
+            batch_size=batch_size)
     detector = DetectLLM(
         scoring_mode=scoring_mode,
         base_model=base_model,
