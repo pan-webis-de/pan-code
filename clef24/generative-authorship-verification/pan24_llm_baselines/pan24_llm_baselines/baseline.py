@@ -37,9 +37,9 @@ def comparative_score(score1, score2, epsilon=1e-3):
     :return: [0, 0.5) if score1 > score2 + eps; (0.5, 1] if score2 > score1 + eps; 0.5 otherwise
     """
     if score1 > score2 + epsilon:
-        return min((1.0 - score2) / 2.0 + 0.5, 1.0)
+        return (1.0 - min(max(score2, 0.0), 1.0)) / 2.0 + 0.5
     if score2 > score1 + epsilon:
-        return max(score1 / 2.0, 0.0)
+        return min(max(score1, 0.0), 1.0) / 2.0
     return 0.5
 
 
