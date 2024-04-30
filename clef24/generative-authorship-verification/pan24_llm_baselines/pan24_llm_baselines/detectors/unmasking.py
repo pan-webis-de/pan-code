@@ -92,7 +92,7 @@ class UnmaskingDetector(DetectorBase):
         Unmasking for Short Texts.” In Proceedings of the 2019 Conference of the North, 654–59.
         Stroudsburg, PA, USA: Association for Computational Linguistics.
     """
-    def __init__(self, rounds=35, top_n=200, cv_folds=10, n_delete=4, chunk_size=700, n_chunks=30):
+    def __init__(self, rounds=35, top_n=200, cv_folds=20, n_delete=4, chunk_size=700, n_chunks=60):
         """
         :param rounds: number of deconstruction rounds
         :param top_n: number of top tokens to sample
@@ -124,5 +124,6 @@ class UnmaskingDetector(DetectorBase):
             x_right = chunks_to_matrix(chunks_right, most_frequent)
 
             degen_acc = deconstruct(x_left, x_right, self.rounds, self.n_delete, self.cv_folds)
-            scores.append(1.0 - (np.sum(degen_acc) / len(degen_acc)))
+            score = 2 * np.sum(degen_acc - 0.75) / len(degen_acc)
+            scores.append(1.0 / (1.0 + np.exp(score)))
         return scores

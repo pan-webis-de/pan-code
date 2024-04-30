@@ -282,7 +282,14 @@ def length(input_file, output_directory, outfile_name):
 @click.argument('input_file', type=click.File('r'))
 @click.argument('output_directory', type=click.Path(file_okay=False, exists=True))
 @click.option('-o', '--outfile-name', help='Output file name', default='unmasking.jsonl', show_default=True)
-def unmasking(input_file, output_directory, outfile_name):
+@click.option('-r', '--rounds', type=int, default=35, show_default=True, help='Deconstruction rounds')
+@click.option('-t', '--top-n', type=int, default=200, show_default=True, help='Number of top features')
+@click.option('-c', '--cv-folds', type=int, default=20, show_default=True, help='Cross-validation folds')
+@click.option('-d', '--n-delete', type=int, default=4, show_default=True,
+              help='Features to eliminate per round')
+@click.option('-s', '--chunk-size', type=int, default=700, show_default=True, help='Chunk sample size')
+@click.option('-n', '--n-chunks', type=int, default=60, show_default=True, help='Number of chunks to sample')
+def unmasking(input_file, output_directory, outfile_name, rounds, top_n, cv_folds, n_delete, chunk_size, n_chunks):
     """
     PAN'24 baseline: Authorship unmasking.
 
@@ -297,7 +304,7 @@ def unmasking(input_file, output_directory, outfile_name):
         Stroudsburg, PA, USA: Association for Computational Linguistics.
     """
     from pan24_llm_baselines.detectors import UnmaskingDetector
-    detector = UnmaskingDetector()
+    detector = UnmaskingDetector(rounds, top_n, cv_folds, n_delete, chunk_size, n_chunks)
     detect(detector, input_file, output_directory, outfile_name)
 
 
