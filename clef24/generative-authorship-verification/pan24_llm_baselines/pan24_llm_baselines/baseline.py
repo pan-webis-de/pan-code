@@ -284,7 +284,7 @@ def length(input_file, output_directory, outfile_name):
 @click.option('-o', '--outfile-name', help='Output file name', default='unmasking.jsonl', show_default=True)
 @click.option('-r', '--rounds', type=int, default=35, show_default=True, help='Deconstruction rounds')
 @click.option('-t', '--top-n', type=int, default=200, show_default=True, help='Number of top features')
-@click.option('-c', '--cv-folds', type=int, default=20, show_default=True, help='Cross-validation folds')
+@click.option('-c', '--cv-folds', type=int, default=10, show_default=True, help='Cross-validation folds')
 @click.option('-d', '--n-delete', type=int, default=4, show_default=True,
               help='Features to eliminate per round')
 @click.option('-s', '--chunk-size', type=int, default=700, show_default=True, help='Chunk sample size')

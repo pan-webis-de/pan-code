@@ -92,7 +92,7 @@ class UnmaskingDetector(DetectorBase):
         Unmasking for Short Texts.” In Proceedings of the 2019 Conference of the North, 654–59.
         Stroudsburg, PA, USA: Association for Computational Linguistics.
     """
-    def __init__(self, rounds=35, top_n=200, cv_folds=20, n_delete=4, chunk_size=700, n_chunks=60):
+    def __init__(self, rounds=35, top_n=200, cv_folds=10, n_delete=4, chunk_size=700, n_chunks=60):
         """
         :param rounds: number of deconstruction rounds
         :param top_n: number of top tokens to sample
