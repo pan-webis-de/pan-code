@@ -274,7 +274,7 @@ def length(input_file, output_directory, outfile_name):
             j = json.loads(l)
             l1 = len(j['text1'])
             l2 = len(j['text2'])
-            json.dump({'id': j['id'], 'is_human': float(l1 < l2)}, out)
+            json.dump({'id': j['id'], 'is_human': float(l1 > l2)}, out)
             out.write('\n')
 
 
