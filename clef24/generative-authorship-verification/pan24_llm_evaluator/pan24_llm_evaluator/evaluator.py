@@ -148,23 +148,26 @@ def load_problem_file(file_obj):
         if 'is_human' not in j:
             raise ValueError('Invalid input JSON schema')
 
+        d = {k: v for k, v in j.items() if k not in ['id', 'is_human']}
         if type(j['is_human']) in [list, tuple]:
             assert j['is_human'][0] ^ j['is_human'][1]      # sanity check
-            problems[j['id']] = 0.0 if j['is_human'][0] else 1.0
+            d['is_human'] = 0.0 if j['is_human'][0] else 1.0
         elif type(j['is_human']) in [int, float]:
-            problems[j['id']] = float(j['is_human'])
+            d['is_human'] = float(j['is_human'])
         else:
             raise ValueError(f'Invalid data type {type(j["is_human"])} for problem {j["id"]}."')
+        problems[j['id']] = d
 
     return problems
 
 
 def evaluate_all(true_y, pred_y):
     """
-    Convenience function: calculates all PAN20 evaluation measures
-    and returns them as a dict, including the 'overall' score, which
-    is the mean of the individual metrics (0 >= metric >= 1). All
-    scores get rounded to three digits.
+    Calculate all evaluation scores and return results as a dict.
+    All scores are rounded to three digits.
+
+    :param true_y : truth as numpy array [n_problems]
+    :param pred_y : predictions as numpy array [n_problems]
     """
 
     results = {
@@ -182,7 +185,25 @@ def evaluate_all(true_y, pred_y):
     return results
 
 
-@click.command(help='Evaluation script GenAIDetection @ PAN\'24')
+def vectorize_and_evaluate(truth_dict, pred_dict, missing_default=0.5):
+    """
+    Vectorize input data into numpy arrays and evaluate them.
+
+    :param truth_dict: ground truth dict
+    :param pred_dict: predictions dict
+    :param missing_default: default missing predictions to this value
+    :return: dict with evaluation results
+    """
+    missing_default = {'is_human': missing_default}
+    scores = [(truth_dict[k]['is_human'], pred_dict.get(k, missing_default)['is_human']) for k in sorted(truth_dict)]
+    truth, pred = zip(*scores)
+    truth = np.array(truth, dtype=np.float64)
+    pred = np.clip(np.array(pred, dtype=np.float64), 0.0, 1.0)
+    assert len(truth) == len(pred)
+    return evaluate_all(truth, pred)
+
+
+@click.command(help='Evaluation script for GenAI Authorship Verification @ PAN\'24')
 @click.argument('answer_file', type=click.File('r'))
 @click.argument('truth_file', type=click.File('r'))
 @click.argument('output_dir', type=click.Path(exists=True, file_okay=False))
@@ -197,30 +218,29 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext):
     click.echo(f'-> {len(truth)} problems in ground truth', err=True)
     click.echo(f'-> {len(pred)} solutions explicitly proposed', err=True)
 
-    # default missing problems to 0.5
-    for pid in sorted(truth):
-        if pid not in pred:
-            pred[pid] = 0.5
-
-    if len(truth) != len(pred) or set(truth.keys()).union(set(pred)) != set(truth.keys()):
+    if len(pred) > len(truth) or set(truth.keys()).union(set(pred)) != set(truth.keys()):
         raise click.UsageError('Truth file does not match answer file.')
 
-    # align the scores
-    scores = [(truth[k], pred[k]) for k in sorted(truth)]
-    truth, pred = zip(*scores)
-    truth = np.array(truth, dtype=np.float64)
-    pred = np.clip(np.array(pred, dtype=np.float64), 0.0, 1.0)
+    # Evaluate all test cases
+    results = vectorize_and_evaluate(truth, pred)
 
-    assert len(truth) == len(pred)
+    # Write Tira Prototext
+    if not skip_prototext:
+        with open(os.path.join(output_dir, os.path.splitext(outfile_name)[0] + '.prototext'), 'w') as f:
+            f.write(to_prototext([results]))
 
-    results = evaluate_all(truth, pred)
+    # Evaluate test cases for individual sources and add to JSON output
+    sources = {v['source_id'].split('/', 1)[0] for v in truth.values() if 'source_id' in v}
+    if sources:
+        results['_sources'] = {}
+        for s in sources:
+            t = {k: v for k, v in truth.items() if v['source_id'].startswith(s + '/')}
+            results['_sources'][s] = vectorize_and_evaluate(t, pred)
+
     jstr = json.dumps(results, indent=4, sort_keys=False)
     click.echo(jstr)
     with open(os.path.join(output_dir, outfile_name), 'w') as f:
         f.write(jstr)
-    if not skip_prototext:
-        with open(os.path.join(output_dir, os.path.splitext(outfile_name)[0] + '.prototext'), 'w') as f:
-            f.write(to_prototext([results]))
 
 
 if __name__ == '__main__':
