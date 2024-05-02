@@ -230,7 +230,7 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext):
             f.write(to_prototext([results]))
 
     # Evaluate test cases for individual sources and add to JSON output
-    sources = {v['source_id'].split('/', 1)[0] for v in truth.values() if 'source_id' in v}
+    sources = sorted({v['source_id'].split('/', 1)[0] for v in truth.values() if 'source_id' in v})
     if sources:
         results['_sources'] = {}
         for s in sources:
