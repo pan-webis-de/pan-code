@@ -1,5 +1,6 @@
 import random
 from typing import List, Tuple, Union
+import warnings
 
 from more_itertools import batched
 from tqdm import tqdm
@@ -45,6 +46,10 @@ class T5MaskPerturbator(PerturbatorBase):
         self.batch_size = batch_size
         self.verbose = verbose
 
+        if use_flash_attn:
+            use_flash_attn = False  # T5 does not support Flash attention yet
+            warnings.warn('Disabling Flash Attention 2.0 for T5.')
+
         self.model = load_model(model_name,
                                 device_map=device,
                                 auto_cls=AutoModelForSeq2SeqLM,
@@ -63,7 +68,7 @@ class T5MaskPerturbator(PerturbatorBase):
         text = text.strip().split(' ')
         text_len = len(text)
         n_spans_target = int(self.mask_pct * text_len / (self.span_length + self.mask_buffer_size * 2) + 1)
-        n_spans_target = min(n_spans_target, 99)    # T5 has a max of 100 sentinel tokens by default
+        n_spans_target = min(n_spans_target, 99)  # T5 has a max of 100 sentinel tokens by default
 
         spans = set()
         del_idx = set()
@@ -90,7 +95,7 @@ class T5MaskPerturbator(PerturbatorBase):
     def _generate_fills(self, masked_texts: List[str], num_masks: Union[List[int], torch.Tensor]) -> List[List[str]]:
         """
         Generate a new texts from batch of masked token sequence.
-        
+
         :param masked_texts: batch of masked texts
         :param num_masks: number of masks for each text
         :return: generated sentinel fills
