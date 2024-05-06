@@ -140,6 +140,8 @@ def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_len
     if perturb_model and scoring_mode == 'npr':
         perturbator = T5MaskPerturbator(
             model_name=perturb_model,
+            quantization_bits=quantize,
+            use_flash_attn=flash_attn,
             device=device2,
             span_length=span_length,
             mask_pct=perturb_pct,
@@ -189,6 +191,8 @@ def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_p
 
     perturbator = T5MaskPerturbator(
         model_name=perturb_model,
+        quantization_bits=quantize,
+        use_flash_attn=flash_attn,
         device=device2,
         span_length=span_length,
         mask_pct=perturb_pct,
