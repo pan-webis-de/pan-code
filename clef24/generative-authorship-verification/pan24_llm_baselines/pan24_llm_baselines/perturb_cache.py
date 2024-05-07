@@ -55,18 +55,18 @@ def t5(input_file, output_dir, perturb_model, device, span_length, perturb_pct,
         mask_pct=perturb_pct,
         batch_size=batch_size)
 
-    t = []
-    for l in tqdm(input_file, desc='Loading input pairs', unit=' pairs'):
+    t = set()
+    for l in tqdm(input_file, desc='Loading inputs', unit=' files'):
         j = json.loads(l)
         if 'text' in j:
-            t.append(j['text'])
+            t.add(j['text'])
         elif 'text1' in j and 'text2' in j:
-            t.append(j['text1'])
-            t.append(j['text2'])
+            t.add(j['text1'])
+            t.add(j['text2'])
         else:
             raise click.UsageError('Invalid input schema. Expected either "text" or "text1" / "text2" keys.')
 
-    pert.perturb(t, n_samples)
+    pert.perturb(list(t), n_samples)
 
 
 if __name__ == '__main__':

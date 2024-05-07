@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import fcntl
 import json
 import hashlib
 import os
@@ -67,8 +68,12 @@ class PerturbatorBase:
             cache_dir = os.path.join(self.cache_dir, h[0])
             os.makedirs(cache_dir, exist_ok=True)
             with open(os.path.join(cache_dir, h), 'a') as f:
-                f.write('\n'.join(json.dumps(ci, ensure_ascii=False) for ci in chunk))
-                f.write('\n')
+                try:
+                    fcntl.flock(f, fcntl.LOCK_EX)
+                    f.write('\n'.join(json.dumps(ci, ensure_ascii=False) for ci in chunk))
+                    f.write('\n')
+                finally:
+                    fcntl.flock(f, fcntl.LOCK_UN)
         return pert
 
     def _get_cached(self, text: List[str], n_variants: int):
@@ -93,7 +98,11 @@ class PerturbatorBase:
 
             # Then read cache file and add to list of variants
             with open(cache_name, 'r') as f_:
-                variants = [json.loads(l) for i, l in enumerate(f_) if i < n_variants]
+                try:
+                    fcntl.flock(f_, fcntl.LOCK_EX)
+                    variants = [json.loads(l) for i, l in enumerate(f_) if i < n_variants]
+                finally:
+                    fcntl.flock(f_, fcntl.LOCK_UN)
 
             # Generate and cache more variants if needed
             if len(variants) < n_variants:
