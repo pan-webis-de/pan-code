@@ -64,7 +64,9 @@ class PerturbatorBase:
         pert = self._perturb_impl(text, n_variants)
         for orig_t, chunk in zip(text, chunked(pert, n_variants)):
             h = hashlib.sha256(orig_t.encode(errors='ignore')).hexdigest()
-            with open(os.path.join(self.cache_dir, h), 'a') as f:
+            cache_dir = os.path.join(self.cache_dir, h[0])
+            os.makedirs(cache_dir, exist_ok=True)
+            with open(os.path.join(cache_dir, h), 'a') as f:
                 f.write('\n'.join(json.dumps(ci, ensure_ascii=False) for ci in chunk))
                 f.write('\n')
         return pert
@@ -74,11 +76,10 @@ class PerturbatorBase:
             yield from self._perturb_impl(text, n_variants)
             return
 
-        os.makedirs(self.cache_dir, exist_ok=True)
         uncached_wait_list = []
         for t in text:
             h = hashlib.sha256(t.encode(errors='ignore')).hexdigest()
-            cache_name = os.path.join(self.cache_dir, h)
+            cache_name = os.path.join(self.cache_dir, h[0], h)
 
             if not os.path.isfile(cache_name):
                 # No cache file found, just add to list of variants to be generated later
