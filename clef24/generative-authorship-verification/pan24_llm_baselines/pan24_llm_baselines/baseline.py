@@ -113,6 +113,7 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
 @click.option('-s', '--span-length', type=int, default=2, show_default=True, help='Size of mask token spans')
 @click.option('-p', '--perturb-pct', type=click.FloatRange(0, 1), default=0.3, show_default=True,
               help='Percentage of tokens to perturb')
+@click.option('-c', '--perturb-cache', type=click.Path(file_okay=False), help='Perturbation cache directory')
 @click.option('-n', '--n-samples', type=int, default=20, show_default=True,
               help='Number of perturbed samples to generate for NPR')
 @click.option('-b', '--batch-size', type=int, default=5, help='GPU task batch size')
@@ -122,8 +123,8 @@ def binoculars(input_file, output_directory, outfile_name, quantize, flash_attn,
 @click.option('--perturb-model', help='Perturbation model for NPR', default='t5-large', show_default=True)
 @click.option('--device1', help='Base model device', default='auto', show_default=True)
 @click.option('--device2', help='Perturbation model device', default='auto', show_default=True)
-def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_length, perturb_pct, n_samples,
-              batch_size, quantize, flash_attn, base_model, perturb_model, device1, device2):
+def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_length, perturb_pct, perturb_cache,
+              n_samples, batch_size, quantize, flash_attn, base_model, perturb_model, device1, device2):
     """
     PAN'24 baseline: DetectLLM.
 
@@ -139,6 +140,7 @@ def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_len
     perturbator = None
     if perturb_model and scoring_mode == 'npr':
         perturbator = T5MaskPerturbator(
+            cache_dir=perturb_cache,
             model_name=perturb_model,
             quantization_bits=quantize,
             use_flash_attn=flash_attn,
@@ -165,6 +167,7 @@ def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_len
 @click.option('-s', '--span-length', type=int, default=2, show_default=True, help='Size of mask token spans')
 @click.option('-p', '--perturb-pct', type=click.FloatRange(0, 1), default=0.3, show_default=True,
               help='Percentage of tokens to perturb')
+@click.option('-c', '--perturb-cache', type=click.Path(file_okay=False), help='Perturbation cache directory')
 @click.option('-n', '--n-samples', type=int, default=20, show_default=True,
               help='Number of perturbed samples to generate')
 @click.option('-b', '--batch-size', type=int, default=5, help='GPU task batch size')
@@ -174,8 +177,8 @@ def detectllm(input_file, output_directory, scoring_mode, outfile_name, span_len
 @click.option('--perturb-model', help='Perturbation model', default='t5-large', show_default=True)
 @click.option('--device1', help='Base model device', default='auto', show_default=True)
 @click.option('--device2', help='Perturbation model device', default='auto', show_default=True)
-def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_pct, n_samples, batch_size,
-              quantize, flash_attn, base_model, perturb_model, device1, device2):
+def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_pct, perturb_cache, n_samples,
+              batch_size, quantize, flash_attn, base_model, perturb_model, device1, device2):
     """
     PAN'24 baseline: DetectGPT.
 
@@ -190,6 +193,7 @@ def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_p
     from pan24_llm_baselines.perturbators import T5MaskPerturbator
 
     perturbator = T5MaskPerturbator(
+        cache_dir=perturb_cache,
         model_name=perturb_model,
         quantization_bits=quantize,
         use_flash_attn=flash_attn,
@@ -220,7 +224,7 @@ def detectgpt(input_file, output_directory, outfile_name, span_length, perturb_p
 @click.option('--base-model', help='Base detection model', default='tiiuae/falcon-7b', show_default=True)
 @click.option('--device', help='Base model device', default='auto', show_default=True)
 def fastdetectgpt(input_file, output_directory, outfile_name, n_samples, batch_size,
-              quantize, flash_attn, base_model, device):
+                  quantize, flash_attn, base_model, device):
     """
     PAN'24 baseline: Fast-DetectGPT.
 

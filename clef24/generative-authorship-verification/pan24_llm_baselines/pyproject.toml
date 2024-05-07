@@ -41,3 +41,4 @@ homepage = "https://pan.webis.de/clef24/pan24-web/generated-content-analysis.htm
 
 [project.scripts]
 baseline = "pan24_llm_baselines.baseline:main"
+perturb-cache = 'pan24_llm_baselines.perturb_cache:main'
