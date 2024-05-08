@@ -62,13 +62,17 @@ class PerturbatorBase:
         """
         raise NotImplementedError
 
-    def _generate_and_cache(self, text: List[str], n_variants: int):
+    def _generate_and_cache(self, text: List[str], n_variants: int, write_cache: bool):
         pert = self._perturb_impl(text, n_variants)
+        if not write_cache:
+            return pert
+
         for orig_t, chunk in zip(text, chunked(pert, n_variants)):
             h = hashlib.sha256(orig_t.encode(errors='ignore')).hexdigest()
             with open(os.path.join(os.path.join(self.cache_dir, h[0]), h), 'a') as f:
                 f.write('\n'.join(json.dumps(ci, ensure_ascii=False) for ci in chunk))
                 f.write('\n')
+
         return pert
 
     def _get_cached(self, text: List[str], n_variants: int):
@@ -76,16 +80,18 @@ class PerturbatorBase:
             yield from self._perturb_impl(text, n_variants)
             return
 
+        cache_writable = os.access(self.cache_dir, os.W_OK)
         uncached_wait_list = []
         for t in text:
             h = hashlib.sha256(t.encode(errors='ignore')).hexdigest()
             cache_dir = os.path.join(self.cache_dir, h[0])
-            os.makedirs(cache_dir, exist_ok=True)
             cache_name = os.path.join(cache_dir, h)
+            if cache_writable:
+                os.makedirs(cache_dir, exist_ok=True)
 
             try:
                 # Try to acquire file lock
-                while True:
+                while cache_writable:
                     lock = open(cache_name + '.lock', 'w')
                     fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
                     if not os.fstat(lock.fileno()).st_nlink:
@@ -102,7 +108,7 @@ class PerturbatorBase:
 
                 # We found a cache file, first execute and clear out wait list of uncached variants
                 if uncached_wait_list:
-                    yield from self._generate_and_cache(uncached_wait_list, n_variants)
+                    yield from self._generate_and_cache(uncached_wait_list, n_variants, cache_writable)
                     uncached_wait_list = []
 
                 # Then read cache file and add to list of variants
@@ -111,19 +117,20 @@ class PerturbatorBase:
 
                 # Generate and cache more variants if needed
                 if len(variants) < n_variants:
-                    variants.extend(self._generate_and_cache([t], n_variants - len(variants)))
+                    variants.extend(self._generate_and_cache([t], n_variants - len(variants), cache_writable))
 
                 yield from variants
 
             finally:
                 # Release lock
-                os.unlink(lock.name)
-                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
-                lock.close()
+                if cache_writable:
+                    os.unlink(lock.name)
+                    fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+                    lock.close()
 
         # Generate and yield any remaining previously uncached variants
         if uncached_wait_list:
-            yield from self._generate_and_cache(uncached_wait_list, n_variants)
+            yield from self._generate_and_cache(uncached_wait_list, n_variants, cache_writable)
 
     def perturb(self, text: Union[str, List[str]], n_variants: int = 1) -> Union[str, List[str]]:
         """
