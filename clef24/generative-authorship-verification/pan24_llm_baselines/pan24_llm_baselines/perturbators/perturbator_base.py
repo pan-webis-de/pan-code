@@ -16,6 +16,7 @@ import fcntl
 import json
 import hashlib
 import os
+import time
 from typing import Iterable, List, Optional, Union
 
 from more_itertools import chunked
@@ -65,15 +66,9 @@ class PerturbatorBase:
         pert = self._perturb_impl(text, n_variants)
         for orig_t, chunk in zip(text, chunked(pert, n_variants)):
             h = hashlib.sha256(orig_t.encode(errors='ignore')).hexdigest()
-            cache_dir = os.path.join(self.cache_dir, h[0])
-            os.makedirs(cache_dir, exist_ok=True)
-            with open(os.path.join(cache_dir, h), 'a') as f:
-                try:
-                    fcntl.flock(f, fcntl.LOCK_EX)
-                    f.write('\n'.join(json.dumps(ci, ensure_ascii=False) for ci in chunk))
-                    f.write('\n')
-                finally:
-                    fcntl.flock(f, fcntl.LOCK_UN)
+            with open(os.path.join(os.path.join(self.cache_dir, h[0]), h), 'a') as f:
+                f.write('\n'.join(json.dumps(ci, ensure_ascii=False) for ci in chunk))
+                f.write('\n')
         return pert
 
     def _get_cached(self, text: List[str], n_variants: int):
@@ -84,31 +79,47 @@ class PerturbatorBase:
         uncached_wait_list = []
         for t in text:
             h = hashlib.sha256(t.encode(errors='ignore')).hexdigest()
-            cache_name = os.path.join(self.cache_dir, h[0], h)
+            cache_dir = os.path.join(self.cache_dir, h[0])
+            os.makedirs(cache_dir, exist_ok=True)
+            cache_name = os.path.join(cache_dir, h)
 
-            if not os.path.isfile(cache_name):
-                # No cache file found, just add to list of variants to be generated later
-                uncached_wait_list.append(t)
-                continue
+            try:
+                # Try to acquire file lock
+                while True:
+                    lock = open(cache_name + '.lock', 'w')
+                    fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+                    if not os.fstat(lock.fileno()).st_nlink:
+                        # Lock file got deleted
+                        lock.close()
+                        time.sleep(0.1)
+                        continue
+                    break
 
-            # We found a cache file, first execute and clear out wait list of uncached variants
-            if uncached_wait_list:
-                yield from self._generate_and_cache(uncached_wait_list, n_variants)
-                uncached_wait_list = []
+                if not os.path.isfile(cache_name):
+                    # No cache file found, just add to list of variants to be generated later
+                    uncached_wait_list.append(t)
+                    continue
 
-            # Then read cache file and add to list of variants
-            with open(cache_name, 'r') as f_:
-                try:
-                    fcntl.flock(f_, fcntl.LOCK_EX)
+                # We found a cache file, first execute and clear out wait list of uncached variants
+                if uncached_wait_list:
+                    yield from self._generate_and_cache(uncached_wait_list, n_variants)
+                    uncached_wait_list = []
+
+                # Then read cache file and add to list of variants
+                with open(cache_name, 'r') as f_:
                     variants = [json.loads(l) for i, l in enumerate(f_) if i < n_variants]
-                finally:
-                    fcntl.flock(f_, fcntl.LOCK_UN)
 
-            # Generate and cache more variants if needed
-            if len(variants) < n_variants:
-                variants.extend(self._generate_and_cache([t], n_variants - len(variants)))
+                # Generate and cache more variants if needed
+                if len(variants) < n_variants:
+                    variants.extend(self._generate_and_cache([t], n_variants - len(variants)))
 
-            yield from variants
+                yield from variants
+
+            finally:
+                # Release lock
+                os.unlink(lock.name)
+                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+                lock.close()
 
         # Generate and yield any remaining previously uncached variants
         if uncached_wait_list:
