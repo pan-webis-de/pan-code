@@ -1,5 +1,7 @@
+import hashlib
 import random
-from typing import List, Tuple, Union
+from typing import Iterable, List, Tuple, Union
+import warnings
 
 from more_itertools import batched
 from tqdm import tqdm
@@ -14,6 +16,7 @@ __all__ = ['T5MaskPerturbator']
 
 class T5MaskPerturbator(PerturbatorBase):
     def __init__(self,
+                 cache_dir=None,
                  span_length=2,
                  mask_pct=0.3,
                  buffer_size=1,
@@ -22,10 +25,11 @@ class T5MaskPerturbator(PerturbatorBase):
                  quantization_bits=None,
                  use_flash_attn=False,
                  max_tokens=512,
-                 batch_size=10,
+                 batch_size=1,
                  verbose=True,
                  **model_args):
         """
+        :param cache_dir: cache directory for storing generated perturbations
         :param span_length: length of token spans to mask out
         :param mask_pct: target percentage of tokens to mask out
         :param buffer_size: minimum buffer around mask tokens
@@ -38,12 +42,19 @@ class T5MaskPerturbator(PerturbatorBase):
         :param verbose: show progress bar
         :param model_args: additional model arguments
         """
+        super().__init__(cache_dir)
+
+        self.model_name = model_name
         self.span_length = span_length
         self.mask_pct = mask_pct
         self.mask_buffer_size = buffer_size
         self.max_tokens = max_tokens
         self.batch_size = batch_size
         self.verbose = verbose
+
+        if use_flash_attn:
+            use_flash_attn = False  # T5 does not support Flash attention yet
+            warnings.warn('Disabling Flash Attention 2.0 for T5.')
 
         self.model = load_model(model_name,
                                 device_map=device,
@@ -52,6 +63,11 @@ class T5MaskPerturbator(PerturbatorBase):
                                 use_flash_attn=use_flash_attn,
                                 **model_args)
         self.tokenizer = load_tokenizer(model_name, model_max_length=max_tokens)
+
+    @property
+    def cache_key(self) -> str:
+        return hashlib.sha256((f'{self.model_name}-pct{self.mask_pct}-span{self.span_length}'
+                               f'-buf{self.mask_buffer_size}-tok{self.max_tokens}').encode()).hexdigest()[:10]
 
     def _mask_tokens(self, text) -> Tuple[str, int]:
         """
@@ -63,7 +79,7 @@ class T5MaskPerturbator(PerturbatorBase):
         text = text.strip().split(' ')
         text_len = len(text)
         n_spans_target = int(self.mask_pct * text_len / (self.span_length + self.mask_buffer_size * 2) + 1)
-        n_spans_target = min(n_spans_target, 99)    # T5 has a max of 100 sentinel tokens by default
+        n_spans_target = min(n_spans_target, 99)  # T5 has a max of 100 sentinel tokens by default
 
         spans = set()
         del_idx = set()
@@ -90,7 +106,7 @@ class T5MaskPerturbator(PerturbatorBase):
     def _generate_fills(self, masked_texts: List[str], num_masks: Union[List[int], torch.Tensor]) -> List[List[str]]:
         """
         Generate a new texts from batch of masked token sequence.
-        
+
         :param masked_texts: batch of masked texts
         :param num_masks: number of masks for each text
         :return: generated sentinel fills
@@ -141,14 +157,13 @@ class T5MaskPerturbator(PerturbatorBase):
             texts.append(' '.join(m).strip())
         return texts
 
-    def _perturb_impl(self, text: List[str], n_variants: int) -> List[str]:
+    def _perturb_impl(self, text: List[str], n_variants: int) -> Iterable[str]:
         batch_size = self.batch_size if self.batch_size else len(text)
         n_iter = (len(text) * n_variants + 1) // batch_size
         batch_it = batched((t for t in text for _ in range(n_variants)), batch_size)
         if self.verbose:
             batch_it = tqdm(batch_it, desc='Generating perturbations', leave=False, unit=' batch', total=n_iter)
 
-        perturbed = []
         for b in batch_it:
             masked = []
             n_masks = []
@@ -157,6 +172,4 @@ class T5MaskPerturbator(PerturbatorBase):
                 masked.append(t)
                 n_masks.append(n)
             fills = self._generate_fills(masked, n_masks)
-            perturbed.extend(self._apply_fills(masked, fills))
-
-        return perturbed
+            yield from self._apply_fills(masked, fills)

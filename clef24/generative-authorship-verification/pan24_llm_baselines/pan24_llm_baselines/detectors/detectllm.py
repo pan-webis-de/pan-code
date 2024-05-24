@@ -90,6 +90,8 @@ class DetectLLM(DetectGPT):
         return torch.cat(ll) / torch.cat(lrr)
 
     def _npr(self, text: List[str]) -> torch.Tensor:
+        if not self.perturbator:
+            raise ValueError('No perturbator given.')
         perturbed = self.perturbator.perturb(text, n_variants=self.n_samples)
 
         verbose_msg = 'Calculating logit distribution' if self.verbose else None
