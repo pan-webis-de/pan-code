@@ -160,7 +160,7 @@ def spans_annots_to_spanF1_format(texts_json: List[Dict]) -> Dict[str, List[List
             span_ranges = sorted([s[1:3] for s in spans if s[0] == l], key=lambda x: x[0])
             # map each char range to a set of character indices
             for start, end in span_ranges:
-                f1spans.append([l, set(range(start, end))])
+                f1spans.append([l, set(range(start, end+1))])
         result[text_id] = f1spans
     return result
 
