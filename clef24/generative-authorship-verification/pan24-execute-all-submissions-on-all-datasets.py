@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+from tira.rest_api_client import Client
+import json
+from tqdm import tqdm
+from glob import glob
+from time import sleep
+
+tira = Client()
+
+task = 'generative-ai-authorship-verification-panclef-2024'
+dataset = 'pan24-generative-authorship-test-20240502-test'
+
+TEAM_TO_SUBMISSIONS = json.load(open('team-to-submissions.json'))
+SUBMISSION_TO_RESOURCES = json.load(open('submission-to-resources.json'))
+
+DATASETS = ['pan24-generative-authorship-news-test-f-20240514-test', 'pan24-generative-authorship-news-test-g-20240516-test', 'pan24-generative-authorship-news-test-h-20240521-test', 'pan24-generative-authorship-eloquent-20240523-test']
+
+def create_submission_to_resources(input_dir, output_file):
+    run_id_to_software = {}
+    ret = {}
+
+    for _, i in tira.submissions(task, dataset).iterrows():
+        if i['is_evaluation']:
+            continue
+        run_id_to_software[i['run_id']] = {'software': i['software'], 'team': i['team']}
+
+    for job in glob(f'{input_dir}/**/**/job-executed-on-*.txt'):
+        run_id = job.split('/')[-2]
+        if run_id not in run_id_to_software:
+            continue
+
+        print(run_id, job)
+        gpu = open(job).read().split('TIRA_GPU=')[1].split('\n')[0]
+        if gpu == '1-nvidia-1080':
+            #xl-resources-gpu
+            ret[run_id_to_software[run_id]['software']] = 'xl-resources-gpu'
+    
+    json.dump(ret, open(output_file, 'w'))
+
+
+def main():
+    for team, softwares in TEAM_TO_SUBMISSIONS.items():
+        for software in softwares:
+            if software not in SUBMISSION_TO_RESOURCES:
+                continue
+            for dataset in DATASETS:
+                try:
+                    print('Start', team, software, dataset)
+                    tira.run_software(f'{task}/{team}/{software}', dataset, resources=SUBMISSION_TO_RESOURCES[software])
+                    print('Done. Started ', team, software, dataset)
+                    sleep(90)
+                except Exception as e:
+                    print(e)
+                    print('Failure, sleep 360 seconds')
+                    sleep(180*2)
+
+
+if __name__ == '__main__':
+    #create_submission_to_resources('../../../generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-test-20240502-test/', 'submission-to-resources.json')
+    main()
+
