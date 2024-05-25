@@ -37,6 +37,16 @@ def create_submission_to_resources(input_dir, output_file):
         if gpu == '1-nvidia-1080':
             #xl-resources-gpu
             ret[run_id_to_software[run_id]['software']] = 'xl-resources-gpu'
+
+    for job in glob(f'{input_dir}/**/**/job-executed-on-*.txt'):
+        run_id = job.split('/')[-2]
+        if run_id not in run_id_to_software or run_id_to_software[run_id]['software'] in ret:
+            continue
+
+        gpu = open(job).read().split('TIRA_GPU=')[1].split('\n')[0]
+
+        if gpu == '1-nvidia-a100':
+            ret[run_id_to_software[run_id]['software']] = 'a100-resources-gpu'
     
     json.dump(ret, open(output_file, 'w'))
 
@@ -83,8 +93,7 @@ def main():
                     print('Failure, sleep 360 seconds')
                     sleep(180*2)
 
-
 if __name__ == '__main__':
-    #create_submission_to_resources('../../../generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-test-20240502-test/', 'submission-to-resources.json')
-    main()
+    create_submission_to_resources('../../../generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-test-20240502-test/', 'submission-to-resources.json')
+    #main()
 
