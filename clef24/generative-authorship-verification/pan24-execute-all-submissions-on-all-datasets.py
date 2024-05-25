@@ -13,7 +13,10 @@ dataset = 'pan24-generative-authorship-test-20240502-test'
 TEAM_TO_SUBMISSIONS = json.load(open('team-to-submissions.json'))
 SUBMISSION_TO_RESOURCES = json.load(open('submission-to-resources.json'))
 
-DATASETS = ['pan24-generative-authorship-news-test-f-20240514-test', 'pan24-generative-authorship-news-test-g-20240516-test', 'pan24-generative-authorship-news-test-h-20240521-test', 'pan24-generative-authorship-eloquent-20240523-test']
+DATASETS = [
+    'pan24-generative-authorship-news-test-c-20240506-test', 'pan24-generative-authorship-news-test-d-20240506-test', 'pan24-generative-authorship-news-test-e-20240506-test',
+    #'pan24-generative-authorship-news-test-f-20240514-test', 'pan24-generative-authorship-news-test-g-20240516-test', 'pan24-generative-authorship-news-test-h-20240521-test', 'pan24-generative-authorship-eloquent-20240523-test'
+]
 
 def create_submission_to_resources(input_dir, output_file):
     run_id_to_software = {}
@@ -49,7 +52,17 @@ def main():
         except:
             pass
 
-    raise ValueError(software_to_docker_id)
+    dataset_to_executed_software = {}
+
+    for d in DATASETS:
+        dataset_to_executed_software[d] = set()
+        
+        for _, i in tira.submissions(task, d).iterrows():
+            if i['is_evaluation']:
+                continue
+            
+            dataset_to_executed_software[d].add(i['software'])
+
     for team, softwares in TEAM_TO_SUBMISSIONS.items():
         for software in softwares:
             if software not in SUBMISSION_TO_RESOURCES:
@@ -57,15 +70,18 @@ def main():
             if software not in software_to_docker_id:
                 continue
             for d in DATASETS:
-#                try:
+                if software in dataset_to_executed_software[d]:
+                    print('Skip already executed software', team, software, d)
+                    continue
+                try:
                     print('Start', team, software, d)
                     tira.run_software(f'{task}/{team}/{software}', d, resources=SUBMISSION_TO_RESOURCES[software], software_id=software_to_docker_id[software])
                     print('Done. Started ', team, software, d)
                     sleep(90)
-#                except Exception as e:
-#                    print(e)
-#                    print('Failure, sleep 360 seconds')
-#                    sleep(180*2)
+                except Exception as e:
+                    print(e)
+                    print('Failure, sleep 360 seconds')
+                    sleep(180*2)
 
 
 if __name__ == '__main__':
