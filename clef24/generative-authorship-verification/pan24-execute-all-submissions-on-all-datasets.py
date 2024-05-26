@@ -72,8 +72,6 @@ def main():
 
     for team, softwares in TEAM_TO_SUBMISSIONS.items():
         for software in softwares:
-            if software not in SUBMISSION_TO_RESOURCES:
-                continue
             if software not in software_to_docker_id:
                 continue
             for d in DATASETS:
@@ -82,7 +80,7 @@ def main():
                     continue
                 try:
                     print('Start', team, software, d)
-                    tira.run_software(f'{task}/{team}/{software}', d, resources=SUBMISSION_TO_RESOURCES[software], software_id=software_to_docker_id[software])
+                    tira.run_software(f'{task}/{team}/{software}', d, resources=SUBMISSION_TO_RESOURCES.get(software, 'medium-resources'), software_id=software_to_docker_id[software])
                     print('Done. Started ', team, software, d)
                     sleep(30)
                 except Exception as e:
