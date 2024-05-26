@@ -13,7 +13,7 @@ dataset = 'pan24-generative-authorship-test-20240502-test'
 TEAM_TO_SUBMISSIONS = json.load(open('team-to-submissions.json'))
 SUBMISSION_TO_RESOURCES = json.load(open('submission-to-resources.json'))
 
-DATASETS = [ 'pan24-generative-authorship-test-b-20240506-test', 'pan24-generative-authorship-news-test-c-20240506-test', 'pan24-generative-authorship-news-test-d-20240506-test', 'pan24-generative-authorship-news-test-e-20240506-test', 'pan24-generative-authorship-news-test-f-20240514-test', 'pan24-generative-authorship-news-test-g-20240516-test', 'pan24-generative-authorship-news-test-h-20240521-test', 'pan24-generative-authorship-eloquent-20240523-test']
+DATASETS = ['pan24-generative-authorship-test-20240502-test', 'pan24-generative-authorship-test-b-20240506-test', 'pan24-generative-authorship-news-check-20240523-test', 'pan24-generative-authorship-news-test-c-20240506-test', 'pan24-generative-authorship-news-test-d-20240506-test', 'pan24-generative-authorship-news-test-e-20240506-test', 'pan24-generative-authorship-news-test-f-20240514-test', 'pan24-generative-authorship-news-test-g-20240516-test', 'pan24-generative-authorship-news-test-h-20240521-test', 'pan24-generative-authorship-eloquent-20240523-test']
 
 def create_submission_to_resources(input_dir, output_file):
     run_id_to_software = {}
