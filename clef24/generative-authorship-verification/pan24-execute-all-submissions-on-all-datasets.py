@@ -72,7 +72,7 @@ def main():
 
     for team, softwares in TEAM_TO_SUBMISSIONS.items():
         for software in softwares:
-            if software not in SUBMISSION_TO_RESOURCES or SUBMISSION_TO_RESOURCES[software] != 'a100-resources-gpu':
+            if software not in SUBMISSION_TO_RESOURCES:
                 continue
             if software not in software_to_docker_id:
                 continue
@@ -84,11 +84,11 @@ def main():
                     print('Start', team, software, d)
                     tira.run_software(f'{task}/{team}/{software}', d, resources=SUBMISSION_TO_RESOURCES[software], software_id=software_to_docker_id[software])
                     print('Done. Started ', team, software, d)
-                    sleep(90)
+                    sleep(30)
                 except Exception as e:
                     print(e)
                     print('Failure, sleep 360 seconds')
-                    sleep(180*2)
+                    sleep(180)
 
 if __name__ == '__main__':
     #create_submission_to_resources('../../../generative-ai-authorship-verification-panclef-2024/pan24-generative-authorship-test-20240502-test/', 'submission-to-resources.json')
