@@ -211,7 +211,8 @@ def vectorize_and_evaluate(truth_dict, pred_dict, missing_default=0.5):
               help='Output JSON filename')
 @click.option('-p', '--skip-prototext', is_flag=True,
               help='Skip Tira Prototext output, only write JSON')
-def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext):
+@click.option('-s', '--skip-source-eval', is_flag=True, help='Skip evaluation of individual sources')
+def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip_source_eval):
     pred = load_problem_file(answer_file)
     truth = load_problem_file(truth_file)
 
@@ -231,7 +232,7 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext):
 
     # Evaluate test cases for individual sources and add to JSON output
     sources = sorted({v['source_id'].split('/', 1)[0] for v in truth.values() if 'source_id' in v})
-    if sources:
+    if sources and not skip_source_eval:
         results['_sources'] = {}
         for s in sources:
             t = {k: v for k, v in truth.items() if v['source_id'].startswith(s + '/')}
