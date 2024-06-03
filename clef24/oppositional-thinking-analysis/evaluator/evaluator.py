@@ -192,7 +192,8 @@ def spans_annots_to_spanF1_format(texts_json: List[Dict], correct_overlaps=False
             span['end_char'] = int(span['end_char'])
             # ensure start_char <= end_char and that both are positive
             if not(span['start_char'] <= span['end_char'] and span['start_char'] >= 0):
-                print(f"WARNING ignoring malformed span in text ID {text_id}: [{span['start_char']}:{span['end_char']}]")
+                #print(f"WARNING ignoring malformed span in text ID {text_id}: [{span['start_char']}:{span['end_char']}]")
+                pass
             else:
                 good_spans.append(span)
         spans = [(s['category'], s['start_char'], s['end_char']) for s in good_spans]
