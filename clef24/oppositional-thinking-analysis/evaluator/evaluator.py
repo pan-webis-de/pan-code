@@ -140,7 +140,41 @@ def evaluate_task1(predictions_path, gold_path, verbose=False):
     # return a map of the evaluation metrics, with key-value pairs
     return {'MCC': mcc, 'F1-macro': f1_macro, 'F1-conspiracy': f1_pos, 'F1-critical': f1_neg}
 
-def spans_annots_to_spanF1_format(texts_json: List[Dict]) -> Dict[str, List[List]]:
+def flatten_overlaps(f1spans, l):
+    '''
+    :param f1spans: list of tuples (label string, list of consecutive character indices of the span)
+    :param l: label string
+    :return: list of tuples in the same format, with all overlapping spans flattened
+    '''
+    if not f1spans: return []
+    min_index = min([min(span[1]) for span in f1spans])
+    max_index = max([max(span[1]) for span in f1spans])
+    # create an array of all character indices in the range [min_index, max_index+1]
+    # check if there exists an indice covered by more than one span
+    cov_cnt = {i: 0 for i in range(min_index, max_index + 1)}
+    for span in f1spans:
+        for i in span[1]:
+            cov_cnt[i] += 1
+    for i, cnt in cov_cnt.items():
+        if cnt > 1:
+            # print(f"WARNING: in text ID {text_id}, label {l}, characted {i} is covered by more than one span")
+            break
+    # calculate all the uninterrupted consecutive ranges of indices within [min_index, max_index]
+    # using the cov_cnt map - get a list of tuples (start, end) for each range, end non-inclusive
+    ranges = []; start = None
+    for i in range(min_index, max_index + 1):
+        if cov_cnt[i] > 0:
+            if start is None: start = i
+        else:
+            if start is not None:
+                ranges.append((start, i))
+                start = None
+    if start is not None:  # if a range stretches to the end
+        ranges.append((start, max_index + 1))
+    # convert the ranges to the span-f1 format
+    return [(l, set(range(start, end))) for start, end in ranges]
+
+def spans_annots_to_spanF1_format(texts_json: List[Dict], correct_overlaps=False) -> Dict[str, List[List]]:
     '''
     Convert span annotations loaded from .json to the format used by the spanF1 scorer:
     a map text_id -> list of spans in span-f1 format,
@@ -166,11 +200,14 @@ def spans_annots_to_spanF1_format(texts_json: List[Dict]) -> Dict[str, List[List
         labels = sorted(list(set([s[0] for s in spans])))
         f1spans = []
         for l in labels:
+            f1spans_label = []
             # take all spans with label l, and sort them by the start index
             span_ranges = sorted([s[1:3] for s in spans if s[0] == l], key=lambda x: x[0])
             # map each char range to a set of character indices
             for start, end in span_ranges:
-                f1spans.append([l, set(range(start, end+1))])
+                f1spans_label.append([l, set(range(start, end+1))])
+            if correct_overlaps: f1spans_label = flatten_overlaps(f1spans_label, l)
+            f1spans.extend(f1spans_label)
         result[text_id] = f1spans
     return result
 
@@ -205,8 +242,8 @@ def evaluate_task2(predictions_path, gold_path, verbose=False):
     ensure_id_consistency(predictions, gold)
     check_sequence_predictions(predictions)
     # calculate and print the evaluation metrics
-    predictions_spanf1 = spans_annots_to_spanF1_format(predictions)
-    gold_spanf1 = spans_annots_to_spanF1_format(gold)
+    predictions_spanf1 = spans_annots_to_spanF1_format(predictions, correct_overlaps=True)
+    gold_spanf1 = spans_annots_to_spanF1_format(gold, correct_overlaps=False)
     result = compute_score_pr(predictions_spanf1, gold_spanf1, SPAN_LABELS, disable_logger=True)
     calc_macro_averages(result, verbose=verbose)
     if verbose:
