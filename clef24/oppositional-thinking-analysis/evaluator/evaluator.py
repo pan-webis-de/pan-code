@@ -151,7 +151,17 @@ def spans_annots_to_spanF1_format(texts_json: List[Dict]) -> Dict[str, List[List
         text_id = annot_text['id']
         # clean empty spans
         spans_json = [span for span in annot_text['annotations'] if span['category'] != SPAN_EMPTY_LABEL]
-        spans = [(s['category'], s['start_char'], s['end_char']) for s in spans_json]
+        # clean malformed integer ranges
+        good_spans = []
+        for span in spans_json:
+            span['start_char'] = int(span['start_char'])
+            span['end_char'] = int(span['end_char'])
+            # ensure start_char <= end_char and that both are positive
+            if not(span['start_char'] <= span['end_char'] and span['start_char'] >= 0):
+                print(f"WARNING ignoring malformed span in text ID {text_id}: [{span['start_char']}:{span['end_char']}]")
+            else:
+                good_spans.append(span)
+        spans = [(s['category'], s['start_char'], s['end_char']) for s in good_spans]
         if text_id not in result: result[text_id] = []
         labels = sorted(list(set([s[0] for s in spans])))
         f1spans = []
