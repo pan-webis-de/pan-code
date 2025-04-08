@@ -1,0 +1,7 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+
+torch==2.2.1+cu121
+transformers==4.38.2
+pandas==2.2.1
+datasets==3.0.1
+tqdm==4.66.5
