@@ -18,6 +18,11 @@ We provide a set of baselines:
 
 ## Evaluation
 
+### Requirements
+Works for:
+- `python 3.11.*`
+- `torch==2.1.1+cu121`
+
 ### Evaluation Criteria
 
 The submissions will be evaluated using different metrics:
