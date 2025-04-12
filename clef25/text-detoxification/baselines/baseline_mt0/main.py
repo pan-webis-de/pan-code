@@ -194,22 +194,22 @@ def main():
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=16,
+        default=32,
         help="Batch size for processing (default: 16)",
     )
 
     args = parser.parse_args()
 
     # Validate paths
-    input_path = Path(args.input)
+    input_path = Path(args.input_path)
     if not input_path.exists():
         raise FileNotFoundError(f"Input file not found: {input_path}")
 
-    output_path = Path(args.output)
+    output_path = Path(args.output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Process the file
-    process_file(args.input, args.output, args.batch_size)
+    process_file(args.input_path, args.output_path, args.batch_size)
     print(f"Processing complete. Results saved to {output_path}")
 
 

@@ -18,6 +18,11 @@ We provide a set of baselines:
 
 ## Evaluation
 
+### Requirements
+Works for:
+- `python 3.11.*`
+- `torch==2.1.1+cu121`
+
 ### Evaluation Criteria
 
 The submissions will be evaluated using different metrics:
@@ -27,7 +32,7 @@ The submissions will be evaluated using different metrics:
 3. **X-comet for Fluency:** Based on our experiments, COMET machine translation models showed perfect correlation with the annotation of fluency in detoxified texts. Especially, we rely on the [myyycroft/XCOMET-lite](https://huggingface.co/myyycroft/XCOMET-lite) model.
 
 
-### How to evaluare your prediction
+### How to evaluate your submission
 ```python
 
 # see arguments with provided texts and parameters

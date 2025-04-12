@@ -110,6 +110,7 @@ class BackTranslationBaseline:
         src_lang: str,
         tgt_lang: str,
         batch_size: int = 32,
+        max_length: int = 128,
         verbose: bool = True,
     ) -> List[str]:
         """
@@ -136,7 +137,11 @@ class BackTranslationBaseline:
         for i in iterator:
             batch = texts[i : i + batch_size]
             tokenized = self.translation_tokenizer(
-                batch, return_tensors="pt", padding=True, truncation=True
+                batch,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+                max_length=max_length,
             ).to(self.device)
 
             outputs = self.translation_model.generate(
@@ -224,7 +229,9 @@ class BackTranslationBaseline:
             for batch in iterator:
                 filled = [template.format(hi_en=b, en="") for b in batch]
                 input_ids = self.hin_tokenizer(
-                    filled, return_tensors="pt", padding=True
+                    filled,
+                    return_tensors="pt",
+                    padding=True,
                 ).input_ids.to(self.device)
 
                 outputs = self.hin_model.generate(
@@ -241,6 +248,7 @@ class BackTranslationBaseline:
         input_path: str,
         output_path: str,
         batch_size: int = 64,
+        max_length: int = 128,
         verbose: bool = True,
     ) -> None:
         """
@@ -250,6 +258,7 @@ class BackTranslationBaseline:
             input_path: Path to input TSV file
             output_path: Path to save output TSV file
             batch_size: Batch size for processing
+            max_length: Max size of processed sequence
             verbose: Whether to show progress bars
         """
         # Load data
@@ -275,6 +284,7 @@ class BackTranslationBaseline:
                     direction="to_english",
                     batch_size=batch_size,
                     verbose=verbose,
+                    max_length=max_length,
                 )
             else:
                 translations[lang] = self.translate_batch(
@@ -311,6 +321,7 @@ class BackTranslationBaseline:
                     direction="to_hinglish",
                     batch_size=batch_size,
                     verbose=verbose,
+                    max_length=128,
                 )
             else:
                 backtranslations[lang] = self.translate_batch(
@@ -324,6 +335,8 @@ class BackTranslationBaseline:
         # Save results
         if verbose:
             print(f"Saving results to {output_path}...")
+        os.makedirs(output_path.parent, exist_ok=True)
+
         data["neutral_sentence"] = data.lang.map(
             lambda x: (
                 backtranslations.get(x, [""] * len(data))[0]
@@ -359,6 +372,12 @@ def parse_args():
         help="Batch size for processing (default: 64)",
     )
     parser.add_argument(
+        "--max_length",
+        type=int,
+        default=128,
+        help="Max size of processed sequences (default: 128)",
+    )
+    parser.add_argument(
         "--device",
         type=str,
         choices=["cuda", "cpu"],
@@ -366,7 +385,7 @@ def parse_args():
         help="Device to run models on (default: cuda)",
     )
     parser.add_argument(
-        "--quiet", action="store_true", help="Disable progress bars and verbose output"
+        "--verbose", type=bool, help="Show progress bars and verbose output"
     )
 
     return parser.parse_args()
@@ -383,5 +402,5 @@ if __name__ == "__main__":
         input_path=args.input_path,
         output_path=args.output_path,
         batch_size=args.batch_size,
-        verbose=not args.quiet,
+        verbose=args.verbose,
     )

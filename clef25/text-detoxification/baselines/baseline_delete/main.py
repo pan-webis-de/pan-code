@@ -154,7 +154,7 @@ def main():
     args = parser.parse_args()
 
     detox = DetoxificationBaseline(args.lexicon)
-    detox.process_dataframe(args.input, args.output)
+    detox.process_dataframe(args.input_path, args.output_path)
 
 
 if __name__ == "__main__":
