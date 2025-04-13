@@ -15,6 +15,7 @@ We provide a set of baselines:
 - [baseline-delete](baselines/baseline_delete/)
 - [baseline-backtranslation](baselines/baseline_backtranslation/)
 - [baseline-mt0](baselines/baseline_mt0/)
+- [openai-baselines](baselines/openai/)
 
 ## Evaluation
 
