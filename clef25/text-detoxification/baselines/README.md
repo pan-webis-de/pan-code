@@ -17,3 +17,8 @@ Works for:
 ## Delete (stop words)
 - `pip install -r baseline_delete/requirements.txt`
 - `python baseline_delete/main.py --input_path data/dev_inputs.tsv --output_path results/output.tsv --lexicon None`
+
+## How to fine-tune your seq2seq model
+
+We also provide a quick starter norebook with the example on how to fine-tune your own text detoxification *seq2seq* generation model!
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Wd_32qGpED5M3cfmDapKqOGplgLQ39xP?usp=sharing)
