@@ -2,7 +2,7 @@
 
 The code in this directory is used to evaluate the predictions of the [text detoxification shared task at CLEF 2025](https://pan.webis.de/clef25/pan25-web/text-detoxification.html).
 
-We provide code for several baselines.
+Here, you can find the code for evaluation and baselines.
 
 # CodaLab baseline submission
 
