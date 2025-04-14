@@ -6,7 +6,7 @@ We provide code for several baselines.
 
 # CodaLab baseline submission
 
-If you are participating through [CodaLab platform](https://codalab.lisn.upsaclay.fr/competitions/22396), please refer to [data](sample_submissions/) folder to find the submission examples of the duplicated baseline.
+For participating through [CodaLab platform](https://codalab.lisn.upsaclay.fr/competitions/22396), please refer to [data](sample_submissions/) folder to find the submission examples of the duplicated baseline.
 
 ## Baselines
 
@@ -15,7 +15,7 @@ We provide a set of baselines:
 - [baseline-delete](baselines/baseline_delete/)
 - [baseline-backtranslation](baselines/baseline_backtranslation/)
 - [baseline-mt0](baselines/baseline_mt0/)
-- [openai-baselines](baselines/openai/)
+- [llm-baselines](baselines/openai/)
 
 ## Evaluation
 
