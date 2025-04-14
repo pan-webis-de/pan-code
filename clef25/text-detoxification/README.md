@@ -6,7 +6,7 @@ We provide code for several baselines.
 
 # CodaLab baseline submission
 
-For participating through [CodaLab platform](https://codalab.lisn.upsaclay.fr/competitions/22396), please refer to [data](sample_submissions/) folder to find the submission examples of the duplicated baseline.
+For participation through [CodaLab platform](https://codalab.lisn.upsaclay.fr/competitions/22396), please refer to [data](sample_submissions/) folder to find the submission examples of the duplicated baseline.
 
 ## Baselines
 
