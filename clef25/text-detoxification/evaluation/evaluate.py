@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -13,7 +14,7 @@ EVALUATION_PATH = Path(__file__).resolve()
 SUBMISSION_FOLDER = Path(EVALUATION_PATH.parent.parent, "sample_submissions/")
 
 
-def main():
+def main() -> dict[Any, Any]:
     parser = argparse.ArgumentParser(
         description="Calculate text similarity between original and rewritten texts."
     )
@@ -135,7 +136,7 @@ def main():
         {"STA": "mean", "SIM": "mean", "XCOMET": "mean", "J": "mean"}
     )
     print(results.reset_index().to_markdown())
-    print(results.reset_index().to_dict(orient="records"))
+    return results.reset_index().to_dict(orient="records")
 
 
 if __name__ == "__main__":
