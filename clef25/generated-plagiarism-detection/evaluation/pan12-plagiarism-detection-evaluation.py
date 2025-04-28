@@ -71,6 +71,7 @@ import os
 import sys
 import unittest
 import xml.dom.minidom
+from tira.io_utils import to_prototext
 
 
 TREF, TOFF, TLEN = 'this_reference', 'this_offset', 'this_length'
@@ -220,7 +221,10 @@ def count_chars2(annotations, xref, xoff, xlen):
     """Returns the number of cvhars covered by the annotations with regard to
        the keys xref, xoff, and xlen."""
     num_chars = 0
-    max_length = max((ann[xoff] + ann[xlen] for ann in annotations))
+    try:
+        max_length = max((ann[xoff] + ann[xlen] for ann in annotations))
+    except:
+        max_length = 0
     char_bits = zeros(max_length, dtype=bool)
     xref_index = index_annotations(annotations, xref)
     for xref in xref_index:
@@ -482,16 +486,23 @@ def main(micro_averaged, plag_path, plag_tag_name, det_path, det_tag_name):
     detections = extract_annotations_from_files(det_path, det_tag_name)
     print('Have', len(detections), 'detections')
     print('Processing... (this may take a while)')
-    rec, prec = 0, 0
-    if micro_averaged:
-        rec, prec = micro_avg_recall_and_precision(cases, detections)
-    else:
-        rec, prec = macro_avg_recall_and_precision(cases, detections)
+
+    micro_rec, micro_prec = micro_avg_recall_and_precision(cases, detections)
+    macro_rec, macro_prec = macro_avg_recall_and_precision(cases, detections)
     gran = granularity(cases, detections)
-    print('Plagdet Score', plagdet_score(rec, prec, gran))
-    print('Recall', rec)
-    print('Precision', prec)
-    print('Granularity', gran)
+    ret = {
+        'micro_plagdet': plagdet_score(micro_rec, micro_prec, gran),
+        'micro_recall': micro_rec,
+        'micro_precision': micro_prec,
+        'macro_plagdet': plagdet_score(macro_rec, macro_prec, gran),
+        'macro_recall': macro_rec,
+        'macro_precision': macro_prec,
+        'granularity': gran,
+    }
+    
+    for k, v in ret.items():
+        print(k, ':', v)
+    print(to_prototext([ret]))
 
 
 if __name__ == '__main__':   

@@ -6,7 +6,7 @@ from tqdm import tqdm
 DIR = '/home/maik/workspace/tira/python-client/tests/3715852/pan12-text-alignment-test-and-training/pan12-text-alignment-test-corpus-2012-08-12/'
 
 if __name__ == '__main__':
-    file = '03_artificial_low'
+    file = '02_no_obfuscation'
     target_dir = Path('..') / file
     (target_dir / 'inputs' / 'src').mkdir(exist_ok=True, parents=True)
     (target_dir / 'truth').mkdir(exist_ok=True, parents=True)
