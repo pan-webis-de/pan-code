@@ -266,7 +266,6 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip
             keys = sorted({v[s] for v in truth.values() if s in v})
             if not keys:
                 continue
-            print(keys)
             results[f'_eval-{s}'] = {k: vectorize_and_evaluate({k_: v_ for k_, v_ in truth.items() if v_[s] == k}, pred)
                                      for k in keys}
 
