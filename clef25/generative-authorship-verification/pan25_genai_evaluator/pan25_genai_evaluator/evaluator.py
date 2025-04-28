@@ -211,7 +211,6 @@ def evaluate_all(true_y, pred_y):
         results[k] = round(v, 3) if v is not None else v
 
     results['confusion'] = confusion(true_y, pred_y)
-    print(results['confusion'])
     return results
 
 
