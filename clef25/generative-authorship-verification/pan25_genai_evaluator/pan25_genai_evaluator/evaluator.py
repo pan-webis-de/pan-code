@@ -3,7 +3,7 @@ import os
 
 import click
 import numpy as np
-from sklearn.metrics import roc_auc_score, f1_score, brier_score_loss
+from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss
 from tira.io_utils import to_prototext
 
 
@@ -25,7 +25,9 @@ def auc(true_y, pred_y):
     ----------
     The Area Under the ROC Curve.
     """
-    return roc_auc_score(true_y, pred_y)
+    if len(np.unique(true_y)) != 2:
+        return None
+    return float(roc_auc_score(true_y, pred_y))
 
 
 def c_at_1(true_y, pred_y):
@@ -54,7 +56,7 @@ def c_at_1(true_y, pred_y):
     nu = pred_y == 0.5
     nc = np.sum((true_y == (pred_y > 0.5))[~nu])
     nu = np.sum(nu)
-    return (1 / len(true_y)) * (nc + (nu * nc / len(true_y)))
+    return float((1 / len(true_y)) * (nc + (nu * nc / len(true_y))))
 
 
 def f1(true_y, pred_y):
@@ -82,7 +84,10 @@ def f1(true_y, pred_y):
         Task at PAN 2014. CLEF (Working Notes) 2014: 877-897.
     """
 
-    return f1_score(true_y, pred_y > 0.5)
+    score = f1_score(true_y, pred_y > 0.5, zero_division=np.nan)
+    if np.isnan(score):
+        return None
+    return float(score)
 
 
 def f05u(true_y, pred_y):
@@ -113,7 +118,10 @@ def f05u(true_y, pred_y):
     n_fp = np.sum((1.0 - true_y) * (pred_y > 0.5))
     n_u = np.sum(pred_y == 0.5)
 
-    return (1.25 * n_tp) / (1.25 * n_tp + 0.25 * (n_fn + n_u) + n_fp)
+    denom = 1.25 * n_tp + 0.25 * (n_fn + n_u) + n_fp
+    if denom == 0.0:
+        return None
+    return float((1.25 * n_tp) / denom)
 
 
 def brier_score(true_y, pred_y):
@@ -135,9 +143,28 @@ def brier_score(true_y, pred_y):
     Complement of the Brier score.
     """
     try:
-        return 1 - brier_score_loss(true_y, pred_y)
+        return float(1 - brier_score_loss(true_y, pred_y))
     except ValueError:
-        return 0.0
+        return None
+
+
+def confusion(true_y, pred_y):
+    """
+    Calculates the classification confusion matrix.
+
+    Parameters
+    ----------
+    true_y : array [n_problems]
+        The predictions of a verification system.
+        Assumes `0 >= prediction <=1`.
+    pred_y : array [n_problems]
+        The gold annotations provided for each problem as binary labels.
+
+    Returns
+    ----------
+    Confusion matrix as array.
+    """
+    return confusion_matrix(true_y, pred_y, labels=[0, 1]).tolist()
 
 
 def load_problem_file(file_obj):
@@ -176,13 +203,15 @@ def evaluate_all(true_y, pred_y):
         'brier': brier_score(true_y, pred_y),
         'c@1': c_at_1(true_y, pred_y),
         'f1': f1(true_y, pred_y),
-        'f05u': f05u(true_y, pred_y)
+        'f05u': f05u(true_y, pred_y),
     }
-    results['mean'] = np.mean(list(results.values()))
+    results['mean'] = np.mean([v or 0.0 for v in results.values()])
 
     for k, v in results.items():
-        results[k] = round(v, 3)
+        results[k] = round(v, 3) if v is not None else v
 
+    results['confusion'] = confusion(true_y, pred_y)
+    print(results['confusion'])
     return results
 
 
@@ -232,12 +261,14 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip
             f.write(to_prototext([results]))
 
     # Evaluate test cases for individual sources and add to JSON output
-    sources = sorted({v['source_id'] for v in truth.values() if 'source_id' in v})
-    if sources and not skip_source_eval:
-        results['_sources'] = {}
-        for s in sources:
-            t = {k: v for k, v in truth.items() if v['source_id'] == s}
-            results['_sources'][s] = vectorize_and_evaluate(t, pred)
+    if not skip_source_eval:
+        for s in ['source', 'model', 'genre']:
+            keys = sorted({v[s] for v in truth.values() if s in v})
+            if not keys:
+                continue
+            print(keys)
+            results[f'_eval-{s}'] = {k: vectorize_and_evaluate({k_: v_ for k_, v_ in truth.items() if v_[s] == k}, pred)
+                                     for k in keys}
 
     jstr = json.dumps(results, indent=4, sort_keys=False)
     click.echo(jstr)
