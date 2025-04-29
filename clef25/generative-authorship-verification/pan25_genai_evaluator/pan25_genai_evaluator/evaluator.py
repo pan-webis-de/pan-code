@@ -1,13 +1,13 @@
 import json
-import os
+from pathlib import Path
 
 import click
 import numpy as np
 from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score, brier_score_loss
-from tira.io_utils import to_prototext
+from tira.evaluators import to_prototext
 
 
-def auc(true_y, pred_y):
+def auc(y_true, y_pred):
     """
     Calculates the ROC-AUC score (Area Under the Curve).
 
@@ -15,22 +15,22 @@ def auc(true_y, pred_y):
 
     Parameters
     ----------
-    true_y : array [n_problems]
+    y_true : array [n_problems]
         The predictions of a verification system.
         Assumes `0 >= prediction <=1`.
-    pred_y : array [n_problems]
+    y_pred : array [n_problems]
         The gold annotations provided for each problem as binary labels.
 
     Returns
     ----------
     The Area Under the ROC Curve.
     """
-    if len(np.unique(true_y)) != 2:
+    if len(np.unique(y_true)) != 2:
         return None
-    return float(roc_auc_score(true_y, pred_y))
+    return float(roc_auc_score(y_true, y_pred))
 
 
-def c_at_1(true_y, pred_y):
+def c_at_1(y_true, y_pred):
     """
     Calculates the c@1 score.
 
@@ -42,10 +42,10 @@ def c_at_1(true_y, pred_y):
 
     Parameters
     ----------
-    true_y : array [n_problems]
+    y_true : array [n_problems]
         The predictions of a verification system.
         Assumes `0 >= prediction <=1`, unanswered problems = 0.5.
-    pred_y : array [n_problems]
+    y_pred : array [n_problems]
         The gold annotations provided for each problem as binary labels.
 
     Returns
@@ -53,13 +53,13 @@ def c_at_1(true_y, pred_y):
     The c@1 measure.
     """
 
-    nu = pred_y == 0.5
-    nc = np.sum((true_y == (pred_y > 0.5))[~nu])
+    nu = y_pred == 0.5
+    nc = np.sum((y_true == (y_pred > 0.5))[~nu])
     nu = np.sum(nu)
-    return float((1 / len(true_y)) * (nc + (nu * nc / len(true_y))))
+    return float((1 / len(y_true)) * (nc + (nu * nc / len(y_true))))
 
 
-def f1(true_y, pred_y):
+def f1(y_true, y_pred):
     """
     Calculates the F1 score.
 
@@ -68,10 +68,10 @@ def f1(true_y, pred_y):
 
     Parameters
     ----------
-    true_y : array [n_problems]
+    y_true : array [n_problems]
         The predictions of a verification system.
         Assumes `0 >= prediction <=1`.
-    pred_y : array [n_problems]
+    y_pred : array [n_problems]
         The gold annotations provided for each problem as binary labels.
 
     Returns
@@ -84,13 +84,13 @@ def f1(true_y, pred_y):
         Task at PAN 2014. CLEF (Working Notes) 2014: 877-897.
     """
 
-    score = f1_score(true_y, pred_y > 0.5, zero_division=np.nan)
+    score = f1_score(y_true, y_pred > 0.5, zero_division=np.nan)
     if np.isnan(score):
         return None
     return float(score)
 
 
-def f05u(true_y, pred_y):
+def f05u(y_true, y_pred):
     """
     Calculates the F0.5u score.
 
@@ -102,10 +102,10 @@ def f05u(true_y, pred_y):
 
     Parameters
     ----------
-    true_y : array [n_problems]
+    y_true : array [n_problems]
         The predictions of a verification system.
         Assumes `0 >= prediction <=1`, unanswered problems = 0.5
-    pred_y : array [n_problems]
+    y_pred : array [n_problems]
         The gold annotations provided for each problem as binary labels.
 
     Returns
@@ -113,10 +113,10 @@ def f05u(true_y, pred_y):
     The F0.5u score.
     """
 
-    n_tp = np.sum(true_y * (pred_y > 0.5))
-    n_fn = np.sum(true_y * (pred_y < 0.5))
-    n_fp = np.sum((1.0 - true_y) * (pred_y > 0.5))
-    n_u = np.sum(pred_y == 0.5)
+    n_tp = np.sum(y_true * (y_pred > 0.5))
+    n_fn = np.sum(y_true * (y_pred < 0.5))
+    n_fp = np.sum((1.0 - y_true) * (y_pred > 0.5))
+    n_u = np.sum(y_pred == 0.5)
 
     denom = 1.25 * n_tp + 0.25 * (n_fn + n_u) + n_fp
     if denom == 0.0:
@@ -124,7 +124,7 @@ def f05u(true_y, pred_y):
     return float((1.25 * n_tp) / denom)
 
 
-def brier_score(true_y, pred_y):
+def brier_score(y_true, y_pred):
     """
     Calculates the complement of the Brier score loss (which is bounded
     to [0-1]), so that higher scores indicate better performance.
@@ -132,39 +132,36 @@ def brier_score(true_y, pred_y):
 
     Parameters
     ----------
-    true_y : array [n_problems]
+    y_true : array [n_problems]
         The predictions of a verification system.
         Assumes `0 >= prediction <=1`.
-    pred_y : array [n_problems]
+    y_pred : array [n_problems]
         The gold annotations provided for each problem as binary labels.
 
     Returns
     ----------
     Complement of the Brier score.
     """
-    try:
-        return float(1 - brier_score_loss(true_y, pred_y))
-    except ValueError:
-        return None
+    return float(1 - brier_score_loss(y_true, np.clip(y_pred, 0.0, 1.0)))
 
 
-def confusion(true_y, pred_y):
+def confusion(y_true, y_pred):
     """
     Calculates the classification confusion matrix.
 
     Parameters
     ----------
-    true_y : array [n_problems]
+    y_true : array [n_problems]
         The predictions of a verification system.
         Assumes `0 >= prediction <=1`.
-    pred_y : array [n_problems]
+    y_pred : array [n_problems]
         The gold annotations provided for each problem as binary labels.
 
     Returns
     ----------
     Confusion matrix as array.
     """
-    return confusion_matrix(true_y, pred_y >= 0.5, labels=[0, 1]).tolist()
+    return confusion_matrix(y_true, y_pred >= 0.5, labels=[0, 1]).tolist()
 
 
 def load_problem_file(file_obj):
@@ -189,47 +186,74 @@ def load_problem_file(file_obj):
     return problems
 
 
-def evaluate_all(true_y, pred_y):
+def evaluate_all(y_true, y_pred):
     """
     Calculate all evaluation scores and return results as a dict.
     All scores are rounded to three digits.
 
-    :param true_y : truth as numpy array [n_problems]
-    :param pred_y : predictions as numpy array [n_problems]
+    :param y_true : truth as numpy array [n_problems]
+    :param y_pred : predictions as numpy array [n_problems]
     """
 
     results = {
-        'roc-auc': auc(true_y, pred_y),
-        'brier': brier_score(true_y, pred_y),
-        'c@1': c_at_1(true_y, pred_y),
-        'f1': f1(true_y, pred_y),
-        'f05u': f05u(true_y, pred_y),
+        'roc-auc': auc(y_true, y_pred),
+        'brier': brier_score(y_true, y_pred),
+        'c@1': c_at_1(y_true, y_pred),
+        'f1': f1(y_true, y_pred),
+        'f05u': f05u(y_true, y_pred),
     }
     results['mean'] = np.mean([v or 0.0 for v in results.values()])
 
     for k, v in results.items():
         results[k] = round(v, 3) if v is not None else v
 
-    results['confusion'] = confusion(true_y, pred_y)
+    results['confusion'] = confusion(y_true, y_pred)
     return results
 
 
-def vectorize_and_evaluate(truth_dict, pred_dict, missing_default=0.5):
+def vectorize(truth_dict, pred_dict, missing_default=0.5):
     """
-    Vectorize input data into numpy arrays and evaluate them.
+    Vectorize input data into numpy arrays.
 
     :param truth_dict: ground truth dict
     :param pred_dict: predictions dict
     :param missing_default: default missing predictions to this value
-    :return: dict with evaluation results
+    :return: truth and predictions numpy arrays
     """
     missing_default = {'label': missing_default}
     scores = [(truth_dict[k]['label'], pred_dict.get(k, missing_default)['label']) for k in sorted(truth_dict)]
     truth, pred = zip(*scores)
     truth = np.array(truth, dtype=np.float64)
-    pred = np.clip(np.array(pred, dtype=np.float64), 0.0, 1.0)
+    pred = np.array(pred, dtype=np.float64)
     assert len(truth) == len(pred)
-    return evaluate_all(truth, pred)
+    return truth, pred
+
+
+def optimize_pred_scores(y_true, y_pred, max_steps=1000) -> float:
+    """
+    Optimize c@1 score by finding optimal operating point.
+
+    :param y_true: ground truth array
+    :param y_pred: predictions array
+    :param max_steps: maximum number of iterations
+    :return: optimal operating point
+    """
+
+    min_offset = -(np.max(y_pred) - .49)
+    max_offset = .51 - np.min(y_pred)
+    best_offset = 0.0
+    best_score = c_at_1(y_true, y_pred)
+
+    score_updated = False
+    for offset in np.linspace(min_offset, max_offset, max_steps):
+        score = c_at_1(y_true, y_pred + offset)
+        if score > best_score:
+            best_score = score
+            best_offset = offset
+            score_updated = True
+        elif score_updated and score < best_score - .01:
+            break
+    return best_offset
 
 
 @click.command(help='Evaluation script for GenAI Authorship Verification @ PAN\'25')
@@ -241,9 +265,12 @@ def vectorize_and_evaluate(truth_dict, pred_dict, missing_default=0.5):
 @click.option('-p', '--skip-prototext', is_flag=True,
               help='Skip Tira Prototext output, only write JSON')
 @click.option('-s', '--skip-source-eval', is_flag=True, help='Skip evaluation of individual sources')
-def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip_source_eval):
+@click.option('--optimize-score', is_flag=True, help='Optimize score by finding optimal operating point')
+def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip_source_eval, optimize_score):
     pred = load_problem_file(answer_file)
     truth = load_problem_file(truth_file)
+    output_dir = Path(output_dir)
+    outfile_name = Path(outfile_name)
 
     click.echo(f'-> {len(truth)} problems in ground truth', err=True)
     click.echo(f'-> {len(pred)} solutions explicitly proposed', err=True)
@@ -251,13 +278,23 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip
     if len(pred) > len(truth) or set(truth.keys()).union(set(pred)) != set(truth.keys()):
         raise click.UsageError('Truth file does not match answer file.')
 
+    y_true, y_pred = vectorize(truth, pred)
+
+    # Find optimal operating point if --optimize-score is set
+    score_offset = 0.0
+    if optimize_score:
+        score_offset = optimize_pred_scores(y_true, y_pred)
+        y_pred += score_offset
+        for k in pred:
+            pred[k] = {k_: v_ + score_offset if k_ == 'label' else v_ for k_, v_ in pred[k].items()}
+
     # Evaluate all test cases
-    results = vectorize_and_evaluate(truth, pred)
+    results = evaluate_all(y_true, y_pred)
 
     # Write Tira Prototext
     if not skip_prototext:
-        with open(os.path.join(output_dir, os.path.splitext(outfile_name)[0] + '.prototext'), 'w') as f:
-            f.write(to_prototext([results]))
+        with (output_dir / (outfile_name.stem + '.prototext')).open('w') as f:
+            f.write(to_prototext([{k: v} for k, v in results.items() if type(v) in [float, int]]))
 
     # Evaluate test cases for individual sources and add to JSON output
     if not skip_source_eval:
@@ -265,13 +302,16 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip
             keys = sorted({v[s] for v in truth.values() if s in v})
             if not keys:
                 continue
-            results[f'_eval-{s}'] = {k: vectorize_and_evaluate({k_: v_ for k_, v_ in truth.items() if v_[s] == k}, pred)
-                                     for k in keys}
+            results[f'_eval-{s}'] = {k: evaluate_all(*vectorize(
+                {k_: v_ for k_, v_ in truth.items() if v_[s] == k}, pred)) for k in keys}
 
     jstr = json.dumps(results, indent=4, sort_keys=False)
     click.echo(jstr)
-    with open(os.path.join(output_dir, outfile_name), 'w') as f:
+    with (output_dir / outfile_name).open('w') as f:
         f.write(jstr)
+
+    if optimize_score:
+        click.echo(f'-> Score offset applied: {score_offset}', err=True)
 
 
 if __name__ == '__main__':
