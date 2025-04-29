@@ -58,4 +58,4 @@ $ docker run --rm --gpus=all -v $(pwd)/val.jsonl:/val.jsonl -v $(pwd):/out \
     tfidf /input.jsonl /out
 ```
 
-The option ``--fpus=all`` is needed only for Binoculars.
+The option ``--gpus=all`` is needed only for Binoculars.
