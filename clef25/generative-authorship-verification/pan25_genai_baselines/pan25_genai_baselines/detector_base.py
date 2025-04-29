@@ -81,7 +81,7 @@ class DetectorBase:
         """
         scores = self._get_score_impl(text)
         if scores is not NotImplemented and (scores := self._normalize_scores(scores)) is not NotImplemented:
-            return _to_numpy(scores) >= 0.5
+            return _to_numpy(scores) > 0.5
         return NotImplemented
 
     def predict(self, text: t.Union[str, t.Iterable[str]]) -> t.Union[np.int32, np.ndarray, np.nan]:
@@ -117,7 +117,7 @@ class DetectorBase:
         if scores_norm is NotImplemented:
             return self._predict_impl(text), scores
 
-        return _to_numpy(scores_norm) >= 0.5, scores
+        return _to_numpy(scores_norm) > 0.5, scores
 
     def predict_with_score(self, text: t.Union[str, t.Iterable[str]], normalize: bool = False) -> t.Tuple[
             t.Union[np.int32, np.ndarray, np.nan],

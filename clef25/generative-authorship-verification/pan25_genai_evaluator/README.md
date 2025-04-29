@@ -28,7 +28,7 @@ Use `--help` on any subcommand for more information:
 $ pan25-evaluator --help                                                                                                                                                          USAGE   master  2✔  2✎  ⎈ webis  ceph 
 Usage: pan25-evaluator [OPTIONS] ANSWER_FILE TRUTH_FILE OUTPUT_DIR
 
-  Evaluation script for GenAI Authorship Verification @ PAN'25
+  PAN'25 Generative AI Authorship Verification evaluator.
 
 Options:
   -o, --outfile-name TEXT  Output JSON filename  [default: evaluation.json]

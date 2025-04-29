@@ -22,7 +22,7 @@ from tqdm import tqdm
 @click.group()
 def main():
     """
-    PAN'25 Generative Authorship Detection baselines.
+    PAN'25 Generative AI Authorship Verification baselines.
     """
     pass
 

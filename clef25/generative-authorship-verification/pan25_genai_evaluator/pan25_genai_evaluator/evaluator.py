@@ -256,7 +256,7 @@ def optimize_pred_scores(y_true, y_pred, max_steps=1000) -> float:
     return best_offset
 
 
-@click.command(help='Evaluation script for GenAI Authorship Verification @ PAN\'25')
+@click.command()
 @click.argument('answer_file', type=click.File('r'))
 @click.argument('truth_file', type=click.File('r'))
 @click.argument('output_dir', type=click.Path(exists=True, file_okay=False))
@@ -267,6 +267,9 @@ def optimize_pred_scores(y_true, y_pred, max_steps=1000) -> float:
 @click.option('-s', '--skip-source-eval', is_flag=True, help='Skip evaluation of individual sources')
 @click.option('--optimize-score', is_flag=True, help='Optimize score by finding optimal operating point')
 def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip_source_eval, optimize_score):
+    """
+    PAN'25 Generative AI Authorship Verification evaluator.
+    """
     pred = load_problem_file(answer_file)
     truth = load_problem_file(truth_file)
     output_dir = Path(output_dir)

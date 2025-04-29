@@ -28,7 +28,7 @@ Use `--help` on any subcommand for more information:
 $ pan25-baseline --help
 Usage: pan25-baseline [OPTIONS] COMMAND [ARGS]...
 
-  PAN'25 Generative Authorship Detection baselines.
+  PAN'25 Generative AI Authorship Verification baselines.
 
 Options:
   --help  Show this message and exit.
