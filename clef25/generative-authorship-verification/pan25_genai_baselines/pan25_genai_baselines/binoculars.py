@@ -44,6 +44,7 @@ class Binoculars(DetectorBase):
 
     PAN25_ACCURACY_OFFSET = 1.4617090528028027           # accuracy optimized on PAN'25 training dataset
 
+    @torch.inference_mode()
     def __init__(self,
                  observer_name_or_path='meta-llama/Llama-3.1-8B',
                  performer_name_or_path='meta-llama/Llama-3.1-8B-Instruct',
