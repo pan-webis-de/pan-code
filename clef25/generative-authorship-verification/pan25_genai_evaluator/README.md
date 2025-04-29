@@ -6,7 +6,7 @@ System evaluator for the "Voight-Kampff" Generative AI Authorship Verification B
 
 The baselines can be installed locally in a venv using `pip`:
 
-```console
+```
 python3 -m venv venv
 source venv/bin/activate
 pip install .
@@ -18,13 +18,13 @@ Alternatively, you can run them in a Docker image (see below).
 
 If installed via ``pip``, you can just run the baselines with
 
-```console
+```
 pan25-evaluator ANSWER_FILE TRUTH_FILE OUTPUT_DIR
 ```
 
 Use `--help` on any subcommand for more information:
 
-```console
+```
 pan25-evaluator --help                                                                                                                                                          USAGE   master  2✔  2✎  ⎈ webis  ceph 
 Usage: pan25-evaluator [OPTIONS] ANSWER_FILE TRUTH_FILE OUTPUT_DIR
 
@@ -41,7 +41,7 @@ Options:
 
 If you want to run the baselines via Docker, use:
 
-```console
+```
 docker run --rm -v RUN_FILE:/run.jsonl -v TRUTH_FILE:/truth.jsonl -v OUTPUT_DIRECTORY:/out \
     ghcr.io/pan-webis-de/pan25-generative-authorship-evaluator \
     /run.jsonl /truth.jsonl /out
@@ -52,7 +52,7 @@ docker run --rm -v RUN_FILE:/run.jsonl -v TRUTH_FILE:/truth.jsonl -v OUTPUT_DIRE
 
 Concrete example:
 
-```console
+```
 docker run --rm -v $(pwd)/run.jsonl:/run.jsonl -v $(pwd)/truth.jsonl:/truth.jsonl -v $(pwd):/out \
     ghcr.io/pan-webis-de/pan25-generative-authorship-evaluator \
     /run.jsonl /truth.jsonl /out
