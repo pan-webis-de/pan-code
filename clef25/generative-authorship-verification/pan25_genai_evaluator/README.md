@@ -24,8 +24,8 @@ pan25-evaluator ANSWER_FILE TRUTH_FILE OUTPUT_DIR
 
 Use `--help` on any subcommand for more information:
 
-```
-pan25-evaluator --help                                                                                                                                                          USAGE   master  2✔  2✎  ⎈ webis  ceph 
+```console
+$ pan25-evaluator --help                                                                                                                                                          USAGE   master  2✔  2✎  ⎈ webis  ceph 
 Usage: pan25-evaluator [OPTIONS] ANSWER_FILE TRUTH_FILE OUTPUT_DIR
 
   Evaluation script for GenAI Authorship Verification @ PAN'25

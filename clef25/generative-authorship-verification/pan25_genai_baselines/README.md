@@ -24,8 +24,8 @@ pan25-baseline BASELINENAME INPUT_FILE OUTPUT_DIRECTORY
 
 Use `--help` on any subcommand for more information:
 
-```
-pan25-baseline --help
+```console
+$ pan25-baseline --help
 Usage: pan25-baseline [OPTIONS] COMMAND [ARGS]...
 
   PAN'25 Generative Authorship Detection baselines.
