@@ -13,4 +13,4 @@ RUN set -x \
     && python3 -m pip install --no-cache --no-build-isolation flash-attn \
     && rm -rf ./build ./*.egg-info
 
-ENTRYPOINT pan25-baseline
+ENTRYPOINT ["/usr/local/bin/pan25-baseline"]

@@ -7,4 +7,4 @@ RUN set -x \
     && python3 -m pip install --no-cache . \
     && rm -rf ./build ./*.egg-info
 
-ENTRYPOINT pan25-evaluator
+ENTRYPOINT ["/usr/local/bin/pan25-evaluator"]
