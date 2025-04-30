@@ -42,9 +42,9 @@ Commands:
 If you want to run the baselines via Docker, use:
 
 ```
-docker run --rm --gpus=all -v INPUT_FILE:/input.jsonl -v OUTPUT_DIRECTORY:/out \
+docker run --rm --gpus=all -v INPUT_FILE:/val.jsonl -v OUTPUT_DIRECTORY:/out \
     ghcr.io/pan-webis-de/pan25-generative-authorship-baselines \
-    BASELINENAME /input.jsonl /out
+    BASELINENAME /val.jsonl /out
 ```
 
 `INPUT_FILE` is the test / validation input data (JSONL format). `OUTPUT_DIRECTORY` is the output
@@ -55,7 +55,7 @@ Concrete example:
 ```
 docker run --rm --gpus=all -v $(pwd)/val.jsonl:/val.jsonl -v $(pwd):/out \
     ghcr.io/pan-webis-de/pan25-generative-authorship-baselines \
-    tfidf /input.jsonl /out
+    tfidf /val.jsonl /out
 ```
 
 The option ``--gpus=all`` is needed only for Binoculars.
