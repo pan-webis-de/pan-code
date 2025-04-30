@@ -202,7 +202,7 @@ def evaluate_all(y_true, y_pred):
         'f1': f1(y_true, y_pred),
         'f05u': f05u(y_true, y_pred),
     }
-    results['mean'] = np.mean([v or 0.0 for v in results.values()])
+    results['mean'] = float(np.mean([v or 0.0 for v in results.values()]))
 
     for k, v in results.items():
         results[k] = round(v, 3) if v is not None else v
@@ -297,7 +297,7 @@ def main(answer_file, truth_file, output_dir, outfile_name, skip_prototext, skip
     # Write Tira Prototext
     if not skip_prototext:
         with (output_dir / (outfile_name.stem + '.prototext')).open('w') as f:
-            f.write(to_prototext([{k: v} for k, v in results.items() if type(v) in [float, int]]))
+            f.write(to_prototext([{k: v} for k, v in results.items() if type(v) is float]))
 
     # Evaluate test cases for individual sources and add to JSON output
     if not skip_source_eval:
