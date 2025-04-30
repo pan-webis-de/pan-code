@@ -16,7 +16,10 @@ dependencies = [
     "click>=8.1.7",
     "numpy>=2.2.5",
     "transformers>=4.49.0",
-    "torch<2.7.0",      # 2.7.0 incompatible with flash-attn https://github.com/Dao-AILab/flash-attention/issues/1622
+    "accelerate>=1.4.0",
+    "optimum>=1.24.0",
+    "bitsandbytes>=0.45.2",
+    "torch>2.4.0,<2.7.0",  # 2.7.0 incompatible with flash-attn https://github.com/Dao-AILab/flash-attention/issues/1622
     "tqdm>=4.67.1",
     "pyppmd>=1.1.1",
 ]
