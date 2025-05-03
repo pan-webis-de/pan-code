@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import json
 from pathlib import Path
 from tira.rest_api_client import Client
@@ -18,7 +18,7 @@ def run_baseline(problems: "pd.DataFrame", output_path: Path, pred: int):
     """
     print(f'Write outputs {len(problems)} problems to to {output_path}.')
     for _, i in problems.iterrows():
-        output_file = output_path / i["file"].replace("/problem-", "/solution-problem-").replace(".txt", ".json")
+        output_file = output_path / i["file"].replace("/problem-", "/solution-problem-").replace(".txt", ".json").replace("/train/", "/").replace("/test/", "/").replace("/validation/", "/")
         output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, 'w') as out:
             paragraphs = i["paragraphs"]
@@ -26,7 +26,7 @@ def run_baseline(problems: "pd.DataFrame", output_path: Path, pred: int):
             out.write(json.dumps(prediction))
 
 @click.command()
-@click.option('--dataset', default='generative-ai-authorship-verification-panclef-2025/pan25-generative-ai-detection-smoke-test-20250428-training', help='The dataset to run predictions on (can point to a local directory).')
+@click.option('--dataset', default='multi-author-writing-style-analysis-2025/multi-author-writing-spot-check-20250503-training', help='The dataset to run predictions on (can point to a local directory).')
 @click.option('--output', default=Path(get_output_directory(str(Path(__file__).parent))), help='The file where predictions should be written to.')
 @click.option('--predict', default=0,  help='The prediction to make.')
 def main(dataset, output, predict):

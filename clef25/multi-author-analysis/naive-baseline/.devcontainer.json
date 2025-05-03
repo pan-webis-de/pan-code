@@ -1,0 +1,14 @@
+{
+  "build": {"dockerfile": "Dockerfile"},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.datawrangler",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}
