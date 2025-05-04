@@ -59,3 +59,23 @@ docker run --rm --gpus=all -v $(pwd)/val.jsonl:/val.jsonl -v $(pwd):/out \
 ```
 
 The option ``--gpus=all`` is needed only for Binoculars.
+
+## Submit to TIRA
+
+First, please ensure that your have a valid tira client installed via:
+
+```
+tira-cli verify-installation
+```
+
+First, please test that your approach works on the smoke-test dataset as expected (more details are available in the [documentation](https://docs.tira.io/participants/participate.html#submitting-your-submission)):
+
+```
+tira-cli code-submission --dry-run --path . --task generative-ai-authorship-verification-panclef-2025 --dataset pan25-generative-ai-detection-smoke-test-20250428-training --command '/predict.py'
+```
+
+If this works as expected, you can omit the `--dry-run` argument to submit this baseline to TIRA, please run:
+
+```
+tira-cli code-submission --path . --task generative-ai-authorship-verification-panclef-2025 --dataset pan25-generative-ai-detection-smoke-test-20250428-training --command '/usr/local/bin/pan25-baseline tfidf $inputDataset/dataset.jsonl $outputDir'
+```
