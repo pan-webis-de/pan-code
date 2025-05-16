@@ -195,7 +195,7 @@ if __name__ == "__main__":
         Path(outdir).mkdir(exist_ok=True, parents=True)
         from tira.io_utils import dataset_as_iterator
 
-        for i in dataset_as_iterator('../03_artificial_low/inputs', 'text-alignment-corpus'):
+        for i in dataset_as_iterator(corpus_dir, 'text-alignment-corpus'):
             baseline = Baseline(
                 susp_id=i['suspicious_document_id'],
                 susp_text=i['suspicious_document_text'],
