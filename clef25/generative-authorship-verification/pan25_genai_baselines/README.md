@@ -71,7 +71,7 @@ tira-cli verify-installation
 First, please test that your approach works on the smoke-test dataset as expected (more details are available in the [documentation](https://docs.tira.io/participants/participate.html#submitting-your-submission)):
 
 ```
-tira-cli code-submission --dry-run --path . --task generative-ai-authorship-verification-panclef-2025 --dataset pan25-generative-ai-detection-smoke-test-20250428-training --command '/predict.py'
+tira-cli code-submission --dry-run --path . --task generative-ai-authorship-verification-panclef-2025 --dataset pan25-generative-ai-detection-smoke-test-20250428-training --command '/usr/local/bin/pan25-baseline tfidf $inputDataset/dataset.jsonl $outputDir'
 ```
 
 If this works as expected, you can omit the `--dry-run` argument to submit this baseline to TIRA, please run:
@@ -79,3 +79,13 @@ If this works as expected, you can omit the `--dry-run` argument to submit this 
 ```
 tira-cli code-submission --path . --task generative-ai-authorship-verification-panclef-2025 --dataset pan25-generative-ai-detection-smoke-test-20250428-training --command '/usr/local/bin/pan25-baseline tfidf $inputDataset/dataset.jsonl $outputDir'
 ```
+
+
+## Submit LLM Approaches to TIRA
+
+As soon as it is verified that a software works (you can use tiny-llama to do that), you can submit an submission (here an example for Llama-3.1-8B and Llama-3.1-8B-Instruct via:
+
+```
+tira-cli code-submission --mount-hf-model meta-llama/Llama-3.1-8B-Instruct meta-llama/Llama-3.1-8B --path . --task generative-ai-authorship-verification-panclef-2025 --dataset pan25-generative-ai-detection-smoke-test-20250428-training --command '/usr/local/bin/pan25-baseline binoculars --observer meta-llama/Llama-3.1-8B --performer meta-llama/Llama-3.1-8B-Instruct $inputDataset/dataset.jsonl $outputDir'
+```
+
