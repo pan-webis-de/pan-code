@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python3
 # Copyright (C) 2009 webis.de. All rights reserved.
 """Plagiarism detection performance measures.
 Re-used from: https://github.com/pan-webis-de/pan-code/blob/master/sepln09/pan09-plagiarism-detection-performance-measures.py
@@ -444,7 +444,7 @@ def parse_options():
     """Parses the command line options."""
     try:
         long_options = ["micro", "plag-path=", "plag-tag=", "det-path=",
-                        "det-tag=", "help"]
+                        "det-tag=", "help", "output="]
         opts, _ = getopt.getopt(sys.argv[1:], "p:d:h", long_options)
     except:
         usage()
@@ -452,6 +452,7 @@ def parse_options():
     micro_averaged = False
     plag_path, det_path = "undefined", "undefined"
     plag_tag_name, det_tag_name = "plagiarism", "detected-plagiarism"
+    output_dir = "evaluation.prototext"
     for opt, arg in opts:
         if opt in ("--micro"):
             micro_averaged = True
@@ -463,6 +464,8 @@ def parse_options():
             det_path = arg
         elif opt == "--det-tag":
             det_tag_name = arg
+        elif opt == "--output":
+            output_dir = arg
         elif opt in ("-h", "--help"):
             usage()
             sys.exit()
@@ -474,10 +477,10 @@ def parse_options():
     if det_path == "undefined":
         print("Detections path undefined. Use option -d or --det-path.")
         sys.exit()
-    return (micro_averaged, plag_path, plag_tag_name, det_path, det_tag_name)
+    return (micro_averaged, plag_path, plag_tag_name, det_path, det_tag_name, output_dir)
 
 
-def main(micro_averaged, plag_path, plag_tag_name, det_path, det_tag_name):
+def main(micro_averaged, plag_path, plag_tag_name, det_path, det_tag_name, output_dir):
     """Main method of this module."""        
     print('Reading', plag_path)
     cases = extract_annotations_from_files(plag_path, plag_tag_name)
@@ -502,7 +505,9 @@ def main(micro_averaged, plag_path, plag_tag_name, det_path, det_tag_name):
     
     for k, v in ret.items():
         print(k, ':', v)
-    print(to_prototext([ret]))
+
+    with open(output_dir, 'w') as f:
+        f.write(to_prototext([ret]))
 
 
 if __name__ == '__main__':   
