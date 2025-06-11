@@ -28,7 +28,7 @@ def load_ir_metadata(directory):
 
 @click.command()
 @click.option("--task", type=click.Choice(["generative-ai-authorship-verification-panclef-2025"]), required=True, help="The task id in tira. See https://archive.tira.io/datasets?query=ai-authorship-verification")
-@click.option("--datasets", type=click.Choice(["pan25-generative-ai-detection-eloquent-20250605-test", "pan25-generative-ai-detection-20250604-test"]), multiple=True, help="The dataset id in tira. See https://archive.tira.io/datasets?query=ai-authorship-verification")
+@click.option("--datasets", type=click.Choice(["pan25-generative-ai-detection-eloquent-20250605-test", "pan25-generative-ai-detection-eloquent-20250610-test", "pan25-generative-ai-detection-20250604-test"]), multiple=True, help="The dataset id in tira. See https://archive.tira.io/datasets?query=ai-authorship-verification")
 @click.option("--output", default="runs.jsonl")
 def main(task, datasets, output):
     tira = Client()
@@ -52,6 +52,7 @@ def main(task, datasets, output):
                      i["evaluation"] = evaluation_results[i["run_id"]]
                      i["used_resources"] = load_ir_metadata(run_directory)
                      f.write(json.dumps(i) + "\n")
+                     shutil.copytree(Path(run_directory).parent, Path(output).parent / Path(run_directory).parent.name)
 
 if __name__ == '__main__':
     main()
