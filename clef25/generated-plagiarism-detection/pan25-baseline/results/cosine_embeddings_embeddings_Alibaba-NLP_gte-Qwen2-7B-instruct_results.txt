@@ -1,0 +1,9 @@
+Reading pan25-plag_detect_test/03_test_truth
+Have 238783 cases
+Reading pan25-plag_detect_test/detections_cosine_embeddings_Alibaba-NLP_gte-Qwen2-7B-instruct
+Have 792730 detections
+Processing... (this may take a while)
+Plagdet Score 0.25765320960250215
+Recall 0.5415365128955872
+Precision 0.17899269055480946
+Granularity 1.0622988127142878

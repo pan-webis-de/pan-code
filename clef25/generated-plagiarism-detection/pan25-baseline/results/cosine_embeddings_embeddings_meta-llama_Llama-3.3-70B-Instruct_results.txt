@@ -1,0 +1,9 @@
+Reading pan25-plag_detect_test/03_test_truth
+Have 238783 cases
+Reading pan25-plag_detect_test/detections_cosine_embeddings_meta-llama_Llama-3.3-70B-Instruct
+Have 676874 detections
+Processing... (this may take a while)
+Plagdet Score 0.21227275003425117
+Recall 0.40285697386707053
+Precision 0.1454832134000998
+Granularity 1.0097921601197617

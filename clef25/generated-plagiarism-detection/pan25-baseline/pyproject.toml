@@ -1,0 +1,21 @@
+[project]
+name = "2025-pan-plag-detect"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "flashinfer-python==0.2.2",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.10.1",
+    "scikit-learn>=1.6.1",
+    "seaborn>=0.13.2",
+    "sentence-transformers>=4.0.2",
+    "setuptools>=78.1.0",
+    "tqdm>=4.67.1",
+    "transformers>=4.51.3",
+    "vllm==0.8.3",
+]
+
+[tool.uv.workspace]
+members = ["visualizer"]
