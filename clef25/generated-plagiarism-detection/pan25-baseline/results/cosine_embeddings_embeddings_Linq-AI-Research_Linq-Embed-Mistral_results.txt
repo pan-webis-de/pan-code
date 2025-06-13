@@ -1,0 +1,9 @@
+Reading pan25-plag_detect_test/03_test_truth
+Have 238783 cases
+Reading pan25-plag_detect_test/detections_cosine_embeddings_Linq-AI-Research_Linq-Embed-Mistral
+Have 503732 detections
+Processing... (this may take a while)
+Plagdet Score 0.5360132230591531
+Recall 0.8251212258189471
+Precision 0.4604540926301973
+Granularity 1.1475762643103806

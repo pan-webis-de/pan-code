@@ -1,0 +1,9 @@
+Reading pan25-plag_detect_test/03_test_truth
+Have 238783 cases
+Reading pan25-plag_detect_test/detections_random
+Have 190012 detections
+Processing... (this may take a while)
+Plagdet Score 0.0036685801379029623
+Recall 0.0030659484618640064
+Precision 0.004566070306406488
+Granularity 1.0
