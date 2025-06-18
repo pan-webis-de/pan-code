@@ -21,7 +21,7 @@ uv sync
 
 ### 1. Generating Embeddings
 
-> If you want to skip this step, you can download the precomputed embeddings from AWS S3 for [Llama](https://aws-static-webhost-9.s3.us-east-2.amazonaws.com/test_embeddings_meta-llama_Llama-3.3-70B-Instruct.tar.gz), [Mistral](https://aws-static-webhost-9.s3.us-east-2.amazonaws.com/test_embeddings_Linq-AI-Research_Linq-Embed-Mistral.tar.gz), and [Qwen](https://aws-static-webhost-9.s3.us-east-2.amazonaws.com/test_embeddings_Alibaba-NLP_gte-Qwen2-7B-instruct.tar.gz).
+> If you want to skip this step, you can download the precomputed embeddings from AWS S3 for [Llama](https://aws-static-webhost-9.s3.us-east-2.amazonaws.com/pan25/test_embeddings_meta-llama_Llama-3.3-70B-Instruct.tar.gz), [Mistral](https://aws-static-webhost-9.s3.us-east-2.amazonaws.com/pan25/test_embeddings_Linq-AI-Research_Linq-Embed-Mistral.tar.gz), and [Qwen](https://aws-static-webhost-9.s3.us-east-2.amazonaws.com/pan25/test_embeddings_Alibaba-NLP_gte-Qwen2-7B-instruct.tar.gz).
 
 The first step is to generate embeddings for all documents using a large language model. You can use the `embeddings.py` script for example for the train directory `train_data`:
 
