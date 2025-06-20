@@ -7,22 +7,17 @@ from tira.io_utils import parse_prototext_key_values
 import shutil
 import json
 import yaml
+import os
+import zipfile
 
 def zip_directory_contents(dir_path, zip_name):
-    dir_path = os.path.abspath(dir_path)
-    parent_dir = os.path.dirname(dir_path)
-    dir_name = os.path.basename(dir_path)
-    zip_path = os.path.join(parent_dir, zip_name)
-
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    with zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(dir_path):
             for file in files:
                 abs_file_path = os.path.join(root, file)
                 # Relative to the parent of dir_path
-                arcname = os.path.relpath(abs_file_path, start=parent_dir)
+                arcname = os.path.relpath(abs_file_path, start=dir_path.parent)
                 zipf.write(abs_file_path, arcname)
-
-    return zip_path
 
 def load_ir_metadata(directory):
     try:
@@ -71,9 +66,9 @@ def main(task, datasets, output):
                 shutil.copytree(Path(run_directory).parent, Path(Path(output).parent) / "runs" / dataset / Path(run_directory).parent.name)
             
             dataset_inputs = tira.download_dataset(task, dataset, False)
-            zip_directory_contents(dataset_inputs, Path(Path(output).parent) / f"{dataset}-inputs.zip")
+            zip_directory_contents(Path(dataset_inputs), Path(Path(output).parent) / f"{dataset}-inputs.zip")
             dataset_truths = tira.download_dataset(task, dataset, True)
-            zip_directory_contents(dataset_truths, Path(Path(output).parent) / f"{dataset}-truths.zip")
+            zip_directory_contents(Path(dataset_truths), Path(Path(output).parent) / f"{dataset}-truths.zip")
 
 if __name__ == '__main__':
     main()
