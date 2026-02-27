@@ -36,3 +36,8 @@ Upload this to TIRA via (remove the `--dry-run` argument after a first test):
 ```
 tira-cli dataset-submission --path spot-check-dataset --task pan26-generated-plagiarism-detection --split train --dry-run
 ```
+
+If everything works, the result should look like:
+
+<img width="1341" height="205" alt="Screenshot_20260227_145626" src="https://github.com/user-attachments/assets/65b8cbb6-6977-4ae8-82f0-331ceccd57dc" />
+
