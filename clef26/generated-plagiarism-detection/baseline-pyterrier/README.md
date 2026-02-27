@@ -8,10 +8,10 @@ This directory is [configured as DevContainer](https://code.visualstudio.com/doc
 
 If you want to run it locally, please install the dependencies via `pip3 install -r requirements.txt`.
 
-To create a run, please run (the final dataset is not yet ready, you can use any other dataset for the moment, e.g., cranfield):
+To create a run, please run (the final dataset is not yet ready, you can use any other dataset for the moment, e.g., `pan26-generated-plagiarism-detection/spot-check-dataset-20260227-training` is the spot-check dataset):
 
 ```
-./baseline.py --dataset cranfield --output output --index /tmp/indexes
+./baseline.py --dataset pan26-generated-plagiarism-detection/spot-check-dataset-20260227-training --output output --index /tmp/indexes
 ```
 
 ## Code Submission to TIRA
