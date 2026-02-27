@@ -24,7 +24,7 @@ tira_configs:
   truth_format:
     name: "qrels.txt"
   evaluator:
-    measures: ["nDCG@10", "nDCG@20", "RR"]
+    measures: ["nDCG@10", "RR"]
 ---
 
 # Generative Plagiarism Detection 2026: Spot Check Dataset
