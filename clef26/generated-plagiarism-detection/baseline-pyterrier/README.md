@@ -21,8 +21,8 @@ You can make code submissions where the tira client will build a docker image of
 ```
 tira-cli code-submission \
     --path . \
-    --task longeval-2026 \
-    --dataset task-1-spot-check-20260225-training \
+    --task pan26-generated-plagiarism-detection \
+    --dataset spot-check-dataset-20260227-training \
     --command '/baseline.py --dataset $inputDataset --index /tmp/indexes --output $outputDir' \
     --dry-run
 ```
