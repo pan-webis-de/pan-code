@@ -13,8 +13,8 @@ tira_configs:
   resolve_inputs_to: "."
   resolve_truths_to: "."
   baseline:
-    link: https://github.com/reneuir/lsr-benchmark/tree/main/step-03-retrieval-approaches/pyterrier-naive
-    command: /run-pyterrier.py --dataset $inputDataset --retrieval BM25 --output $outputDir
+    link: https://github.com/pan-webis-de/pan-code/tree/master/clef26/generated-plagiarism-detection/baseline-pyterrier
+    command: /baseline.py --dataset $inputDataset --output $outputDir --index /tmp/my-index/
     format:
       name: ["run.txt", "lightning-ir-document-embeddings", "lightning-ir-query-embeddings"]
   input_format:
@@ -24,7 +24,7 @@ tira_configs:
   truth_format:
     name: "qrels.txt"
   evaluator:
-    measures: ["nDCG@10", "nDCG@20"]
+    measures: ["nDCG@10", "nDCG@20", "RR"]
 ---
 
 # Generative Plagiarism Detection 2026: Spot Check Dataset
