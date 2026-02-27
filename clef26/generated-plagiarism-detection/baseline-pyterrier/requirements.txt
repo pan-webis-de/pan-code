@@ -1,0 +1,4 @@
+click
+tira>=0.0.160
+python-terrier==0.13.0
+ir-datasets
