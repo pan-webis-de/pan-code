@@ -24,10 +24,12 @@ def calculate_bert_score(orig, water):
 @click.command()
 @click.argument("watermarked_texts", type=Path)
 @click.argument("original_texts", type=Path)
+@click.argument("truth_labels", type=Path)
 @click.argument("predictions", type=Path)
 @click.option("--output-directory", type=Path, required=False, help="The output directory.")
-def main(original_texts, watermarked_texts, predictions, output_directory):
+def main(original_texts, watermarked_texts, truth_labels, predictions, output_directory):
     orig = load_data(original_texts)
+    truths = load_data(truth_labels)
     water = load_data(watermarked_texts)
     predictions = load_data(predictions)
 
@@ -36,7 +38,7 @@ def main(original_texts, watermarked_texts, predictions, output_directory):
     false_positives = 0
     false_negatives = 0
 
-    for text_id, truth in orig.items():
+    for text_id, truth in truths.items():
         pred = predictions[text_id]
         if truth["truth_label"] == "watermarked" and pred["label"] == 1.0:
             true_positives += 1
@@ -52,10 +54,10 @@ def main(original_texts, watermarked_texts, predictions, output_directory):
     evaluation = {
         "BLEU": calculate_bleu(orig, water),
         "BertScore": calculate_bert_score(orig, water),
-        "true_positives": true_positives/len(orig),
-        "true_negatives": true_negatives/len(orig),
-        "false_positives": false_positives/len(orig),
-        "false_negatives": false_negatives/len(orig),
+        "true_positives": true_positives/len(truths),
+        "true_negatives": true_negatives/len(truths),
+        "false_positives": false_positives/len(truths),
+        "false_negatives": false_negatives/len(truths),
     }
     print(evaluation)
     if output_directory:

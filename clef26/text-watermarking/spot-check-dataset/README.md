@@ -10,22 +10,26 @@ configs:
     path: ["train.jsonl"]
 
 tira_configs:
-  resolve_inputs_to: "."
-  resolve_truths_to: "."
   baseline:
-    link: tbd
-    command: tbd
+    link: https://github.com/pan-webis-de/pan-code/tree/master/clef26/text-watermarking/watermarking-baseline
+    workflow_configuration:
+      watermark_command: '/baseline.py watermark $inputDataset $outputDir'
+      detect_command: '/baseline.py detect $inputDataset $outputDir'
     format:
       name: ["*.jsonl"]
+  workflow:
+    name: pan26-text-watermarking
+    obfuscation_image: mam10eks/pan-watermarking-prototype:obfuscator-0.0.1
+    obfuscation_command: '/obfuscate.py $inputDataset/01-watermarking/*.jsonl $inputDataset/original/*.jsonl'
   input_format:
     name: "*.jsonl"
-    config:
-      max_size_mb: 150
   truth_format:
     name: "*.jsonl"
   evaluator:
-    image: tbd
-    command: tbd
+    image: mam10eks/pan-watermarking-prototype:eval-0.0.1
+    command: '/evaluator.py $inputRun/01-watermarking/*.jsonl $inputRun/02-obfuscation/*.jsonl $inputDataset/*.jsonl $inputRun/03-detection/*.jsonl'
+  resolve_inputs_to: "."
+  resolve_truths_to: "."
 ---
 
 # Text Watermarking 2026: Spot Check Dataset
