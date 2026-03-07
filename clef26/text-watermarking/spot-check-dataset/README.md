@@ -46,5 +46,4 @@ tira-cli dataset-submission --path spot-check-dataset --task pan26-text-watermar
 
 If everything works, the result should look like:
 
-<img width="1341" height="205" alt="Screenshot_20260227_145626" src="https://github.com/user-attachments/assets/65b8cbb6-6977-4ae8-82f0-331ceccd57dc" />
-
+<img width="1898" height="260" alt="Screenshot_20260307_220335" src="https://github.com/user-attachments/assets/afd75626-0286-414c-a441-f57eb893a67f" />
