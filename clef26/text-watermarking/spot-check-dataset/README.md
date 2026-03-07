@@ -16,18 +16,18 @@ tira_configs:
       watermark_command: '/baseline.py watermark $inputDataset $outputDir'
       detect_command: '/baseline.py detect $inputDataset $outputDir'
     format:
-      name: ["*.jsonl"]
+      name: ["pan-text-watermarking"]
   workflow:
     name: pan26-text-watermarking
     obfuscation_image: mam10eks/pan-watermarking-prototype:obfuscator-0.0.1
-    obfuscation_command: '/obfuscate.py $inputDataset/01-watermarking/*.jsonl $inputDataset/original/*.jsonl'
+    obfuscation_command: '/obfuscate.py $inputDataset/01-watermarking/*.jsonl $inputDataset/original/*.jsonl $outputDir'
   input_format:
     name: "*.jsonl"
   truth_format:
     name: "*.jsonl"
   evaluator:
     image: mam10eks/pan-watermarking-prototype:eval-0.0.1
-    command: '/evaluator.py $inputRun/01-watermarking/*.jsonl $inputRun/02-obfuscation/*.jsonl $inputDataset/*.jsonl $inputRun/03-detection/*.jsonl'
+    command: '/evaluator.py --output-directory $outputDir $inputRun/01-watermarking/*.jsonl $inputDataset/*.jsonl $inputRun/02-obfuscation/*.jsonl $inputRun/03-detection/*.jsonl'
   resolve_inputs_to: "."
   resolve_truths_to: "."
 ---
