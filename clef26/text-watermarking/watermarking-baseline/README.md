@@ -46,7 +46,13 @@ The final result (e.g., via `head -3 03-detection/detected-text.jsonl`) contains
 
 ## Submission To TIRA
 
-To submit this baseline to TIRA (please ensure your tira client is up-to date via `pip3 install --upgrade tira`), you can run this command (`--dry-run` ensures that we first only test locally):
+First, please ensure that your TIRA client is correctly installed (please ensure your tira client is up-to date via `pip3 install --upgrade tira`). Please run:
+
+```
+tira-cli verify-installation
+```
+
+To submit this baseline to TIRA , you can run this command (`--dry-run` ensures that we first only test locally):
 
 ```
 tira-cli code-submission \
