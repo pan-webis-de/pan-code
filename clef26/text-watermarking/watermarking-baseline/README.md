@@ -60,4 +60,4 @@ tira-cli code-submission \
 
 If everything looks good, you can remove the `--dry-run` flag, a valid upload looks like:
 
-
+<img width="1716" height="336" alt="Screenshot_20260311_171747" src="https://github.com/user-attachments/assets/257f3778-baf3-413e-b89d-4cbb90134607" />
