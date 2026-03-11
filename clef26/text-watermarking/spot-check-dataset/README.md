@@ -41,7 +41,7 @@ This dataset is intended to spot check submissions (via the train.jsonl file fro
 Upload this to TIRA via (remove the `--dry-run` argument after a first test):
 
 ```
-tira-cli dataset-submission --path spot-check-dataset --task pan26-text-watermarking --split train --dry-run
+tira-cli dataset-submission --path spot-check-dataset --task text-watermarking-panclef-2026 --split train --dry-run
 ```
 
 If everything works, the result should look like:
