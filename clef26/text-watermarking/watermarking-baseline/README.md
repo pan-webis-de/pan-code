@@ -52,7 +52,7 @@ First, please ensure that your TIRA client is correctly installed (please ensure
 tira-cli verify-installation
 ```
 
-To submit this baseline to TIRA , you can run this command (`--dry-run` ensures that we first only test locally):
+TIRA will automatically embedd your approach into the pipeline for the watermarking task (you need to specify the `watermark_command` and the `detect_command`). To submit this baseline to TIRA, you can run this command (`--dry-run` ensures that we first only test locally):
 
 ```
 tira-cli code-submission \
@@ -67,3 +67,13 @@ tira-cli code-submission \
 If everything looks good, you can remove the `--dry-run` flag, a valid upload looks like:
 
 <img width="1716" height="336" alt="Screenshot_20260311_171747" src="https://github.com/user-attachments/assets/257f3778-baf3-413e-b89d-4cbb90134607" />
+
+The output of this pipeline then looks like:
+```
+├── 01-watermarking
+│   └── watermarked-text.jsonl
+├── 02-obfuscation
+│   └── texts.jsonl
+├── 03-detection
+│   └── detected-text.jsonl
+```
