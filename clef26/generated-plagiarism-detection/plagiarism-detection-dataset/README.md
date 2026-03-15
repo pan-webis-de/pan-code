@@ -20,21 +20,21 @@ tira_configs:
   input_format:
     name: "lsr-benchmark-inputs"
     config:
-      max_size_mb: 150
+      max_size_mb: 900
   truth_format:
     name: "qrels.txt"
   evaluator:
     measures: ["nDCG@10", "RR"]
 ---
 
-# Generative Plagiarism Detection 2026: Spot Check Dataset
+# Generative Plagiarism Detection 2026: Test Set
 
-This dataset is intended to spot check submissions for Task-4@Pan on Generative Plagiarism Detection.
+This is the test dataset for Task-4@Pan on Generative Plagiarism Detection.
 
 Upload this to TIRA via (remove the `--dry-run` argument after a first test):
 
 ```
-tira-cli dataset-submission --path spot-check-dataset --task pan26-generated-plagiarism-detection --split train --dry-run
+tira-cli dataset-submission --path generated-plagiarism-detection --task pan26-generated-plagiarism-detection --split train --dry-run
 ```
 
 If everything works, the result should look like:
