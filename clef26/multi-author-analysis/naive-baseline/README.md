@@ -39,5 +39,5 @@ tira-cli verify-installation
 Finally, you can upload your code submission via (add the `--dry-run` flag to test that everything works):
 
 ```
-tira-cli code-submission --path . --task multi-author-writing-style-analysis-2025 --dataset multi-author-writing-spot-check-20250503-training --command '/predict.py --dataset $inputDataset --output $outputDir --predict 0'
+tira-cli code-submission --path . --task multi-author-writing-style-analysis-2026 --dataset multi-author-writing-spot-check-20250503-training --command '/predict.py --dataset $inputDataset --output $outputDir --predict 0'
 ```
