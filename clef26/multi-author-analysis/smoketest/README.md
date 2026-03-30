@@ -1,0 +1,42 @@
+---
+configs:
+- config_name: inputs
+  data_files:
+  - split: train
+    path: ["*/*/problem*.json"]
+- config_name: truths
+  data_files:
+  - split: train
+    path: ["*/*/truth-problem*.json"]
+
+tira_configs:
+  resolve_inputs_to: "."
+  resolve_truths_to: "."
+  baseline:
+    link: https://github.com/pan-webis-de/pan-code/tree/master/clef26/generated-plagiarism-detection/baseline-pyterrier
+    command: /baseline.py --dataset $inputDataset --output $outputDir --index /tmp/my-index/
+    format:
+      name: ["multi-author-writing-style-analysis-solutions"]
+  input_format:
+    name: "multi-author-writing-style-analysis-problems"
+    config:
+      max_size_mb: 150
+  truth_format:
+    name: "multi-author-writing-style-analysis-truths"
+  evaluator:
+    image:
+    command:
+---
+
+# Multi-Author Writing Style Analysis 2026: Spot Check Dataset
+
+This dataset is intended to spot check submissions for Task-3@Pan on Multi-Author Writing Style Analysis.
+
+Upload this to TIRA via (remove the `--dry-run` argument after a first test):
+
+```
+tira-cli dataset-submission --path spot-check-dataset --task pmulti-author-writing-style-analysis-2026 --split train --dry-run
+```
+
+If everything works, the result should look like:
+
