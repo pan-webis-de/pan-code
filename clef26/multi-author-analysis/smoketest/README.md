@@ -40,3 +40,5 @@ tira-cli dataset-submission --path smoketest --task multi-author-writing-style-a
 
 If everything works, the result should look like:
 
+<img width="1904" height="415" alt="Screenshot_20260330_072413" src="https://github.com/user-attachments/assets/de6df072-0d5f-410e-b19f-918bd59769a4" />
+
