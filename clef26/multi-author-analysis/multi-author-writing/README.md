@@ -3,11 +3,11 @@ configs:
 - config_name: inputs
   data_files:
   - split: test
-    path: ["*/*/*.txt"]
+    path: ["*/test/*.txt"]
 - config_name: truths
   data_files:
   - split: test
-    path: ["*/*/*.json"]
+    path: ["*/test/*.json"]
 
 tira_configs:
   resolve_inputs_to: "."
