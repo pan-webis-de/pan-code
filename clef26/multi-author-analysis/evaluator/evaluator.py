@@ -29,7 +29,7 @@ def read_ground_truth_files(truth_folder: str) -> dict:
     :return: dict of ground truth files with problem-id as key and file content as value
     """
     truth = {}
-    for truth_file in glob.glob(os.path.join(truth_folder, 'truth-problem*.json')):
+    for truth_file in glob.glob(os.path.join(truth_folder, 'truth-problem*.json')) + glob.glob(os.path.join(truth_folder, '*/truth-problem*.json')):
         with open(truth_file, 'r') as fh:
             curr_truth = json.load(fh)
             truth[os.path.basename(truth_file)[6:-5]] = curr_truth
