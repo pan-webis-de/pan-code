@@ -27,8 +27,8 @@ tira_configs:
     name: "*.jsonl"
     config: {"required_fields":["id","label"],"minimum_lines":3}
   evaluator:
-    image: mam10eks/multi-author-analysis:eval-26
-    command: python3 /evaluator.py -p ${inputRun} -t ${inputDataset} -o ${outputDir}
+    image: ghcr.io/pan-webis-de/pan25-generative-authorship-evaluator
+    command: pan25-evaluator $inputRun/*.jsonl $inputDataset/*-truth.jsonl $outputDir
 ---
 
 # Generative AI Authorship Verification 2026: Spot Check Dataset
@@ -38,7 +38,7 @@ This dataset is intended to spot check submissions for Task-2@Pan on Voight-Kamp
 Upload this to TIRA via (remove the `--dry-run` argument after a first test):
 
 ```
-tira-cli dataset-submission --path smoketest --task generative-ai-authorship-verification-panclef-2026 --split train --dry-run
+tira-cli dataset-submission --path pan26-generative-ai-detection-smoke-test --task generative-ai-authorship-verification-panclef-2026 --split train --dry-run
 ```
 
 If everything works, the result should look like:

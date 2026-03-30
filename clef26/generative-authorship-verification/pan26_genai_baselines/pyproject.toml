@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=78.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pan25-genai-baselines"
+version = "1.0.0"
+description = "Baselines for the PAN'25 Generative AI Authorship verification shared task."
+authors = [
+  { name = "Janek Bevendorff" }
+]
+license = { text = "Apache License 2.0" }
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.7",
+    "numpy>=2.2.5",
+    "pandas>=1.24.0",
+    "scikit-learn>=1.6.0",
+    "transformers>=4.49.0",
+    "accelerate>=1.4.0",
+    "optimum>=1.24.0",
+    "bitsandbytes>=0.45.2",
+    "torch>2.4.0,<2.7.0",  # 2.7.0 incompatible with flash-attn https://github.com/Dao-AILab/flash-attention/issues/1622
+    "tqdm>=4.67.1",
+    "pyppmd>=1.1.1",
+]
+
+[project.urls]
+repository = "https://github.com/pan-webis-de/pan-code/tree/master/clef25/generative-authorship-verification"
+homepage = "https://pan.webis.de/clef25/pan25-web/generated-content-analysis.html"
+
+[project.scripts]
+pan25-baseline = "pan25_genai_baselines.cli:main"
+
+[tool.setuptools.package-data]
+pan25_genai_baselines = ['*.pkl']
