@@ -13,8 +13,8 @@ tira_configs:
   resolve_inputs_to: "."
   resolve_truths_to: "."
   baseline:
-    link: https://github.com/pan-webis-de/pan-code/tree/master/clef26/generated-plagiarism-detection/baseline-pyterrier
-    command: /baseline.py --dataset $inputDataset --output $outputDir --index /tmp/my-index/
+    link: https://github.com/pan-webis-de/pan-code/tree/master/clef26/multi-author-analysis/naive-baseline
+    command: /predict.py
     format:
       name: ["multi-author-writing-style-analysis-solutions"]
   input_format:
@@ -24,8 +24,8 @@ tira_configs:
   truth_format:
     name: "multi-author-writing-style-analysis-truths"
   evaluator:
-    image:
-    command:
+    image: mam10eks/multi-author-analysis:eval-26
+    command: python3 /evaluator/evaluator.py -p ${inputRun} -t ${inputDataset} -o ${outputDir}
 ---
 
 # Multi-Author Writing Style Analysis 2026: Spot Check Dataset
