@@ -25,7 +25,7 @@ tira_configs:
     name: "multi-author-writing-style-analysis-truths"
   evaluator:
     image: mam10eks/multi-author-analysis:eval-26
-    command: python3 /evaluator/evaluator.py -p ${inputRun} -t ${inputDataset} -o ${outputDir}
+    command: python3 /evaluator.py -p ${inputRun} -t ${inputDataset} -o ${outputDir}
 ---
 
 # Multi-Author Writing Style Analysis 2026: Spot Check Dataset
