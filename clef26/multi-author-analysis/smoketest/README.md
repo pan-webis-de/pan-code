@@ -3,11 +3,11 @@ configs:
 - config_name: inputs
   data_files:
   - split: train
-    path: ["*/*/problem*.json"]
+    path: ["*/*/*.txt"]
 - config_name: truths
   data_files:
   - split: train
-    path: ["*/*/truth-problem*.json"]
+    path: ["*/*/*.json"]
 
 tira_configs:
   resolve_inputs_to: "."
@@ -35,7 +35,7 @@ This dataset is intended to spot check submissions for Task-3@Pan on Multi-Autho
 Upload this to TIRA via (remove the `--dry-run` argument after a first test):
 
 ```
-tira-cli dataset-submission --path spot-check-dataset --task pmulti-author-writing-style-analysis-2026 --split train --dry-run
+tira-cli dataset-submission --path smoketest --task multi-author-writing-style-analysis-2026 --split train --dry-run
 ```
 
 If everything works, the result should look like:
