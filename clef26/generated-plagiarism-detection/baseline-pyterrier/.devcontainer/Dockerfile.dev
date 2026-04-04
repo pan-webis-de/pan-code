@@ -4,4 +4,5 @@ FROM webis/longeval-pyterrier-baseline:dev-0.0.1
 ADD requirements.txt /tmp/requirements.txt
 
 RUN pip3 install -r /tmp/requirements.txt \
-    && rm /tmp/requirements.txt
+    && rm /tmp/requirements.txt \
+    && pip3 install --upgrade tira
