@@ -3,7 +3,10 @@ from tira.check_format import lines_if_valid
 from pathlib import Path
 import click
 from tira.io_utils import to_prototext
-import pandas as pd
+import numpy as np
+from sklearn.metrics import balanced_accuracy_score
+import nltk
+from torchmetrics.text.bert import BERTScore
 
 
 def load_data(directory):
@@ -11,14 +14,28 @@ def load_data(directory):
     return {i["id"]: i for i in ret}
 
 
+def calculate_balanced_accuracy(truths, pred):
+    score = balanced_accuracy_score(truths, pred > 0.5, zero_division=np.nan)
+    if np.isnan(score):
+        return None
+    return float(score)
+
+
 def calculate_bleu(orig, water):
-    # TODO
-    return 0.0
+    bleu_sum = 0
+    for text_id, water_text in water.items():
+        orig_text = orig[text_id]
+        bleu_sum += sum(nltk.translate.bleu_score.sentence_bleu([orig_text], water_text))
+    return bleu_sum/len(water)
 
 
 def calculate_bert_score(orig, water):
-    # TODO
-    return 0.0
+    bertscore = BERTScore(truncation=True)
+    bert_sum = 0
+    for text_id, water_text in water.items():
+        orig_text = orig[text_id]
+        bert_sum += bertscore(orig_text, water_text)['f1'].item()
+    return bert_sum/len(water)
 
 
 @click.command()
@@ -52,6 +69,7 @@ def main(original_texts, watermarked_texts, truth_labels, predictions, output_di
             raise ValueError("this should not happen...")
 
     evaluation = {
+        "balanced_accuracy": calculate_balanced_accuracy(truths, predictions),
         "BLEU": calculate_bleu(orig, water),
         "BertScore": calculate_bert_score(orig, water),
         "true_positives": true_positives/len(truths),
@@ -59,6 +77,7 @@ def main(original_texts, watermarked_texts, truth_labels, predictions, output_di
         "false_positives": false_positives/len(truths),
         "false_negatives": false_negatives/len(truths),
     }
+    evaluation["twf"] = max(evaluation["BLEU"], evaluation["BertScore"]) * evaluation["balanced_accuracy"]
     print(evaluation)
     if output_directory:
         output_directory.mkdir(exist_ok=True, parents=True)
