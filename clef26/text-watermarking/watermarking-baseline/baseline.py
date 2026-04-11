@@ -75,7 +75,7 @@ def watermark(
     # Configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_id = model_name_or_path
-    model = AutoModelForCausalLM.from_pretrained(model_id, **model_args)
+    model = AutoModelForCausalLM.from_pretrained(model_id, **model_args).to(device)
     tok = AutoTokenizer.from_pretrained(model_id)
     tok.pad_token_id = tok.eos_token_id
     tok.padding_side = "left"
