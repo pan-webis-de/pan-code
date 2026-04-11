@@ -94,29 +94,32 @@ def watermark(
             "Return exactly one paraphrased version and nothing else.\n\n"
     input_list = ["<s>[INST] "
                 f"{prompt}"
-                f"{normalize_text(t)} [/INST]"
-                for t in data['text']]
-    inputs = tok(input_list, padding=True, return_tensors="pt").to(device)
-    max_new_tokens = int(inputs["input_ids"].shape[1] * 1.2)
+                f"{normalize_text(t[:50])} [/INST]"
+                for t in data[:1]['text']]
+    
+    decoded_cleaned = []
+    for text in input_list:
+        inputs = tok([text], padding=True, return_tensors="pt").to(device)
+        max_new_tokens = int(inputs["input_ids"].shape[1] * 1.2)
 
-    # Generate Watermarks
-    out_watermarked = model.generate(
-        **inputs, 
-        watermarking_config=watermarking_config, 
-        do_sample=True, 
-        top_p=0.9, 
-        temperature=0.6, 
-        max_new_tokens=max_new_tokens, 
-        no_repeat_ngram_size=2, 
-        eos_token_id=tok.eos_token_id
-    )
+        # Generate Watermark
+        out_watermarked = model.generate(
+            **inputs, 
+            watermarking_config=watermarking_config, 
+            do_sample=True, 
+            top_p=0.9, 
+            temperature=0.6, 
+            max_new_tokens=max_new_tokens, 
+            no_repeat_ngram_size=2, 
+            eos_token_id=tok.eos_token_id
+        )
 
-    # Decode Watermarked Text
-    decoded = tok.batch_decode(
-        out_watermarked,
-        skip_special_tokens=True
-    )
-    decoded_cleaned = clean_llm_output(decoded)
+        # Decode Watermarked Text
+        decoded = tok.batch_decode(
+            out_watermarked,
+            skip_special_tokens=True
+        )
+        decoded_cleaned += clean_llm_output(decoded)
     data["text"] = decoded_cleaned
 
     # Save Output File
