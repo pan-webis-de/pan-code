@@ -75,7 +75,7 @@ def watermark(
     # Configuration
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_id = model_name_or_path
-    model = AutoModelForCausalLM.from_pretrained(model_id, **model_args).to(device)
+    model = AutoModelForCausalLM.from_pretrained(model_id, **model_args)
     tok = AutoTokenizer.from_pretrained(model_id)
     tok.pad_token_id = tok.eos_token_id
     tok.padding_side = "left"
@@ -96,7 +96,7 @@ def watermark(
                 f"{prompt}"
                 f"{normalize_text(t)} [/INST]"
                 for t in data['text']]
-    inputs = tok(input_list, padding=True, return_tensors="pt").to(device)
+    inputs = tok(input_list, padding=True, return_tensors="pt")
     max_new_tokens = int(inputs["input_ids"].shape[1] * 1.2)
 
     # Generate Watermarks
