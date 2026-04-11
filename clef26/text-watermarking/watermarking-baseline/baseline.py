@@ -5,6 +5,7 @@ import click
 import pandas as pd
 import torch
 import json
+from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM, WatermarkDetector, WatermarkingConfig
 import unicodedata
 
@@ -98,7 +99,7 @@ def watermark(
                 for t in data['text']]
     
     decoded_cleaned = []
-    for text in input_list:
+    for text in tqdm(input_list):
         inputs = tok([text], padding=True, return_tensors="pt").to(device)
         max_new_tokens = int(inputs["input_ids"].shape[1] * 1.2)
 
