@@ -94,8 +94,8 @@ def watermark(
             "Return exactly one paraphrased version and nothing else.\n\n"
     input_list = ["<s>[INST] "
                 f"{prompt}"
-                f"{normalize_text(t[:50])} [/INST]"
-                for t in data[:1]['text']]
+                f"{normalize_text(t)} [/INST]"
+                for t in data['text']]
     
     decoded_cleaned = []
     for text in input_list:
