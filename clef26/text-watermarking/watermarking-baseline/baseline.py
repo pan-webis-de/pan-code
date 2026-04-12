@@ -103,8 +103,8 @@ def watermark(
     batch_size = 1
     for i in tqdm(range(0, len(input_list), batch_size)):
         batch = input_list[i:i+batch_size]
-        input_len = inputs["input_ids"].shape[1]
         inputs = tok(batch, padding=True, return_tensors="pt").to(device)
+        input_len = inputs["input_ids"].shape[1]
         max_new_tokens = int(input_len)
 
         # Generate Watermark
