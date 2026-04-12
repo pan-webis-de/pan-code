@@ -23,14 +23,35 @@ def normalize_text(text):
     return unicodedata.normalize("NFKC", text)
 
 
-def clean_llm_output(decoded_output):
-    clean_outputs = []
-    for text in decoded_output:
-        if "[/INST]" in text:
-            clean_outputs.append(text.split("[/INST]", 1)[1].strip())
-        else:
-            clean_outputs.append(text.strip())
-    return clean_outputs
+def build_prompt(tok, text):
+    system_msg = "You are a text editor. You only output the final paraphrased text. No explanations, no extra words."
+    messages = [
+        {"role": "system", "content": system_msg},
+        {"role": "user", "content": (
+            "Paraphrase the following text in clear, formal prose. "
+            "Preserve meaning and structure. "
+            "Output only the rewritten text. \n\n"
+            + normalize_text(text)
+        )}
+    ]
+    
+    return tok.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True
+    )
+
+
+def extract_from_llm_output(decoded_batch):
+    results = []
+    for text in decoded_batch:
+        if "<|assistant|>" in text:
+            text = text.split("<|assistant|>")[-1]
+        
+        text = text.strip().split("\n")[0]
+
+        results.append(text.strip())
+    return results
 
 
 # Dummy Watermark Functions
@@ -64,7 +85,7 @@ def detect_dummy(input_directory, output_directory):
 def watermark(
     input_directory, 
     output_directory,
-    model_name_or_path='mistralai/Mistral-7B-Instruct-v0.2',#"Qwen/Qwen2.5-1.5B-Instruct",
+    model_name_or_path="Qwen/Qwen2.5-1.5B-Instruct",
     greenlist_ratio=0.25,
     bias=2.5,
     hashing_key=15485863,
@@ -88,28 +109,22 @@ def watermark(
     )
 
     # Prepare prompts
-    prompt = "Paraphrase the following text in clear, formal prose. " \
-            "Preserve the meaning, arguments, and structure. " \
-            "Do not shorten or lengthen it significantly. " \
-            "Do not use bullet points, markdown, or special characters. " \
-            "Return exactly one paraphrased version and nothing else.\n\n"
-    input_list = ["<s>[INST] "
-                f"{prompt}"
-                f"{normalize_text(t)} [/INST]"
-                for t in data['text']]
+    input_list = [build_prompt(t) for t in data["text"]]
     
     decoded_cleaned = []
-    for text in tqdm(input_list):
-        inputs = tok([text], padding=True, return_tensors="pt").to(device)
+    batch_size = 1
+    for i in tqdm(range(0, len(input_list), batch_size)):
+        batch = input_list[i:i+batch_size]
+        inputs = tok(batch, padding=True, return_tensors="pt").to(device)
         max_new_tokens = int(inputs["input_ids"].shape[1] * 1.2)
 
         # Generate Watermark
         out_watermarked = model.generate(
             **inputs, 
             watermarking_config=watermarking_config, 
-            do_sample=True, 
-            top_p=0.9, 
-            temperature=0.6, 
+            do_sample=False, 
+            top_p=None, 
+            temperature=None, 
             max_new_tokens=max_new_tokens, 
             no_repeat_ngram_size=2, 
             eos_token_id=tok.eos_token_id
@@ -120,7 +135,7 @@ def watermark(
             out_watermarked,
             skip_special_tokens=True
         )
-        decoded_cleaned += clean_llm_output(decoded)
+        decoded_cleaned += extract_from_llm_output(decoded)
     data["text"] = decoded_cleaned
 
     # Save Output File
