@@ -42,18 +42,6 @@ def build_prompt(tok, text):
     )
 
 
-def extract_from_llm_output(decoded_batch):
-    results = []
-    for text in decoded_batch:
-        if "<|assistant|>" in text:
-            text = text.split("<|assistant|>")[-1]
-        
-        text = text.strip().split("\n")[0]
-
-        results.append(text.strip())
-    return results
-
-
 # Dummy Watermark Functions
 @click.argument("input_directory", type=Path)
 @click.argument("output_directory", type=Path)
@@ -111,34 +99,36 @@ def watermark(
     # Prepare prompts
     input_list = [build_prompt(tok, t) for t in data["text"]]
     
-    decoded_cleaned = []
+    decoded_list = []
     batch_size = 1
     for i in tqdm(range(0, len(input_list), batch_size)):
         batch = input_list[i:i+batch_size]
+        input_len = inputs["input_ids"].shape[1]
         inputs = tok(batch, padding=True, return_tensors="pt").to(device)
-        max_new_tokens = int(inputs["input_ids"].shape[1] * 1.2)
+        max_new_tokens = int(input_len)
 
         # Generate Watermark
         out_watermarked = model.generate(
             **inputs, 
             watermarking_config=watermarking_config, 
             do_sample=False, 
-            top_p=None, 
-            temperature=None, 
             max_new_tokens=max_new_tokens, 
             no_repeat_ngram_size=2, 
             eos_token_id=tok.eos_token_id
         )
 
+        generated_tokens = out_watermarked[:, input_len:]
+
         # Decode Watermarked Text
         decoded = tok.batch_decode(
-            out_watermarked,
+            generated_tokens,
             skip_special_tokens=True
         )
-        decoded_cleaned += extract_from_llm_output(decoded)
-    data["text"] = decoded_cleaned
+        decoded_list += decoded
+    data["text"] = decoded_list
 
     # Save Output File
+    output_directory.mkdir(exist_ok=True, parents=True)
     with open(str(output_directory / "watermarked-text.jsonl"), 'w', encoding="utf-8") as outfile:
         for _, entry in data.iterrows():
             json.dump(entry.to_dict(), outfile, ensure_ascii=False)
