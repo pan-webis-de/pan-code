@@ -109,7 +109,7 @@ def watermark(
     )
 
     # Prepare prompts
-    input_list = [build_prompt(t) for t in data["text"]]
+    input_list = [build_prompt(tok, t) for t in data["text"]]
     
     decoded_cleaned = []
     batch_size = 1
