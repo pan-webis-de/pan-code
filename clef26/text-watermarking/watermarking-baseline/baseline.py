@@ -140,7 +140,7 @@ def watermark(
 def detect(
     input_directory, 
     output_directory,
-    model_name_or_path='mistralai/Mistral-7B-Instruct-v0.2',
+    model_name_or_path="Qwen/Qwen2.5-1.5B-Instruct",
     greenlist_ratio=0.25,
     bias=2.5,
     hashing_key=15485863,
