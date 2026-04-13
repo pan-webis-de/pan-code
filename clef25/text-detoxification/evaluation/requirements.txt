@@ -1,7 +1,7 @@
 sentence-transformers==2.6.1
 unbabel_comet==2.2.1
 protobuf==3.20.0
-transformers==4.35.2
+transformers==5.0.0rc3
 torchvision==0.17.1
 pandas==2.2.2
 pydantic==2.9.2
