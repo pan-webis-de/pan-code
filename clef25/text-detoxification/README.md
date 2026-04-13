@@ -22,7 +22,7 @@ We provide a set of baselines:
 ### Requirements
 Works for:
 - `python 3.11.*`
-- `torch==2.1.1+cu121`
+- `torch==2.1.1+cu121` # To install: `pip install torch==2.2.1+cu121 --find-links https://download.pytorch.org/whl/torch_stable.html`
 
 ### Evaluation Criteria
 
