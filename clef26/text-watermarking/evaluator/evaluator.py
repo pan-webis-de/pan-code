@@ -50,7 +50,7 @@ def calculate_bleu(orig, water):
 
 
 def calculate_bert_score(orig, water):
-    bertscore = BERTScore(truncation=True)
+    bertscore = BERTScore(model_name_or_path="roberta-large", truncation=True)
     bert_sum = 0
     for i in tqdm(range(len(orig)), desc="Calculating bert..."):
         text_id = orig["id"][i]
