@@ -7,10 +7,9 @@ import numpy as np
 from sklearn.metrics import balanced_accuracy_score
 import nltk
 from nltk.translate.bleu_score import SmoothingFunction
-from torchmetrics.text.bert import BERTScore
+from bert_score import score as bertscore
 import pandas as pd
 import json
-from tqdm import tqdm
 
 
 def load_data(directory):
@@ -31,38 +30,41 @@ def calculate_balanced_accuracy(truths, pred):
 
 def calculate_bleu(orig, water):
     bleu_sum = 0
-    for i in tqdm(range(len(orig)), desc="Calculating bleu..."):
+    for i in range(len(orig)):
         text_id = orig["id"][i]
         orig_text = [nltk.word_tokenize(s) for s in nltk.sent_tokenize(orig["text"][i])]
         water_text = [nltk.word_tokenize(s) for s in nltk.sent_tokenize(water.loc[water["id"] == text_id]["text"].values[0])]
         
         text_bleu_sum = 0
         text_count = 0
-        for s_i in range(len(orig_text)):
-            if len(water_text) <= s_i:
-                break
-            score = nltk.translate.bleu_score.sentence_bleu(orig_text[s_i], water_text[s_i], smoothing_function=SmoothingFunction().method1)
+        max_len = min(len(orig_text), len(water_text))
+        for s_i in range(max_len):
+            score = nltk.translate.bleu_score.sentence_bleu([orig_text[s_i]], water_text[s_i], smoothing_function=SmoothingFunction().method1)
             text_bleu_sum += score
             text_count += 1
-        bleu_sum += text_bleu_sum / text_count
+        
+        if text_count > 0:
+            bleu_sum += text_bleu_sum / text_count
+        else:
+            bleu_sum += 0
 
     return bleu_sum/len(orig)
 
 
 def calculate_bert_score(orig, water):
-    bertscore = BERTScore(model_name_or_path="roberta-large", truncation=True)
-    bert_sum = 0
-    for i in tqdm(range(len(orig)), desc="Calculating bert..."):
+    all_orig = []
+    all_water = []
+    for i in range(len(orig)):
         text_id = orig["id"][i]
         orig_text = [s for s in nltk.sent_tokenize(orig["text"][i])]
         water_text = [s for s in nltk.sent_tokenize(water.loc[water["id"] == text_id]["text"].values[0])]
-        l = min(len(orig_text), len(water_text))
-        orig_text = orig_text[:l]
-        water_text = water_text[:l]
-        
-        score = bertscore(orig_text, water_text)
-        bert_sum += sum(score['f1'])/len(score['f1']) if len(score['f1'].size()) > 0 else 0
-    return bert_sum.item()/len(orig)
+        max_len = min(len(orig_text), len(water_text))
+
+        all_orig.extend(orig_text[:max_len])
+        all_water.extend(water_text[:max_len])
+
+    _, _, score = bertscore(all_water, all_orig, lang="en")
+    return score.mean().item()
 
 
 @click.command()
