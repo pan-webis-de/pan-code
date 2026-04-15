@@ -74,7 +74,7 @@ def watermark(
     input_directory, 
     output_directory,
     model_name_or_path="Qwen/Qwen2.5-1.5B-Instruct",
-    greenlist_ratio=0.25,
+    greenlist_ratio=0.5,
     bias=2.5,
     hashing_key=15485863,
     seeding_scheme="lefthash",
@@ -141,7 +141,7 @@ def detect(
     input_directory, 
     output_directory,
     model_name_or_path="Qwen/Qwen2.5-1.5B-Instruct",
-    greenlist_ratio=0.25,
+    greenlist_ratio=0.5,
     bias=2.5,
     hashing_key=15485863,
     seeding_scheme="lefthash",
@@ -164,9 +164,12 @@ def detect(
     )
 
     # Detect Watermarks
-    inputs = tok(data["text"].to_list(), padding=True, return_tensors="pt").to(device)
-    detection_out_watermarked = detector(inputs["input_ids"], return_dict=True)
-    data["label"] = detection_out_watermarked.prediction.astype(int)
+    results = []
+    for text in data["text"]:
+        inputs = tok(text, return_tensors="pt").to(device)
+        detection_out_watermarked = detector(inputs["input_ids"], return_dict=True)
+        results.extend(detection_out_watermarked.prediction.tolist())
+    data["label"] = results
     del data["text"]
     
     # Save Output File
