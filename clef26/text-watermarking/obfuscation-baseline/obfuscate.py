@@ -3,6 +3,16 @@ from tira.check_format import lines_if_valid
 from pathlib import Path
 import click
 import pandas as pd
+import nltk
+import random
+
+
+# Sample attack
+def sentence_shuffle_attack(text):
+    sentences = nltk.sent_tokenize(text)
+    random.shuffle(sentences)
+    shuffled_text = " ".join(sentences)
+    return shuffled_text
 
 
 @click.command()
@@ -15,15 +25,15 @@ def main(watermarked_texts, original_texts, output_directory):
     for i in range(len(watermarked_data)):
         watermarked_data[i]["truth_label"] = "watermarked"
 
-    # for the first 30 entries we remove the watermark
-    for i in range(30):
-        watermarked_data[i]["text"] = watermarked_data[i]["text"].replace("y12", "")
+    # attack watermark
+    for i in range(len(watermarked_data)):
+        watermarked_data[i]["text"] = sentence_shuffle_attack(watermarked_data[i]["text"])
 
     data = {i["id"]: i for i in watermarked_data}
 
     original_data = lines_if_valid(original_texts, "*.jsonl")
     # we add some more original documents that are not watermarked
-    for i in range(30):
+    for i in range(len(watermarked_data)):
         original_data[i]["truth_label"] = "not-watermarked"
         data[original_data[i]["id"]] = original_data[i]
 
