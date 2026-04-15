@@ -72,7 +72,7 @@ def calculate_bert_score(orig, water):
 @click.argument("original_texts", type=Path)
 @click.argument("labels", type=Path)
 @click.option("--output-directory", type=Path, required=False, help="The output directory.")
-def main(original_texts, watermarked_texts, labels, output_directory):
+def main(watermarked_texts, original_texts, labels, output_directory):
     orig = load_data(original_texts)
     water = load_data(watermarked_texts)
     labels = load_data(labels)
