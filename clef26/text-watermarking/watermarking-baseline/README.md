@@ -1,6 +1,6 @@
-# Naive Watermarking Baseline for PAN 26
+# Watermarking Baseline for PAN 26
 
-This directory contains a naive baseline for PAN 26 on text watermarking. This baseline appends a naive watermark `_xy123_` to each text and looks for this text during the detection.
+This directory contains a basic baseline for PAN 26 on text watermarking. This baseline uses an [implementation of the KGW Watermarking Scheme](https://huggingface.co/docs/transformers/v5.0.0/en/internal/generation_utils#transformers.WatermarkingConfig).
 
 ## High-Level Overview
 
