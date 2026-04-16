@@ -168,7 +168,7 @@ def detect(
     for text in data["text"]:
         inputs = tok(text, return_tensors="pt").to(device)
         detection_out_watermarked = detector(inputs["input_ids"], return_dict=True)
-        results.extend(detection_out_watermarked.prediction.int().tolist())
+        results.extend(detection_out_watermarked.prediction.astype(int).tolist())
     data["label"] = results
     del data["text"]
     
