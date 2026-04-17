@@ -12,10 +12,7 @@ import unicodedata
 
 # Some Helper Functions
 def load_data(directory):
-    ret = []
-    with open(str(directory), mode='r', encoding="utf-8") as infile:
-        for line in infile:
-            ret.append(json.loads(line))
+    ret = lines_if_valid(directory, "*.jsonl")
     return pd.DataFrame.from_records(ret)
 
 
