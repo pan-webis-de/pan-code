@@ -24,17 +24,17 @@ Step by step, this would look like:
 
 1.) Run the watermarking
 ```
-./baseline.py watermark ../spot-check-dataset/<filename> 01-watermarked
+./baseline.py watermark ../spot-check-dataset/ 01-watermarked
 ```
 
 2.) Obfuscate the watermark
 ```
-../obfuscation-baseline/obfuscate.py 01-watermarked/<filename> ../spot-check-dataset/<filename> 02-obfuscated
+../obfuscation-baseline/obfuscate.py 01-watermarked/ ../spot-check-dataset/ 02-obfuscated
 ```
 
 3.) Detect if watermark is in the texts
 ```
-./baseline.py detect 02-obfuscated/<filename> 03-detection
+./baseline.py detect 02-obfuscated/ 03-detection
 ```
 
 The final result (e.g., via `head -3 03-detection/detected-text.jsonl`) contains lines like:
