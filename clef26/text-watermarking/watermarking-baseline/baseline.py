@@ -39,31 +39,6 @@ def build_prompt(tok, text):
     )
 
 
-# Dummy Watermark Functions
-@click.argument("input_directory", type=Path)
-@click.argument("output_directory", type=Path)
-def watermark_dummy(input_directory, output_directory):
-    data = load_data(input_directory)
-
-    # we just add "_xy123_" as watermark
-    data["text"] = data["text"].apply(lambda i: i + " _xy123_")
-    output_directory.mkdir(exist_ok=True, parents=True)
-
-    data.to_json(output_directory / "watermarked-text.jsonl", lines=True, orient="records")
-
-
-@click.argument("input_directory", type=Path)
-@click.argument("output_directory", type=Path)
-def detect_dummy(input_directory, output_directory):
-    data = load_data(input_directory)
-    
-    # label should be 1.0 if our watermark "_xy123_" is in the text
-    data["label"] = data["text"].apply(lambda i: 1.0 if "_xy123_" in i else 0.0)
-    del data["text"]
-    output_directory.mkdir(exist_ok=True, parents=True)
-    data.to_json(output_directory / "detected-text.jsonl", lines=True, orient="records")
-
-
 # Watermark Functions
 @click.argument("input_directory", type=Path)
 @click.argument("output_directory", type=Path)
