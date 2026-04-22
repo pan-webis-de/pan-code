@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.metrics import balanced_accuracy_score
 import nltk
 from nltk.translate.bleu_score import SmoothingFunction
-from bert_score import score as bertscore
+from bert_score import BERTScorer
 import pandas as pd
 import json
 
@@ -49,19 +49,28 @@ def calculate_bleu(orig, water):
 
 
 def calculate_bert_score(orig, water):
-    all_orig = []
-    all_water = []
+    scorer = BERTScorer(model_type="roberta-large", lang="en")
+
+    text_scores = []
     for i in range(len(orig)):
         text_id = orig["id"][i]
         orig_text = [s for s in nltk.sent_tokenize(orig["text"][i])]
         water_text = [s for s in nltk.sent_tokenize(water.loc[water["id"] == text_id]["text"].values[0])]
         max_len = min(len(orig_text), len(water_text))
 
-        all_orig.extend(orig_text[:max_len])
-        all_water.extend(water_text[:max_len])
+        if max_len == 0:
+            continue
 
-    _, _, score = bertscore(all_water, all_orig, lang="en")
-    return score.mean().item()
+        orig_sents = orig_text[:max_len]
+        water_sents = water_text[:max_len]
+
+        _, _, scores = scorer.score(water_sents, orig_sents)
+        text_scores.append(scores.mean().item())
+    
+    if not text_scores:
+        return None
+    
+    return float(np.mean(text_scores))
 
 
 @click.command()
