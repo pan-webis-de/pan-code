@@ -78,7 +78,8 @@ def calculate_bert_score(orig, water):
     return float(np.mean(text_scores))
 
 
-def calculate_average_twf_per_sample_pair(labels, water, orig):
+# Here: twf is calculated for text pairs and then averaged
+def calculate_average_twf_per_text_pair(labels, water, orig):
     twf_scores = []
     bleu_scores = {}
     bert_scores = {}
@@ -176,7 +177,7 @@ def main(watermarked_texts, original_texts, labels, output_directory):
         "true_negatives": true_negatives/len(truths),
         "false_positives": false_positives/len(truths),
         "false_negatives": false_negatives/len(truths),
-        "average_twf_per_sample_pair": calculate_average_twf_per_sample_pair(labels, water, orig)
+        "average_twf_per_text_pair": calculate_average_twf_per_text_pair(labels, water, orig)
     }
     evaluation["twf"] = max(evaluation["BLEU"], evaluation["BertScore"]) * evaluation["balanced_accuracy"]
     print(evaluation)
