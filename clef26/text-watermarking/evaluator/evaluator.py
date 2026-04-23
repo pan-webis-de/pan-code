@@ -4,6 +4,7 @@ from pathlib import Path
 import click
 from tira.io_utils import to_prototext
 import numpy as np
+from tqdm import tqdm
 from sklearn.metrics import balanced_accuracy_score
 import nltk
 from nltk.translate.bleu_score import SmoothingFunction
@@ -27,7 +28,7 @@ def calculate_balanced_accuracy(truths, pred):
 
 def calculate_bleu(orig, water):
     bleu_sum = 0
-    for i in range(len(orig)):
+    for i in tqdm(range(len(orig)), desc='Calculate Bleu-Score...'):
         text_id = orig["id"][i]
         orig_text = [nltk.word_tokenize(s) for s in nltk.sent_tokenize(orig["text"][i])]
         water_text = [nltk.word_tokenize(s) for s in nltk.sent_tokenize(water.loc[water["id"] == text_id]["text"].values[0])]
@@ -35,6 +36,10 @@ def calculate_bleu(orig, water):
         text_bleu_sum = 0
         text_count = 0
         max_len = min(len(orig_text), len(water_text))
+
+        if max_len == 0:
+            continue
+
         for s_i in range(max_len):
             score = nltk.translate.bleu_score.sentence_bleu([orig_text[s_i]], water_text[s_i], smoothing_function=SmoothingFunction().method1)
             text_bleu_sum += score
@@ -52,7 +57,7 @@ def calculate_bert_score(orig, water):
     scorer = BERTScorer(model_type="roberta-large", lang="en")
 
     text_scores = []
-    for i in range(len(orig)):
+    for i in tqdm(range(len(orig)), desc='Calculating Bert-Score...'):
         text_id = orig["id"][i]
         orig_text = [s for s in nltk.sent_tokenize(orig["text"][i])]
         water_text = [s for s in nltk.sent_tokenize(water.loc[water["id"] == text_id]["text"].values[0])]
@@ -71,6 +76,66 @@ def calculate_bert_score(orig, water):
         return None
     
     return float(np.mean(text_scores))
+
+
+def calculate_average_twf_per_sample_pair(labels, water, orig):
+    twf_scores = []
+    bleu_scores = {}
+    bert_scores = {}
+    scorer = BERTScorer(model_type="roberta-large", lang="en")
+    pairs = labels.groupby(['id', 'type']).apply(lambda g: g.to_dict('records'))
+    for (text_id, text_type), rows in tqdm(pairs.items(), desc='Calculating average twf...'):
+        water_row = water.loc[water['id'] == text_id].iloc[0]
+        orig_row = orig.loc[orig['id'] == text_id].iloc[0]
+        truths = pd.Series([x['truth_label'] for x in rows])
+        pred = pd.Series([x['label'] for x in rows])
+        
+        # Calc. Balanced Accuracy
+        b_acc = calculate_balanced_accuracy(truths, pred)
+
+        orig_text = [nltk.word_tokenize(s) for s in nltk.sent_tokenize(orig_row["text"])]
+        water_text = [nltk.word_tokenize(s) for s in nltk.sent_tokenize(water_row["text"])]
+        
+        # Calc. Bleu
+        if text_id in bleu_scores:
+            bleu = bleu_scores[text_id]
+        else:
+            text_bleu_sum = 0
+            text_count = 0
+            max_len = min(len(orig_text), len(water_text))
+            if max_len == 0:
+                continue
+            for s_i in range(max_len):
+                score = nltk.translate.bleu_score.sentence_bleu([orig_text[s_i]], water_text[s_i], smoothing_function=SmoothingFunction().method1)
+                text_bleu_sum += score
+                text_count += 1
+            
+            if text_count > 0:
+                bleu = text_bleu_sum / text_count
+            else:
+                bleu = 0  
+            bleu_scores[text_id] = bleu
+        
+        # Calc. Bert
+        if text_id in bert_scores:
+            bert = bert_scores[text_id]
+        else:
+            orig_text = [s for s in nltk.sent_tokenize(orig_row["text"])]
+            water_text = [s for s in nltk.sent_tokenize(water_row["text"])]
+            max_len = min(len(orig_text), len(water_text))
+            if max_len == 0:
+                continue
+            orig_sents = orig_text[:max_len]
+            water_sents = water_text[:max_len]
+
+            _, _, scores = scorer.score(water_sents, orig_sents)
+            bert = scores.mean().item()
+            bert_scores[text_id] = bert
+
+        # Calc. twf
+        twf_scores.append(max(bleu, bert) * b_acc)
+        
+    return sum(twf_scores)/len(twf_scores)
 
 
 @click.command()
@@ -111,6 +176,7 @@ def main(watermarked_texts, original_texts, labels, output_directory):
         "true_negatives": true_negatives/len(truths),
         "false_positives": false_positives/len(truths),
         "false_negatives": false_negatives/len(truths),
+        "average_twf_per_sample_pair": calculate_average_twf_per_sample_pair(labels, water, orig)
     }
     evaluation["twf"] = max(evaluation["BLEU"], evaluation["BertScore"]) * evaluation["balanced_accuracy"]
     print(evaluation)
