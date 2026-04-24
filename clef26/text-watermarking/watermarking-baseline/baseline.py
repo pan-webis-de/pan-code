@@ -3,6 +3,9 @@ from tira.check_format import lines_if_valid
 from pathlib import Path
 import click
 import pandas as pd
+import random
+import os
+import numpy as np
 import torch
 import json
 from tqdm import tqdm
@@ -14,6 +17,14 @@ import unicodedata
 def load_data(directory):
     ret = lines_if_valid(directory, "*.jsonl")
     return pd.DataFrame.from_records(ret)
+
+
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
 
 
 def normalize_text(text):
@@ -50,8 +61,10 @@ def watermark(
     bias=2.5,
     hashing_key=15485863,
     seeding_scheme="lefthash",
+    random_seed=42,
     **model_args
 ):
+    seed_everything(random_seed)
     data = load_data(input_directory)
 
     # Configuration
@@ -83,9 +96,11 @@ def watermark(
         out_watermarked = model.generate(
             **inputs, 
             watermarking_config=watermarking_config, 
-            do_sample=False, 
+            do_sample=True,
+            temperature=0.6,
+            top_p=0.9,
             max_new_tokens=max_new_tokens, 
-            no_repeat_ngram_size=2, 
+            no_repeat_ngram_size=3, 
             eos_token_id=tok.eos_token_id
         )
 
@@ -117,8 +132,10 @@ def detect(
     bias=2.5,
     hashing_key=15485863,
     seeding_scheme="lefthash",
+    random_seed=42,
     **model_args
 ):
+    seed_everything(random_seed)
     data = load_data(input_directory)
     
     # Configuration
