@@ -21,13 +21,13 @@ def normalize_text(text):
 
 
 def build_prompt(tok, text):
-    system_msg = "You are a text editor. You only output the final paraphrased text. No explanations, no extra words."
+    system_msg = "You are a text editor. You only output the final paraphrased text. No explanations, no extra words. The output must be in English."
     messages = [
         {"role": "system", "content": system_msg},
         {"role": "user", "content": (
             "Paraphrase the following text in clear, formal prose. "
             "Preserve meaning and structure. "
-            "Output only the rewritten text. \n\n"
+            "Output only the rewritten text in English. \n\n"
             + normalize_text(text)
         )}
     ]
